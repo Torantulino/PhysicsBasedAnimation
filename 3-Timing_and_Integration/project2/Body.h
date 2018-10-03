@@ -33,15 +33,15 @@ public:
 
 private:
 	// Visual Properties
-	Mesh m_mesh;		// Associated Mesh
+	Mesh m_mesh;	// Associated Mesh
 
 	// Physical Properties
 	float m_mass;	// Mass
-	float m_cor;		// Coefficient of Restitution (Elasticity)
+	float m_cor;	// Coefficient of Restitution (Elasticity)
 
 	// Dynamic Variables
-	glm::vec3 m_acc;		// Acceleration
-	glm::vec3 m_vel;		// Veloctity
-	glm::vec3 m_pos;		// Position (from mesh)
+	glm::vec3 m_acc;	// Acceleration
+	glm::vec3 m_vel;	// Veloctity
+	glm::vec3 m_pos;	// Position (from mesh)
 };
 

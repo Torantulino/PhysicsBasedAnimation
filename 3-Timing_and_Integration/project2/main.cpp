@@ -22,11 +22,19 @@
 #include "Application.h"
 #include "Shader.h"
 #include "Mesh.h"
+#include "Particle.h"
 
 
 // time
 GLfloat deltaTime = 0.0f;
 GLfloat lastFrame = 0.0f;
+
+// Physics Objects
+std::vector<Particle> particles;
+
+// Global Properties
+glm::vec3 g = glm::vec3(0.0f, -9.8f, 0.0f);
+
 
 // main function
 int main()
@@ -39,26 +47,25 @@ int main()
 	// create ground plane
 	Mesh plane = Mesh::Mesh(Mesh::QUAD);
 	// scale it up x5
-	plane.scale(glm::vec3(5.0f, 5.0f, 5.0f));
+	plane.scale(glm::vec3(10.0f, 5.0f, 5.0f));
 	Shader lambert = Shader("resources/shaders/physics.vert", "resources/shaders/physics.frag");
 	plane.setShader(lambert);
 
+	//Create Particles
+	for (int i = 0; i < 5; i++) {
+		// Create particle
+		Particle p = Particle::Particle();
+		// Set Shader
+		p.getMesh().setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
 
-	// create particle
-	Mesh particle1 = Mesh::Mesh(Mesh::QUAD);
-	//scale it down (x.1), translate it up by 2.5 and rotate it by 90 degrees around the x axis
-	particle1.translate(glm::vec3(0.0f, 2.5f, 0.0f));
-	particle1.scale(glm::vec3(.1f, .1f, .1f));
-	particle1.rotate((GLfloat) M_PI_2, glm::vec3(1.0f, 0.0f, 0.0f));
-	particle1.setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
-	
-	// create demo objects (a cube and a sphere)
-	Mesh sphere = Mesh::Mesh("resources/models/sphere.obj");
-	sphere.translate(glm::vec3(-1.0f, 1.0f, 0.0f));
-	sphere.setShader(lambert);
-	Mesh cube = Mesh::Mesh("resources/models/cube.obj");
-	cube.translate(glm::vec3(1.0f, .5f, 0.0f));
-	cube.setShader(lambert);
+		//Set Random initial velocity values
+		float rndX = -1.0f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (1.0f - -1.0f)));
+		float rndY = -1.0f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (1.0f - -1.0f)));
+		p.setVel(glm::vec3(rndX, rndY, 0.0f));
+
+		//Add particle to collection
+		particles.push_back(p);
+	}
 
 	// time
 	GLfloat firstFrame = (GLfloat) glfwGetTime();
@@ -83,7 +90,29 @@ int main()
 		/*
 		**	SIMULATION
 		*/
-		
+
+		for (unsigned int i = 0; i < particles.size(); i++) {
+			//Calculate Forces
+			glm::vec3 force = particles[i].getMass() * g;
+			//Calculate Accelleration
+			particles[i].setAcc( force / particles[i].getMass());
+			//Calculate Current Velocity
+			particles[i].setVel(particles[i].getVel() + deltaTime * particles[i].getAcc());
+			//Calculate New Position
+			particles[i].translate(deltaTime * particles[i].getVel());
+
+			glm::vec3 particlePos = particles[i].getPos();
+			glm::vec3 groundPos = plane.getPos();
+
+			//Check for collision with ground
+			if (particlePos.y < groundPos.y) {
+				//Move particle back up to ground pos
+				particles[i].setPos(glm::vec3(particlePos.x, groundPos.y, particlePos.z));
+				//Invert velocity in the y axis and apply damping
+				glm::vec3 curVel = particles[i].getVel();
+				particles[i].setVel(glm::vec3(curVel.x * 0.9, -curVel.y* 0.9, curVel.z));
+			}
+		}
 
 
 		/*
@@ -93,12 +122,12 @@ int main()
 		app.clear();
 		// draw groud plane
 		app.draw(plane);
-		// draw particles
-		app.draw(particle1);	
 
-		// draw demo objects
-		app.draw(cube);
-		app.draw(sphere);
+		// draw particles
+		for each (Particle p in particles)
+		{
+			app.draw(p.getMesh());
+		}
 
 		app.display();
 	}
