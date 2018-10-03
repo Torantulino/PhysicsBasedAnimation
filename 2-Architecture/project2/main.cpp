@@ -53,7 +53,7 @@ int main()
 	// create ground plane
 	Mesh plane = Mesh::Mesh(Mesh::QUAD);
 	// scale it up x5
-	plane.scale(glm::vec3(5.0f, 5.0f, 5.0f));
+	plane.scale(glm::vec3(10.0f, 5.0f, 5.0f));
 	Shader lambert = Shader("resources/shaders/physics.vert", "resources/shaders/physics.frag");
 	plane.setShader(lambert);
 
@@ -66,12 +66,15 @@ int main()
 		p.rotate((GLfloat)M_PI_2, glm::vec3(1.0f, 0.0f, 0.0f));
 		p.setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
 
-		float rnd = ((float)rand() / (RAND_MAX)) + 1;
+
+		float rndX = -1.0f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (1.0f - -1.0f)));
+		float rndY = -1.0f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (1.0f - -1.0f)));
+
 
 		particles.push_back(p);
 		forces.push_back(glm::vec3());
 		accellerations.push_back(glm::vec3());
-		velocities.push_back(glm::vec3(rnd , rnd, 0.0f));
+		velocities.push_back(glm::vec3(rndX , rndY, 0.0f));
 	}
 	/*
 	// create demo objects (a cube and a sphere)
