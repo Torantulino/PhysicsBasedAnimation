@@ -26,7 +26,7 @@
 
 // time
 GLfloat deltaTime = 0.0f;
-GLfloat lastFrame = 0.0f;
+GLfloat lastTime = 0.0f;
 
 // Physics Objects
 std::vector<Particle> particles;
@@ -47,8 +47,8 @@ int main()
 	Mesh plane = Mesh::Mesh(Mesh::QUAD);
 	// scale it up x5
 	plane.scale(glm::vec3(10.0f, 5.0f, 5.0f));
-	Shader lambert = Shader("resources/shaders/physics.vert", "resources/shaders/physics_transparent.frag");
-	plane.setShader(lambert);
+	Shader transLambert = Shader("resources/shaders/physics.vert", "resources/shaders/physics_transparent.frag");
+	plane.setShader(transLambert);
 
 	//Create Particles
 	for (int i = 0; i < 15; i++) {
@@ -70,52 +70,61 @@ int main()
 	}
 
 	// time
-	GLfloat firstFrame = (GLfloat) glfwGetTime();
-	
+	const GLfloat dt = 0.01f;
+
+	GLfloat initTime = (GLfloat)glfwGetTime();
+	GLfloat timeAccumulated = 0.0f;
+
 	// Game loop
 	while (!glfwWindowShouldClose(app.getWindow()))
 	{
 		// Set frame time
-		GLfloat currentFrame = (GLfloat)  glfwGetTime() - firstFrame;
-		// the animation can be sped up or slowed down by multiplying currentFrame by a factor.
-		currentFrame *= 1.5f;
-		deltaTime = currentFrame - lastFrame;
-		lastFrame = currentFrame;
+		GLfloat currentTime = (GLfloat) glfwGetTime() - initTime;
+		// the animation can be sped up or slowed down by multiplying currentFrame by a factor. TODO: Add user control of this variable.
+		//currentFrame *= 1.0f;
+		deltaTime = currentTime - lastTime;
+		lastTime = currentTime;
 
-		/*
-		**	INTERACTION
-		*/
-		// Manage interaction
-		app.doMovement(deltaTime);
+		timeAccumulated += deltaTime;
+
+		//Work off accumulated time
+		while (timeAccumulated >= deltaTime) {
+			/*
+			**	INTERACTION
+			*/
+			// Manage interaction
+			app.doMovement(deltaTime);
 
 
-		/*
-		**	SIMULATION
-		*/
+			/*
+			**	SIMULATION
+			*/
 
-		for (unsigned int i = 0; i < particles.size(); i++) {
-			//Calculate Forces
-			glm::vec3 force = particles[i].getMass() * g;
-			//Calculate Accelleration
-			particles[i].setAcc( force / particles[i].getMass());
-			//Calculate Current Velocity
-			particles[i].setVel(particles[i].getVel() + deltaTime * particles[i].getAcc());
-			//Calculate New Position
-			particles[i].translate(deltaTime * particles[i].getVel());
+			for (unsigned int i = 0; i < particles.size(); i++) {
+				//Calculate Forces
+				glm::vec3 force = particles[i].getMass() * g;
+				//Calculate Accelleration
+				particles[i].setAcc(force / particles[i].getMass());
+				//Calculate Current Velocity
+				particles[i].setVel(particles[i].getVel() + deltaTime * particles[i].getAcc());
+				//Calculate New Position
+				particles[i].translate(deltaTime * particles[i].getVel());
 
-			glm::vec3 particlePos = particles[i].getPos();
-			glm::vec3 groundPos = plane.getPos();
+				glm::vec3 particlePos = particles[i].getPos();
+				glm::vec3 groundPos = plane.getPos();
 
-			//Check for collision with ground
-			if (particlePos.y < groundPos.y) {
-				//Move particle back up to ground pos
-				particles[i].setPos(glm::vec3(particlePos.x, groundPos.y, particlePos.z));
-				//Invert velocity in the y axis and apply damping
-				glm::vec3 curVel = particles[i].getVel();
-				particles[i].setVel(glm::vec3(curVel.x * 0.9, -curVel.y* 0.9, curVel.z));
+				//Check for collision with ground
+				if (particlePos.y < groundPos.y) {
+					//Move particle back up to ground pos
+					particles[i].setPos(glm::vec3(particlePos.x, groundPos.y, particlePos.z));
+					//Invert velocity in the y axis and apply damping
+					glm::vec3 curVel = particles[i].getVel();
+					particles[i].setVel(glm::vec3(curVel.x * 0.9, -curVel.y* 0.9, curVel.z));
+				}
 			}
-		}
 
+			timeAccumulated -= deltaTime;
+		}
 		/*
 		**	RENDER 
 		*/		
