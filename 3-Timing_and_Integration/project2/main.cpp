@@ -24,7 +24,6 @@
 #include "Mesh.h"
 #include "Particle.h"
 
-
 // time
 GLfloat deltaTime = 0.0f;
 GLfloat lastFrame = 0.0f;
@@ -114,7 +113,6 @@ int main()
 			}
 		}
 
-
 		/*
 		**	RENDER 
 		*/		
@@ -122,6 +120,7 @@ int main()
 		app.clear();
 		// draw groud plane
 		app.draw(plane);
+
 
 		// draw particles
 		for each (Particle p in particles)

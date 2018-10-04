@@ -3,18 +3,33 @@
 #include "Mesh.h"
 
 class Body
-{	
+{
 public:
 	Body();
 	~Body();
 
 	// - GETTERS -
 	// Mesh
-	Mesh & getMesh() { return m_mesh; }	// Transform Matrices	glm::mat3 getTranslate() const { return m_mesh.getTranslate(); }	glm::mat3 getRotate() const { return m_mesh.getRotate(); }	glm::mat3 getScale() const { return m_mesh.getScale(); }	// Dynamic Variables	glm::vec3& getAcc() { return m_acc; }	glm::vec3& getVel() { return m_vel; }	glm::vec3& getPos() { return m_pos; }	// Physical Properties	float getMass() const { return m_mass; }	float getCor() const { return m_cor; }
+	Mesh & getMesh() { return m_mesh; }
+
+	// Transform Matrices
+	glm::mat3 getTranslate() const { return m_mesh.getTranslate(); }
+	glm::mat3 getRotate() const { return m_mesh.getRotate(); }
+	glm::mat3 getScale() const { return m_mesh.getScale(); }
+
+	// Dynamic Variables
+	glm::vec3& getAcc() { return m_acc; }
+	glm::vec3& getVel() { return m_vel; }
+	glm::vec3& getPos() { return m_pos; }
+
+	// Physical Properties
+	float getMass() const { return m_mass; }
+	float getCor() const { return m_cor; }
+
 	// - SETTERS -
 	// Visual Properties
 	void setMesh(Mesh m) { m_mesh = m; }
-	
+
 	//Dynamic Variables
 	void setAcc(const glm::vec3 &vect) { m_acc = vect; }
 	void setVel(const glm::vec3 &vect) { m_vel = vect; }
