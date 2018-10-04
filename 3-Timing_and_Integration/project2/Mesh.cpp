@@ -30,7 +30,7 @@ Mesh::Mesh(const std::string& fileName)
 	InitMesh(OBJModel(fileName).ToIndexedModel());
 	initTransform();
 }
-
+ 
 Mesh::Mesh(MeshType type)
 {
 	Vertex vertices[36];

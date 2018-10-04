@@ -10,7 +10,7 @@
 // - No shader allocated by default to avoid creating a shader object for each particle.
 Particle::Particle()
 {
-	setMesh(Mesh::Mesh());
+	setMesh(Mesh::Mesh(Mesh::MeshType::QUAD));
 	scale(glm::vec3(0.1f, 0.1f, 0.1f));
 	rotate((GLfloat)M_PI_2, glm::vec3(1.0f, 0.0f, 0.0f));
 
@@ -19,7 +19,7 @@ Particle::Particle()
 	setVel(glm::vec3(0.0f, 0.0f, 0.0f));
 
 	// Physical Properties
-	setMass(1.0f);
+	setMass(0.1f);
 	setCor(1.0f);
 }
 

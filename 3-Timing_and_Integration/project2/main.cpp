@@ -41,7 +41,7 @@ int main()
 	// create application
 	Application app = Application::Application();
 	app.initRender();
-	Application::camera.setCameraPosition(glm::vec3(0.0f, 5.0f, 20.0f));
+	Application::camera.setCameraPosition(glm::vec3(0.0f, 5.0f, 10.0f));
 			
 	// create ground plane
 	Mesh plane = Mesh::Mesh(Mesh::QUAD);
@@ -51,16 +51,19 @@ int main()
 	plane.setShader(lambert);
 
 	//Create Particles
-	for (int i = 0; i < 5; i++) {
+	for (int i = 0; i < 15; i++) {
 		// Create particle
 		Particle p = Particle::Particle();
 		// Set Shader
 		p.getMesh().setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
 
+		//Set initial position
+		p.setPos(glm::vec3(0.0f, 10.0f, 0.0f));
+
 		//Set Random initial velocity values
 		float rndX = -1.0f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (1.0f - -1.0f)));
 		float rndY = -1.0f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (1.0f - -1.0f)));
-		p.setVel(glm::vec3(rndX, rndY, 0.0f));
+		p.setVel(glm::vec3(rndX, rndY*4, 0.0f));
 
 		//Add particle to collection
 		particles.push_back(p);
