@@ -47,12 +47,12 @@ int main()
 	Mesh plane = Mesh::Mesh(Mesh::QUAD);
 	// scale it up x5
 	plane.scale(glm::vec3(10.0f, 5.0f, 5.0f));
-	Shader lambert = Shader("resources/shaders/physics.vert", "resources/shaders/physics.frag");
+	Shader lambert = Shader("resources/shaders/physics.vert", "resources/shaders/physics_transparent.frag");
 	plane.setShader(lambert);
 
 	//Create Particles
 	for (int i = 0; i < 15; i++) {
-		// Create particle
+		// Create particle 
 		Particle p = Particle::Particle();
 		// Set Shader
 		p.getMesh().setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
@@ -121,8 +121,6 @@ int main()
 		*/		
 		// clear buffer
 		app.clear();
-		// draw groud plane
-		app.draw(plane);
 
 
 		// draw particles
@@ -130,6 +128,14 @@ int main()
 		{
 			app.draw(p.getMesh());
 		}
+
+
+
+		//Render Environment Last for transparency
+		// draw groud plane
+		app.draw(plane);
+
+
 
 		app.display();
 	}
