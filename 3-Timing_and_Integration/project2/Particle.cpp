@@ -20,7 +20,7 @@ Particle::Particle()
 
 	// Physical Properties
 	setMass(0.1f);
-	setCor(1.0f);
+	setCor(0.9f);
 }
 
 
