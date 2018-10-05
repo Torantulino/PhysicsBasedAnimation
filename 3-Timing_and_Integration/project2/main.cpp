@@ -24,6 +24,7 @@
 #include "Shader.h"
 #include "Mesh.h"
 #include "Particle.h"
+#include "main.h"
 
 // time
 GLfloat deltaTime = 0.0f;
@@ -99,71 +100,7 @@ int main()
 					//Calculate New Position
 					particles[i].translate(deltaTime * particles[i].getVel());
 
-					glm::vec3 particlePos = particles[i].getPos();
-					glm::vec3 cubePos = cube.getPos();
-					glm::mat4 cubeScale = cube.getScale();
-
-					//Check for collision with ground
-										//Right
-					if (particlePos.x > cubePos.x + cubeScale[0][0]) {
-						//Move particle back in to plane pos
-						particles[i].setPos(glm::vec3(cubePos.x + cubeScale[0][0], particlePos.y, particlePos.z));
-						//Invert velocity in the y axis and apply damping
-						glm::vec3 curVel = particles[i].getVel();
-						particles[i].setVel(glm::vec3(-curVel.x, curVel.y, curVel.z));
-						//Apply COR
-						particles[i].setVel(particles[i].getVel()*particles[i].getCor());
-					}
-					//Left
-					if (particlePos.x < cubePos.x - cubeScale[0][0]) {
-						//Move particle back in to plane pos
-						particles[i].setPos(glm::vec3(cubePos.x - cubeScale[0][0], particlePos.y, particlePos.z));
-						//Invert velocity in the y axis and apply damping
-						glm::vec3 curVel = particles[i].getVel();
-						particles[i].setVel(glm::vec3(-curVel.x, curVel.y, curVel.z));
-						//Apply COR
-						particles[i].setVel(particles[i].getVel()*particles[i].getCor());
-					}
-					//Up
-					if (particlePos.y > cubePos.y + cubeScale[1][1]) {
-						//Move particle back in to plane pos
-						particles[i].setPos(glm::vec3(particlePos.x, cubePos.y + cubeScale[1][1], particlePos.z));
-						//Invert velocity in the y axis and apply damping
-						glm::vec3 curVel = particles[i].getVel();
-						particles[i].setVel(glm::vec3(curVel.x, -curVel.y, curVel.z));
-						//Apply COR
-						particles[i].setVel(particles[i].getVel()*particles[i].getCor());
-					}
-					//Down
-					if (particlePos.y < cubePos.y - cubeScale[1][1]) {
-						//Move particle back in to plane pos
-						particles[i].setPos(glm::vec3(particlePos.x, cubePos.y - cubeScale[1][1], particlePos.z));
-						//Invert velocity in the y axis and apply damping
-						glm::vec3 curVel = particles[i].getVel();
-						particles[i].setVel(glm::vec3(curVel.x, -curVel.y, curVel.z));
-						//Apply COR
-						particles[i].setVel(particles[i].getVel()*particles[i].getCor());
-					}
-					//Front
-					if (particlePos.z > cubePos.z + cubeScale[2][2]) {
-						//Move particle back in to plane pos
-						particles[i].setPos(glm::vec3(particlePos.x, particlePos.y, cubePos.z + cubeScale[2][2]));
-						//Invert velocity in the y axis and apply damping
-						glm::vec3 curVel = particles[i].getVel();
-						particles[i].setVel(glm::vec3(curVel.x, curVel.y, -curVel.z));
-						//Apply COR
-						particles[i].setVel(particles[i].getVel()*particles[i].getCor());
-					}
-					//Back
-					if (particlePos.z < cubePos.z - cubeScale[2][2]) {
-						//Move particle back in to plane pos
-						particles[i].setPos(glm::vec3(particlePos.x, particlePos.y, cubePos.z - cubeScale[2][2]));
-						//Invert velocity in the y axis and apply damping
-						glm::vec3 curVel = particles[i].getVel();
-						particles[i].setVel(glm::vec3(curVel.x, curVel.y, -curVel.z));
-						//Apply COR
-						particles[i].setVel(particles[i].getVel()*particles[i].getCor());
-					}
+					CheckCollisions(particles[i], cube);
 				}
 			}
 			//Integration Methods Demo
@@ -303,5 +240,74 @@ int main()
 	app.terminate();
 
 	return EXIT_SUCCESS;
+}
+
+void CheckCollisions(Particle &p, Mesh &cube)
+{
+	glm::vec3 particlePos = p.getPos();
+	glm::vec3 cubePos = cube.getPos();
+	glm::mat4 cubeScale = cube.getScale();
+
+	//Check for collision with ground
+	//Right
+	if (particlePos.x > cubePos.x + cubeScale[0][0]) {
+		//Move particle back in to plane pos
+		p.setPos(glm::vec3(cubePos.x + cubeScale[0][0], particlePos.y, particlePos.z));
+		//Invert velocity in the y axis and apply damping
+		glm::vec3 curVel = p.getVel();
+		p.setVel(glm::vec3(-curVel.x, curVel.y, curVel.z));
+		//Apply COR
+		p.setVel(p.getVel()*p.getCor());
+	}
+	//Left
+	if (particlePos.x < cubePos.x - cubeScale[0][0]) {
+		//Move particle back in to plane pos
+		p.setPos(glm::vec3(cubePos.x - cubeScale[0][0], particlePos.y, particlePos.z));
+		//Invert velocity in the y axis and apply damping
+		glm::vec3 curVel = p.getVel();
+		p.setVel(glm::vec3(-curVel.x, curVel.y, curVel.z));
+		//Apply COR
+		p.setVel(p.getVel()*p.getCor());
+	}
+	//Up
+	if (particlePos.y > cubePos.y + cubeScale[1][1]) {
+		//Move particle back in to plane pos
+		p.setPos(glm::vec3(particlePos.x, cubePos.y + cubeScale[1][1], particlePos.z));
+		//Invert velocity in the y axis and apply damping
+		glm::vec3 curVel = p.getVel();
+		p.setVel(glm::vec3(curVel.x, -curVel.y, curVel.z));
+		//Apply COR
+		p.setVel(p.getVel()*p.getCor());
+	}
+	//Down
+	if (particlePos.y < cubePos.y - cubeScale[1][1]) {
+		//Move particle back in to plane pos
+		p.setPos(glm::vec3(particlePos.x, cubePos.y - cubeScale[1][1], particlePos.z));
+		//Invert velocity in the y axis and apply damping
+		glm::vec3 curVel = p.getVel();
+		p.setVel(glm::vec3(curVel.x, -curVel.y, curVel.z));
+		//Apply COR
+		p.setVel(p.getVel()*p.getCor());
+	}
+	//Front
+	if (particlePos.z > cubePos.z + cubeScale[2][2]) {
+		//Move particle back in to plane pos
+		p.setPos(glm::vec3(particlePos.x, particlePos.y, cubePos.z + cubeScale[2][2]));
+		//Invert velocity in the y axis and apply damping
+		glm::vec3 curVel = p.getVel();
+		p.setVel(glm::vec3(curVel.x, curVel.y, -curVel.z));
+		//Apply COR
+		p.setVel(p.getVel()*p.getCor());
+	}
+	//Back
+	if (particlePos.z < cubePos.z - cubeScale[2][2]) {
+		//Move particle back in to plane pos
+		p.setPos(glm::vec3(particlePos.x, particlePos.y, cubePos.z - cubeScale[2][2]));
+		//Invert velocity in the y axis and apply damping
+		glm::vec3 curVel = p.getVel();
+		p.setVel(glm::vec3(curVel.x, curVel.y, -curVel.z));
+		//Apply COR
+		p.setVel(p.getVel()*p.getCor());
+	}
 }
 
