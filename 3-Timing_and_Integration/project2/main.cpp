@@ -83,7 +83,7 @@ int main()
 		// Set frame time
 		GLfloat currentTime = (GLfloat) glfwGetTime() - initTime;
 		// the animation can be sped up or slowed down by multiplying currentFrame by a factor. TODO: Add user control of this variable.
-		currentTime *= 0.1f;
+		// currentTime *= 1.0f;
 		deltaTime = currentTime - lastTime;
 		lastTime = currentTime;
 
@@ -177,6 +177,34 @@ int main()
 				}
 			}
 
+			if (mode == 5 && glfwGetKey(app.getWindow(), GLFW_KEY_LEFT_SHIFT)) {
+				for (unsigned int i = 0; i < particles.size(); i++) {
+
+					//Calculate Forces
+					glm::vec3 force = particles[i].getMass() * g;
+
+					glm::vec3 coneF = calcConeForce(particles[i].getPos());
+					if (coneF == glm::vec3(0.0f, 0.0f, 0.0f)) {
+
+						particles[i].getMesh().setShader(blueParticle);
+					}
+					else {
+						particles[i].getMesh().setShader(redParticle);
+					}
+					force += coneF;
+
+
+					//Calculate Accelleration
+					particles[i].setAcc(force / particles[i].getMass());
+					//Calculate Current Velocity
+					particles[i].setVel(particles[i].getVel() + deltaTime * particles[i].getAcc());
+					//Calculate New Position
+					particles[i].translate(deltaTime * particles[i].getVel());
+
+					CheckCollisions(particles[i], cube);
+
+				}
+			}
 
 			timeAccumulated -= deltaTime;
 		}
@@ -272,10 +300,42 @@ int main()
 			}
 
 			//Set Cone properties
-			coneTip = glm::vec3(0.0f, -1.0f, 0.0f);
-			coneAxis = glm::vec3(0.0f, -1.0f, 0.0f);
-			coneRad = 4.0f;
-			coneHeight = 7.0f;
+			coneTip = glm::vec3(0.0f, -21.0f, 0.0f);
+			coneAxis = glm::vec3(0.0f, 1.0f, 0.0f);
+			coneRad = 5.0f;
+			coneHeight = 20.0f;
+		}
+		// 5 - Grid Test
+		if (glfwGetKey(app.getWindow(), GLFW_KEY_5)) {
+			//Set mode and clear vectors
+			mode = 5;
+			particles.clear();
+		
+			//Create Particles
+			// X
+			for (int x = -5; x < 6; x++) {
+				//Z
+				for (int z = -5; z < 6; z++) {
+					//Y
+					for (int y = -5; y < 6; y++) {
+						// Create particle 
+						Particle p = Particle::Particle();
+						// Set Shader
+						p.getMesh().setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
+
+						//Set initial position
+						p.setPos(glm::vec3((float)x*2.0f, (float)y*2.0f, (float)z*2.0f));
+
+						particles.push_back(p);
+					}
+				}
+			}
+
+			//Set Cone properties
+			coneTip = glm::vec3(0.0f, -21.0f, 0.0f);
+			coneAxis = glm::vec3(0.0f, 1.0f, 0.0f);
+			coneRad = 5.0f;
+			coneHeight = 20.0f;
 		}
 
 		/*
