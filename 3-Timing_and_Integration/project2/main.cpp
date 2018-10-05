@@ -46,10 +46,15 @@ int main()
 	app.initRender();
 	Application::camera.setCameraPosition(glm::vec3(0.0f, 5.0f, 10.0f));
 			
-	// create ground plane
-	Mesh plane = Mesh::Mesh(Mesh::QUAD);
-	// scale it up x5
-	plane.scale(glm::vec3(10.0f, 5.0f, 5.0f));
+	// - Create Cube -
+	Mesh plane = Mesh::Mesh(Mesh::CUBE);
+
+
+	// scale up x5
+	plane.scale(glm::vec3(10.0f, 10.0f, 10.0f));
+
+
+	//Set Shader
 	Shader transLambert = Shader("resources/shaders/physics.vert", "resources/shaders/physics_transparent.frag");
 	plane.setShader(transLambert);
 
@@ -111,7 +116,8 @@ int main()
 					}
 				}
 			}
-			if (mode == 2) {
+			//Integration Methods Demo
+			if (mode == 3) {
 				for (unsigned int i = 0; i < particles.size(); i++) {
 					// - Leave 0 still, simulate 1 and 2 -
 					//Forward Euler Integration
@@ -151,6 +157,11 @@ int main()
 						glm::vec3 curVel = particles[i].getVel();
 						particles[i].setVel(glm::vec3(curVel.x, -curVel.y, curVel.z));
 					}
+				}
+			}
+			if (mode == 4) {
+				for (unsigned int i = 0; i < particles.size(); i++) {
+				
 				}
 			}
 
