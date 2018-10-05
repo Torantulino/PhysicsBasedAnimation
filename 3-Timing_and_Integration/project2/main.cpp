@@ -133,17 +133,7 @@ int main()
 
 
 					// - Collisions -
-					glm::vec3 particlePos = particles[i].getPos();
-					glm::vec3 groundPos = cube.getPos();
-
-					//Check for collision with ground
-					if (particlePos.y < groundPos.y) {
-						//Move particle back up to ground pos
-						particles[i].setPos(glm::vec3(particlePos.x, groundPos.y, particlePos.z));
-						//Invert velocity in the y axis and apply damping
-						glm::vec3 curVel = particles[i].getVel();
-						particles[i].setVel(glm::vec3(curVel.x, -curVel.y, curVel.z));
-					}
+					CheckCollisions(particles[i], cube);
 				}
 			}
 			if (mode == 4) {
@@ -186,9 +176,9 @@ int main()
 		}
 		// 1 - Bouncing Particle in Cube
 		// 2 - Integration Comparison
-		if (glfwGetKey(app.getWindow(), GLFW_KEY_2)) {
+		if (glfwGetKey(app.getWindow(), GLFW_KEY_3)) {
 			//Set mode and clear vectors
-			mode = 2;
+			mode = 3;
 			particles.clear();
 
 			// Create particle
@@ -201,12 +191,15 @@ int main()
 			pFU.getMesh().setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
 			pSIE.getMesh().setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
 
+			pRef.setCor(1.0f);
+			pFU.setCor(1.0f);
+			pSIE.setCor(1.0f);
 
 
 			//Set initial position
-			pRef.setPos(glm::vec3(-0.5f, 2.0f, 0.0f));
-			pFU.setPos(glm::vec3(0.0f, 2.0f, 0.0f));
-			pSIE.setPos(glm::vec3(0.5f, 2.0f, 0.0f));
+			pRef.setPos(glm::vec3(-0.5f, -8.0f, 0.0f));
+			pFU.setPos(glm::vec3(0.0f, -8.0f, 0.0f));
+			pSIE.setPos(glm::vec3(0.5f, -8.0f, 0.0f));
 
 			//Add particle to collection
 			particles.push_back(pRef);
