@@ -36,8 +36,12 @@ std::vector<Particle> particles;
 // Global Properties
 glm::vec3 g = glm::vec3(0.0f, -9.8f, 0.0f);
 
+//other
 unsigned int mode = 10;
-
+glm::vec3 coneTip;
+glm::vec3 coneAxis;
+float coneRad;
+float coneHeight;
 
 // main function
 int main()
@@ -55,12 +59,17 @@ int main()
 	Shader transLambert = Shader("resources/shaders/physics.vert", "resources/shaders/physics_transparent.frag");
 	cube.setShader(transLambert);
 
+	Shader blueParticle = Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag");
+	Shader redParticle = Shader("resources/shaders/solid.vert", "resources/shaders/solid_red.frag");
+
+	/*
 	//Create cone
-	Mesh cone = Mesh::Mesh("resources/models/cone.obj");
+	Mesh cone = Mesh::Mesh("resources/models/cone2.obj");
 	//Set Shader
 	cone.setShader(transLambert);
 	cone.scale(glm::vec3(3.0f));
-
+	cone.rotate(-(GLfloat)M_PI_2, glm::vec3(1.0f, 0.0f, 0.0f));
+	*/
 
 	// time
 	const GLfloat dt = 0.01f;
@@ -74,7 +83,7 @@ int main()
 		// Set frame time
 		GLfloat currentTime = (GLfloat) glfwGetTime() - initTime;
 		// the animation can be sped up or slowed down by multiplying currentFrame by a factor. TODO: Add user control of this variable.
-		//currentFrame *= 1.0f;
+		currentTime *= 0.1f;
 		deltaTime = currentTime - lastTime;
 		lastTime = currentTime;
 
@@ -143,7 +152,28 @@ int main()
 			}
 			if (mode == 4) {
 				for (unsigned int i = 0; i < particles.size(); i++) {
-				
+					//Calculate Forces
+					glm::vec3 force = particles[i].getMass() * g;
+
+					glm::vec3 coneF = calcConeForce(particles[i].getPos());
+					if (coneF == glm::vec3(0.0f, 0.0f, 0.0f)) {
+						
+						particles[i].getMesh().setShader(blueParticle);
+					}
+					else {
+						particles[i].getMesh().setShader(redParticle);
+					}
+					force += coneF;
+
+
+					//Calculate Accelleration
+					particles[i].setAcc(force / particles[i].getMass());
+					//Calculate Current Velocity
+					particles[i].setVel(particles[i].getVel() + deltaTime * particles[i].getAcc());
+					//Calculate New Position
+					particles[i].translate(deltaTime * particles[i].getVel());
+
+					CheckCollisions(particles[i], cube);
 				}
 			}
 
@@ -173,6 +203,7 @@ int main()
 				float rndY = -1.0f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (1.0f - -1.0f)));
 				float rndZ = -1.0f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (1.0f - -1.0f)));
 				p.setVel(glm::vec3(rndX * 50, rndY * 40, rndZ * 50));
+
 
 				//Add particle to collection
 				particles.push_back(p);
@@ -219,24 +250,32 @@ int main()
 
 
 			//Create Particles
-			for (int i = 0; i < 20; i++) {
+			for (int i = 0; i < 100; i++) {
 				// Create particle 
 				Particle p = Particle::Particle();
 				// Set Shader
 				p.getMesh().setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
 				
 				//Set initial position
-				p.setPos(glm::vec3(0.0f, 10.0f, 0.0f));
+				p.setPos(glm::vec3(0.0f, -6.0f, 0.0f));
 
 				//Set Random initial velocity values
 				float rndX = -1.0f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (1.0f - -1.0f)));
 				float rndY = -1.0f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (1.0f - -1.0f)));
 				float rndZ = -1.0f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (1.0f - -1.0f)));
-				p.setVel(glm::vec3(rndX * 5, rndY * 4, rndZ * 5));
+				p.setVel(glm::vec3(rndX * 5, 0.0f, rndZ * 5));
+
+				p.setCor(0.9f);
 
 				//Add particle to collection
 				particles.push_back(p);
 			}
+
+			//Set Cone properties
+			coneTip = glm::vec3(0.0f, -1.0f, 0.0f);
+			coneAxis = glm::vec3(0.0f, -1.0f, 0.0f);
+			coneRad = 4.0f;
+			coneHeight = 7.0f;
 		}
 
 		/*
@@ -255,13 +294,12 @@ int main()
 
 		//Render Environment Last for transparency
 		// draw groud plane
+		/*
 		if (mode == 4) {
 			app.draw(cone);
 		}
+		*/
 		app.draw(cube);
-		
-
-
 		app.display();
 	}
 
@@ -339,3 +377,30 @@ void CheckCollisions(Particle &p, Mesh &cube)
 	}
 }
 
+glm::vec3 calcConeForce(glm::vec3 pos) {
+	//coneTip = glm::vec3(0.0f, -1.0f, 0.0f);
+	//coneAxis = glm::vec3(0.0f, -1.0f, 0.0f);
+	//coneRad = 4.0f;
+	//coneHeight = 7.0f;
+
+	//Calculate the distance along the 'height' of the cone
+	float projToAxis = dot(pos - coneTip, coneAxis);
+	
+	//If 'above' or 'below' cone, force is 0 (outsideb  the cone)
+	if (projToAxis > coneHeight || projToAxis < 0 ) {
+		return glm::vec3(0.0f, 0.0f, 0.0f);
+	}
+	
+	//Calculate the radius of the cone at the current projection
+	float radAtProj = (projToAxis / coneHeight) * coneRad;
+	
+	//Calculate the current point's distance/radius from the spine of the cone
+	float distFromSpine = length((pos - coneTip) - projToAxis * coneAxis);
+	
+	//If this distance is greater than the radius at the current point then it is outside the cone.
+	if (distFromSpine > radAtProj) {
+		return glm::vec3(0.0f, 0.0f, 0.0f);
+	}
+
+	return glm::vec3(0.0f, 5.0f, 0.0f);
+}
