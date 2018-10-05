@@ -55,6 +55,11 @@ int main()
 	Shader transLambert = Shader("resources/shaders/physics.vert", "resources/shaders/physics_transparent.frag");
 	cube.setShader(transLambert);
 
+	//Create cone
+	Mesh cone = Mesh::Mesh("resources/models/cone.obj");
+	//Set Shader
+	cone.setShader(transLambert);
+	cone.scale(glm::vec3(3.0f));
 
 
 	// time
@@ -175,7 +180,7 @@ int main()
 
 		}
 		// 1 - Bouncing Particle in Cube
-		// 2 - Integration Comparison
+		// 3 - Integration Comparison
 		if (glfwGetKey(app.getWindow(), GLFW_KEY_3)) {
 			//Set mode and clear vectors
 			mode = 3;
@@ -206,7 +211,33 @@ int main()
 			particles.push_back(pFU);
 			particles.push_back(pSIE);
 		}
+		// 4 - Blow Dryer
+		if (glfwGetKey(app.getWindow(), GLFW_KEY_4)) {
+			//Set mode and clear vectors
+			mode = 4;
+			particles.clear();
 
+
+			//Create Particles
+			for (int i = 0; i < 20; i++) {
+				// Create particle 
+				Particle p = Particle::Particle();
+				// Set Shader
+				p.getMesh().setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
+				
+				//Set initial position
+				p.setPos(glm::vec3(0.0f, 10.0f, 0.0f));
+
+				//Set Random initial velocity values
+				float rndX = -1.0f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (1.0f - -1.0f)));
+				float rndY = -1.0f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (1.0f - -1.0f)));
+				float rndZ = -1.0f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (1.0f - -1.0f)));
+				p.setVel(glm::vec3(rndX * 5, rndY * 4, rndZ * 5));
+
+				//Add particle to collection
+				particles.push_back(p);
+			}
+		}
 
 		/*
 		**	RENDER 
@@ -224,7 +255,11 @@ int main()
 
 		//Render Environment Last for transparency
 		// draw groud plane
+		if (mode == 4) {
+			app.draw(cone);
+		}
 		app.draw(cube);
+		
 
 
 		app.display();
