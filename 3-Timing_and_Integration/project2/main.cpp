@@ -47,16 +47,12 @@ int main()
 	Application::camera.setCameraPosition(glm::vec3(0.0f, 5.0f, 10.0f));
 			
 	// - Create Cube -
-	Mesh plane = Mesh::Mesh(Mesh::CUBE);
-
-
+	Mesh cube = Mesh::Mesh(Mesh::CUBE);
 	// scale up x5
-	plane.scale(glm::vec3(10.0f, 10.0f, 10.0f));
-
-
+	cube.scale(glm::vec3(10.0f, 10.0f, 10.0f));
 	//Set Shader
 	Shader transLambert = Shader("resources/shaders/physics.vert", "resources/shaders/physics_transparent.frag");
-	plane.setShader(transLambert);
+	cube.setShader(transLambert);
 
 
 
@@ -104,15 +100,69 @@ int main()
 					particles[i].translate(deltaTime * particles[i].getVel());
 
 					glm::vec3 particlePos = particles[i].getPos();
-					glm::vec3 groundPos = plane.getPos();
+					glm::vec3 cubePos = cube.getPos();
+					glm::mat4 cubeScale = cube.getScale();
 
 					//Check for collision with ground
-					if (particlePos.y < groundPos.y) {
-						//Move particle back up to ground pos
-						particles[i].setPos(glm::vec3(particlePos.x, groundPos.y, particlePos.z));
+										//Right
+					if (particlePos.x > cubePos.x + cubeScale[0][0]) {
+						//Move particle back in to plane pos
+						particles[i].setPos(glm::vec3(cubePos.x + cubeScale[0][0], particlePos.y, particlePos.z));
 						//Invert velocity in the y axis and apply damping
 						glm::vec3 curVel = particles[i].getVel();
-						particles[i].setVel(glm::vec3(curVel.x * particles[i].getCor(), -curVel.y * particles[i].getCor(), curVel.z));
+						particles[i].setVel(glm::vec3(-curVel.x, curVel.y, curVel.z));
+						//Apply COR
+						particles[i].setVel(particles[i].getVel()*particles[i].getCor());
+					}
+					//Left
+					if (particlePos.x < cubePos.x - cubeScale[0][0]) {
+						//Move particle back in to plane pos
+						particles[i].setPos(glm::vec3(cubePos.x - cubeScale[0][0], particlePos.y, particlePos.z));
+						//Invert velocity in the y axis and apply damping
+						glm::vec3 curVel = particles[i].getVel();
+						particles[i].setVel(glm::vec3(-curVel.x, curVel.y, curVel.z));
+						//Apply COR
+						particles[i].setVel(particles[i].getVel()*particles[i].getCor());
+					}
+					//Up
+					if (particlePos.y > cubePos.y + cubeScale[1][1]) {
+						//Move particle back in to plane pos
+						particles[i].setPos(glm::vec3(particlePos.x, cubePos.y + cubeScale[1][1], particlePos.z));
+						//Invert velocity in the y axis and apply damping
+						glm::vec3 curVel = particles[i].getVel();
+						particles[i].setVel(glm::vec3(curVel.x, -curVel.y, curVel.z));
+						//Apply COR
+						particles[i].setVel(particles[i].getVel()*particles[i].getCor());
+					}
+					//Down
+					if (particlePos.y < cubePos.y - cubeScale[1][1]) {
+						//Move particle back in to plane pos
+						particles[i].setPos(glm::vec3(particlePos.x, cubePos.y - cubeScale[1][1], particlePos.z));
+						//Invert velocity in the y axis and apply damping
+						glm::vec3 curVel = particles[i].getVel();
+						particles[i].setVel(glm::vec3(curVel.x, -curVel.y, curVel.z));
+						//Apply COR
+						particles[i].setVel(particles[i].getVel()*particles[i].getCor());
+					}
+					//Front
+					if (particlePos.z > cubePos.z + cubeScale[2][2]) {
+						//Move particle back in to plane pos
+						particles[i].setPos(glm::vec3(particlePos.x, particlePos.y, cubePos.z + cubeScale[2][2]));
+						//Invert velocity in the y axis and apply damping
+						glm::vec3 curVel = particles[i].getVel();
+						particles[i].setVel(glm::vec3(curVel.x, curVel.y, -curVel.z));
+						//Apply COR
+						particles[i].setVel(particles[i].getVel()*particles[i].getCor());
+					}
+					//Back
+					if (particlePos.z < cubePos.z - cubeScale[2][2]) {
+						//Move particle back in to plane pos
+						particles[i].setPos(glm::vec3(particlePos.x, particlePos.y, cubePos.z - cubeScale[2][2]));
+						//Invert velocity in the y axis and apply damping
+						glm::vec3 curVel = particles[i].getVel();
+						particles[i].setVel(glm::vec3(curVel.x, curVel.y, -curVel.z));
+						//Apply COR
+						particles[i].setVel(particles[i].getVel()*particles[i].getCor());
 					}
 				}
 			}
@@ -147,7 +197,7 @@ int main()
 
 					// - Collisions -
 					glm::vec3 particlePos = particles[i].getPos();
-					glm::vec3 groundPos = plane.getPos();
+					glm::vec3 groundPos = cube.getPos();
 
 					//Check for collision with ground
 					if (particlePos.y < groundPos.y) {
@@ -177,7 +227,7 @@ int main()
 
 
 			//Create Particles
-			for (int i = 0; i < 15; i++) {
+			for (int i = 0; i < 50; i++) {
 				// Create particle 
 				Particle p = Particle::Particle();
 				// Set Shader
@@ -189,7 +239,8 @@ int main()
 				//Set Random initial velocity values
 				float rndX = -1.0f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (1.0f - -1.0f)));
 				float rndY = -1.0f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (1.0f - -1.0f)));
-				p.setVel(glm::vec3(rndX, rndY * 4, 0.0f));
+				float rndZ = -1.0f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (1.0f - -1.0f)));
+				p.setVel(glm::vec3(rndX * 50, rndY * 40, rndZ * 50));
 
 				//Add particle to collection
 				particles.push_back(p);
@@ -243,7 +294,7 @@ int main()
 
 		//Render Environment Last for transparency
 		// draw groud plane
-		app.draw(plane);
+		app.draw(cube);
 
 
 		app.display();

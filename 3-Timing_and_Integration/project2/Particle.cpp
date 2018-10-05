@@ -10,7 +10,8 @@
 // - No shader allocated by default to avoid creating a shader object for each particle.
 Particle::Particle()
 {
-	setMesh(Mesh::Mesh(Mesh::MeshType::QUAD));
+	//setMesh(Mesh::Mesh(Mesh::MeshType::QUAD));
+	setMesh(Mesh::Mesh(Mesh::MeshType::CUBE));
 	scale(glm::vec3(0.1f, 0.1f, 0.1f));
 	rotate((GLfloat)M_PI_2, glm::vec3(1.0f, 0.0f, 0.0f));
 
