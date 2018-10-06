@@ -42,6 +42,7 @@ glm::vec3 coneTip;
 glm::vec3 coneAxis;
 float coneRad;
 float coneHeight;
+float coneForceScale = 5.0f;
 
 // main function
 int main()
@@ -163,7 +164,7 @@ int main()
 					else {
 						particles[i].getMesh().setShader(redParticle);
 					}
-					force += coneF;
+					force += coneF * coneForceScale;
 
 
 					//Calculate Accelleration
@@ -191,7 +192,7 @@ int main()
 					else {
 						particles[i].getMesh().setShader(redParticle);
 					}
-					force += coneF;
+					force += coneF * coneForceScale;
 
 
 					//Calculate Accelleration
@@ -203,6 +204,16 @@ int main()
 
 					CheckCollisions(particles[i], cube);
 
+				}
+			}
+
+			//Scale force
+			if (mode == 5 || mode == 4) {
+				if (glfwGetKey(app.getWindow(), GLFW_KEY_EQUAL)) {
+					coneForceScale += deltaTime;
+				}
+				if (glfwGetKey(app.getWindow(), GLFW_KEY_MINUS)) {
+					coneForceScale -= deltaTime;
 				}
 			}
 
@@ -465,14 +476,22 @@ glm::vec3 calcConeForce(glm::vec3 pos) {
 		return glm::vec3(0.0f, 0.0f, 0.0f);
 	}
 
-	// - Calculate force magnitude -
 
+	// Get  vector from cone tip to particle position.
+	glm::vec3 tipToPos = pos - coneTip;
+
+	// - Calculate force magnitude based on position within cone -
+	float distance = glm::length(tipToPos);
+	//Find cone slant height
+	float slantHeight = sqrt( pow(coneRad,2) + pow(coneHeight,2) );
+	//Find the distance compared to the slant height of the cone and invert
+	float magScale =  1 - distance / slantHeight;
 
 	// - Calculate force direction -
-	glm::vec3 dir = pos - coneTip;
-	glm::vec3 force = glm::normalize(dir);
+	//Use normalized vector as direction away from tip
+	glm::vec3 force = glm::normalize(tipToPos) * magScale;
 
 
 
-	return force * 5;
+	return force;
 }
