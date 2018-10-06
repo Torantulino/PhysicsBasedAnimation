@@ -438,10 +438,13 @@ void CheckCollisions(Particle &p, Mesh &cube)
 }
 
 glm::vec3 calcConeForce(glm::vec3 pos) {
-	//coneTip = glm::vec3(0.0f, -1.0f, 0.0f);
-	//coneAxis = glm::vec3(0.0f, -1.0f, 0.0f);
-	//coneRad = 4.0f;
-	//coneHeight = 7.0f;
+	// Variables:
+	// coneTip
+	// coneAxis 
+	// coneRad 
+	// coneHeight
+
+	// - Determine position within cone -
 
 	//Calculate the distance along the 'height' of the cone
 	float projToAxis = dot(pos - coneTip, coneAxis);
@@ -462,5 +465,14 @@ glm::vec3 calcConeForce(glm::vec3 pos) {
 		return glm::vec3(0.0f, 0.0f, 0.0f);
 	}
 
-	return glm::vec3(0.0f, 5.0f, 0.0f);
+	// - Calculate force magnitude -
+
+
+	// - Calculate force direction -
+	glm::vec3 dir = pos - coneTip;
+	glm::vec3 force = glm::normalize(dir);
+
+
+
+	return force * 5;
 }
