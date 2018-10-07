@@ -43,6 +43,7 @@ glm::vec3 coneAxis;
 float coneRad;
 float coneHeight;
 float coneForceScale = 5.0f;
+bool firstLoop;
 
 // main function
 int main()
@@ -84,19 +85,19 @@ int main()
 		// Set frame time
 		GLfloat currentTime = (GLfloat) glfwGetTime() - initTime;
 		// the animation can be sped up or slowed down by multiplying currentFrame by a factor. TODO: Add user control of this variable.
-		// currentTime *= 1.0f;
+		//currentTime *= 10.0f;
 		deltaTime = currentTime - lastTime;
 		lastTime = currentTime;
 
 		timeAccumulated += deltaTime;
 
 		//Work off accumulated time
-		while (timeAccumulated >= deltaTime) {
+		while (timeAccumulated >= dt) {
 			/*
 			**	INTERACTION
 			*/
 			// Manage interaction
-			app.doMovement(deltaTime);
+			app.doMovement(dt);
 
 
 			/*
@@ -111,9 +112,9 @@ int main()
 					//Calculate Accelleration
 					particles[i].setAcc(force / particles[i].getMass());
 					//Calculate Current Velocity
-					particles[i].setVel(particles[i].getVel() + deltaTime * particles[i].getAcc());
+					particles[i].setVel(particles[i].getVel() + dt * particles[i].getAcc());
 					//Calculate New Position
-					particles[i].translate(deltaTime * particles[i].getVel());
+					particles[i].translate(dt * particles[i].getVel());
 
 					CheckCollisions(particles[i], cube);
 				}
@@ -130,9 +131,9 @@ int main()
 						particles[i].setAcc(force / particles[i].getMass());
 						//Calculate Current Velocity
 						glm::vec3 prevV = particles[i].getVel();
-						particles[i].setVel(prevV + deltaTime * particles[i].getAcc());
+						particles[i].setVel(prevV + dt * particles[i].getAcc());
 						//Calculate New Position
-						particles[i].translate(deltaTime * prevV);
+						particles[i].translate(dt * prevV);
 					}
 					//Semi-Implicit Euler Integration
 					if (i == 2) {
@@ -141,11 +142,10 @@ int main()
 						//Calculate Accelleration
 						particles[i].setAcc(force / particles[i].getMass());
 						//Calculate Current Velocity
-						particles[i].setVel(particles[i].getVel() + deltaTime * particles[i].getAcc());
+						particles[i].setVel(particles[i].getVel() + dt * particles[i].getAcc());
 						//Calculate New Position
-						particles[i].translate(deltaTime * particles[i].getVel());
+						particles[i].translate(dt * particles[i].getVel());
 					}
-
 
 					// - Collisions -
 					CheckCollisions(particles[i], cube);
@@ -156,26 +156,28 @@ int main()
 					//Calculate Forces
 					glm::vec3 force = particles[i].getMass() * g;
 
-					glm::vec3 coneF = calcConeForce(particles[i].getPos());
-					if (coneF == glm::vec3(0.0f, 0.0f, 0.0f)) {
-						
-						particles[i].getMesh().setShader(blueParticle);
-					}
-					else {
-						particles[i].getMesh().setShader(redParticle);
-					}
-					force += coneF * coneForceScale;
+					if (!firstLoop) {
+						glm::vec3 coneF = calcConeForce(particles[i].getPos());
+						if (coneF == glm::vec3(0.0f, 0.0f, 0.0f)) {
 
+							particles[i].getMesh().setShader(blueParticle);
+						}
+						else {
+							particles[i].getMesh().setShader(redParticle);
+							force += coneF * coneForceScale;
+						}
+					}
 
 					//Calculate Accelleration
 					particles[i].setAcc(force / particles[i].getMass());
 					//Calculate Current Velocity
-					particles[i].setVel(particles[i].getVel() + deltaTime * particles[i].getAcc());
+					particles[i].setVel(particles[i].getVel() + dt * particles[i].getAcc());
 					//Calculate New Position
-					particles[i].translate(deltaTime * particles[i].getVel());
+					particles[i].translate(dt * particles[i].getVel());
 
 					CheckCollisions(particles[i], cube);
 				}
+				firstLoop = false;
 			}
 
 			if (mode == 5 && glfwGetKey(app.getWindow(), GLFW_KEY_LEFT_SHIFT)) {
@@ -191,33 +193,33 @@ int main()
 					}
 					else {
 						particles[i].getMesh().setShader(redParticle);
+						force += coneF * coneForceScale;
 					}
-					force += coneF * coneForceScale;
 
 
 					//Calculate Accelleration
 					particles[i].setAcc(force / particles[i].getMass());
 					//Calculate Current Velocity
-					particles[i].setVel(particles[i].getVel() + deltaTime * particles[i].getAcc());
+					particles[i].setVel(particles[i].getVel() + dt * particles[i].getAcc());
 					//Calculate New Position
-					particles[i].translate(deltaTime * particles[i].getVel());
-
+					particles[i].translate(dt * particles[i].getVel());
+					//Check for collisions with the environment
 					CheckCollisions(particles[i], cube);
-
 				}
+				firstLoop = false;
 			}
 
 			//Scale force
 			if (mode == 5 || mode == 4) {
 				if (glfwGetKey(app.getWindow(), GLFW_KEY_EQUAL)) {
-					coneForceScale += deltaTime;
+					coneForceScale += dt;
 				}
 				if (glfwGetKey(app.getWindow(), GLFW_KEY_MINUS)) {
-					coneForceScale -= deltaTime;
+					coneForceScale -= dt;
 				}
 			}
 
-			timeAccumulated -= deltaTime;
+			timeAccumulated -= dt;
 		}
 
 		// - MODE SWITCHING -
@@ -225,7 +227,6 @@ int main()
 		if (glfwGetKey(app.getWindow(), GLFW_KEY_0)) {
 			mode = 0;
 			particles.clear();
-
 
 			//Create Particles
 			for (int i = 0; i < 50; i++) {
@@ -243,12 +244,11 @@ int main()
 				float rndZ = -1.0f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (1.0f - -1.0f)));
 				p.setVel(glm::vec3(rndX * 50, rndY * 40, rndZ * 50));
 
-
 				//Add particle to collection
 				particles.push_back(p);
 			}
-
 		}
+
 		// 1 - Bouncing Particle in Cube
 		// 3 - Integration Comparison
 		if (glfwGetKey(app.getWindow(), GLFW_KEY_3)) {
@@ -270,7 +270,6 @@ int main()
 			pFU.setCor(1.0f);
 			pSIE.setCor(1.0f);
 
-
 			//Set initial position
 			pRef.setPos(glm::vec3(-0.5f, -8.0f, 0.0f));
 			pFU.setPos(glm::vec3(0.0f, -8.0f, 0.0f));
@@ -286,10 +285,10 @@ int main()
 			//Set mode and clear vectors
 			mode = 4;
 			particles.clear();
-
+			firstLoop = true;
 
 			//Create Particles
-			for (int i = 0; i < 100; i++) {
+			for (int i = 0; i < 1000; i++) {
 				// Create particle 
 				Particle p = Particle::Particle();
 				// Set Shader
@@ -321,7 +320,8 @@ int main()
 			//Set mode and clear vectors
 			mode = 5;
 			particles.clear();
-		
+			firstLoop = true;
+
 			//Create Particles
 			// X
 			for (int x = -5; x < 6; x++) {
@@ -457,7 +457,7 @@ glm::vec3 calcConeForce(glm::vec3 pos) {
 
 	// - Determine position within cone -
 
-	//Calculate the distance along the 'height' of the cone
+	//Calculate the distance along the 'height'/spine of the cone
 	float projToAxis = dot(pos - coneTip, coneAxis);
 	
 	//If 'above' or 'below' cone, force is 0 (outsideb  the cone)
@@ -476,21 +476,19 @@ glm::vec3 calcConeForce(glm::vec3 pos) {
 		return glm::vec3(0.0f, 0.0f, 0.0f);
 	}
 
-
-	// Get  vector from cone tip to particle position.
-	glm::vec3 tipToPos = pos - coneTip;
-
 	// - Calculate force magnitude based on position within cone -
-	float distance = glm::length(tipToPos);
-	//Find cone slant height
-	float slantHeight = sqrt( pow(coneRad,2) + pow(coneHeight,2) );
-	//Find the distance compared to the slant height of the cone and invert
-	float magScale =  1 - distance / slantHeight;
+	//Calculate falloff due to 'height' along spine
+	float hFalloff = 1 - (projToAxis/coneHeight);
+	//Calculate falloff due to radial distance
+	float rFalloff = 1 - (distFromSpine/radAtProj);
+	// Calculate total falloff
+	float tFalloff = hFalloff * rFalloff;
 
 	// - Calculate force direction -
+	//Get vector from cone tip to particle position.
+	glm::vec3 tipToPos = pos - coneTip;
 	//Use normalized vector as direction away from tip
-	glm::vec3 force = glm::normalize(tipToPos) * magScale;
-
+	glm::vec3 force = glm::normalize(tipToPos) * tFalloff;
 
 
 	return force;
