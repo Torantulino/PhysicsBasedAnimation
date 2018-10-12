@@ -111,128 +111,29 @@ int main()
 			//Reset Time
 			timeAccumulated = 0.0f;
 		}
-
-		// 1 - Bouncing Particle in Cube
-		// 3 - Integration Comparison
-		if (glfwGetKey(app.getWindow(), GLFW_KEY_3)) {
-			//Set mode and clear vectors
-			mode = 3;
+		//Spring Test
+		if (glfwGetKey(app.getWindow(), GLFW_KEY_1)) {
+			mode = 1;
 			particles.clear();
 			pause = true;
 
-			// Create particle
-			Particle pRef = Particle::Particle();
-			Particle pFU = Particle::Particle();
-			Particle pSIE = Particle::Particle();
-
+			// Create particles
+			Particle p1 = Particle::Particle();
+			Particle p2 = Particle::Particle();
 			// Set Shader
-			pRef.getMesh().setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
-			pFU.getMesh().setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
-			pSIE.getMesh().setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
-
-			pRef.setCor(1.0f);
-			pFU.setCor(1.0f);
-			pSIE.setCor(1.0f);
+			Shader blue = Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag");
+			p1.getMesh().setShader(blue);
+			p2.getMesh().setShader(blue);
 
 			//Set initial position
-			pRef.setPos(glm::vec3(-0.5f, -8.0f, 0.0f));
-			pFU.setPos(glm::vec3(0.0f, -8.0f, 0.0f));
-			pSIE.setPos(glm::vec3(0.5f, -8.0f, 0.0f));
-
+			p1.setPos(glm::vec3(-2.0f, 10.0f, 0.0f));
+			p2.setPos(glm::vec3(2.0f, 10.0f, 0.0f));
 			//Add particle to collection
-			particles.push_back(pRef);
-			particles.push_back(pFU);
-			particles.push_back(pSIE);
-
-			//Reset Time
-			timeAccumulated = 0.0f;
+			particles.push_back(p1);
+			particles.push_back(p2);
 		}
-		// 4 - Blow Dryer
-		if (glfwGetKey(app.getWindow(), GLFW_KEY_4)) {
-			//Set mode and clear vectors
-			mode = 4;
-			particles.clear();
-			firstLoop = true;
-			pause = true;
 
-			//Create Particles
-			for (int i = 0; i < 1000; i++) {
-				// Create particle 
-				Particle p = Particle::Particle();
-				// Set Shader
-				p.getMesh().setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
-
-				//Set initial position
-				p.setPos(glm::vec3(0.0f, -6.0f, 0.0f));
-
-				//Set Random initial velocity values
-				float rndX = -1.0f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (1.0f - -1.0f)));
-				float rndY = -1.0f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (1.0f - -1.0f)));
-				float rndZ = -1.0f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (1.0f - -1.0f)));
-				p.setVel(glm::vec3(rndX * 5, 0.0f, rndZ * 5));
-
-				p.setCor(0.9f);
-
-				//Add particle to collection
-				particles.push_back(p);
-			}
-
-			//Set Cone properties
-			coneTip = glm::vec3(0.0f, -21.0f, 0.0f);
-			coneAxis = glm::vec3(0.0f, 1.0f, 0.0f);
-			coneRad = 5.0f;
-			coneHeight = 20.0f;
-
-			//Reset Time
-			timeAccumulated = 0.0f;
-		}
-		// 5 - Grid Test
-		if (glfwGetKey(app.getWindow(), GLFW_KEY_5)) {
-			//Set mode and clear vectors
-			mode = 5;
-			particles.clear();
-			firstLoop = true;
-			pause = true;
-
-			//Create Particles
-			// X
-			for (int x = -5; x < 6; x++) {
-				//Z
-				for (int z = -5; z < 6; z++) {
-					//Y
-					for (int y = -5; y < 6; y++) {
-						// Create particle 
-						Particle p = Particle::Particle();
-						// Set Shader
-						p.getMesh().setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
-
-						//Set initial position
-						p.setPos(glm::vec3((float)x*2.0f, (float)y*2.0f, (float)z*2.0f));
-
-						particles.push_back(p);
-					}
-				}
-			}
-
-			//Set Cone properties
-			coneTip = glm::vec3(0.0f, -21.0f, 0.0f);
-			coneAxis = glm::vec3(0.0f, 1.0f, 0.0f);
-			coneRad = 5.0f;
-			coneHeight = 20.0f;
-
-			//Reset Time
- 			timeAccumulated = 0.0f;
-		}
 		// - OTHER USER INTERACTION -
-		//Scale force
-		if (mode == 5 || mode == 4) {
-			if (glfwGetKey(app.getWindow(), GLFW_KEY_EQUAL)) {
-				coneForceScale += timestep;
-			}
-			if (glfwGetKey(app.getWindow(), GLFW_KEY_MINUS)) {
-				coneForceScale -= timestep;
-			}
-		}
 		//Start Simulation
 		if (glfwGetKey(app.getWindow(), GLFW_KEY_SPACE)) {
 			pause = false;
@@ -272,99 +173,28 @@ int main()
 					CheckCollisions(particles[i], cube);
 				}
 			}
-			//Integration Methods Demo
-			if (mode == 3 && !pause) {
-				for (unsigned int i = 0; i < particles.size(); i++) {
-					// - Leave 0 still, simulate 1 and 2 -
-					//Forward Euler Integration
-					if (i == 1) {
-						//Calculate Forces
-						glm::vec3 force = particles[i].getMass() * g;
-						//Calculate Accelleration
-						particles[i].setAcc(force / particles[i].getMass());
-						//Calculate Current Velocity
-						glm::vec3 prevV = particles[i].getVel();
-						particles[i].setVel(prevV + timestep * particles[i].getAcc());
-						//Calculate New Position
-						particles[i].translate(timestep * prevV);
-					}
-					//Semi-Implicit Euler Integration
-					if (i == 2) {
-						//Calculate Forces
-						glm::vec3 force = particles[i].getMass() * g;
-						//Calculate Accelleration
-						particles[i].setAcc(force / particles[i].getMass());
-						//Calculate Current Velocity
-						particles[i].setVel(particles[i].getVel() + timestep * particles[i].getAcc());
-						//Calculate New Position
-						particles[i].translate(timestep * particles[i].getVel());
-					}
+			// 1 - Spring Test -
+			if (mode == 1 && !pause) {
+				//Calculate Forces
+				glm::vec3 force = particles[0].getMass() * g;
+				
+				Hooke hooke;
+				hooke.setB1(particles[0]);
+				hooke.setB2(particles[1]);
+				force += hooke.apply(particles[0].getMass(), particles[0].getPos(), particles[0].getVel());
 
-					// - Collisions -
-					CheckCollisions(particles[i], cube);
-				}
-			}
-			if (mode == 4 && !pause) {
-				for (unsigned int i = 0; i < particles.size(); i++) {
-					//Calculate Forces
-					glm::vec3 force = particles[i].getMass() * g;
+				//Calculate Accelleration
+				particles[0].setAcc(force / particles[0].getMass());
+				//Calculate Current Velocity
+				particles[0].setVel(particles[0].getVel() + timestep * particles[0].getAcc());
+				//Calculate New Position
+				particles[0].translate(timestep * particles[0].getVel());
 
-					if (!firstLoop) {
-						glm::vec3 coneF = calcConeForce(particles[i].getPos());
-						//If outside the cone, colour blue.
-						if (coneF == glm::vec3(0.0f, 0.0f, 0.0f)) {
+				CheckCollisions(particles[0], cube);
 
-							particles[i].getMesh().setShader(blueParticle);
-						}
-						//If inside, colour red.
-						else {
-							particles[i].getMesh().setShader(redParticle);
-							force += coneF * coneForceScale;
-						}
-					}
-
-					//Calculate Accelleration
-					particles[i].setAcc(force / particles[i].getMass());
-					//Calculate Current Velocity
-					particles[i].setVel(particles[i].getVel() + timestep * particles[i].getAcc());
-					//Calculate New Position
-					particles[i].translate(timestep * particles[i].getVel());
-
-					CheckCollisions(particles[i], cube);
-				}
-				firstLoop = false;
 			}
 
-			if (mode == 5 && glfwGetKey(app.getWindow(), GLFW_KEY_LEFT_SHIFT) && !pause) {
-				for (unsigned int i = 0; i < particles.size(); i++) {
-
-					//Calculate Forces
-					glm::vec3 force = particles[i].getMass() * g;
-
-					glm::vec3 coneF = calcConeForce(particles[i].getPos());
-					if (coneF == glm::vec3(0.0f, 0.0f, 0.0f)) {
-
-						particles[i].getMesh().setShader(blueParticle);
-					}
-					else {
-						particles[i].getMesh().setShader(redParticle);
-						force += coneF * coneForceScale;
-					}
-
-
-					//Calculate Accelleration
-					particles[i].setAcc(force / particles[i].getMass());
-					//Calculate Current Velocity
-					particles[i].setVel(particles[i].getVel() + timestep * particles[i].getAcc());
-					//Calculate New Position
-					particles[i].translate(timestep * particles[i].getVel());
-					//Check for collisions with the environment
-					CheckCollisions(particles[i], cube);
-				}
-				firstLoop = false;
-			}
-
-
+			//Remove calculated time from the accumulator
 			timeAccumulated -= timestep;
 		}
 		
@@ -382,13 +212,7 @@ int main()
 
 		}
 
-
-		//- Render Environment Last for transparency -
-		
-//		if (mode == 4 || mode == 5) {
-//			app.draw(cone);
-//		}
-		
+		//- Render Environment Last for transparency -		
 		app.draw(cube);
 		app.display();
 	}
