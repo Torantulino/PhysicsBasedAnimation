@@ -48,3 +48,13 @@ private:
 	float pCrossSecArea = 0.1f;	//Cross sectional area of a particle
 };
 
+// - Hooke's Law -
+class Hooke : public Force {
+public:
+	Hooke() {
+		Hooke(Body* b1, Body* b2, float ks, float kd, float rest) {
+
+		}
+	}
+};
+
