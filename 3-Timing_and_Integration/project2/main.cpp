@@ -36,13 +36,15 @@ std::vector<Particle> particles;
 // Global Properties
 glm::vec3 g = glm::vec3(0.0f, -9.8f, 0.0f);
 
-//other
-unsigned int mode = 10;
+//cone properties
 glm::vec3 coneTip;
 glm::vec3 coneAxis;
 float coneRad;
 float coneHeight;
 float coneForceScale = 5.0f;
+
+//other
+unsigned int mode = 10;
 bool firstLoop;
 bool pause;
 
@@ -59,23 +61,20 @@ int main()
 	// scale up x5
 	cube.scale(glm::vec3(10.0f, 10.0f, 10.0f));
 	//Set Shader
-	Shader transLambert = Shader("resources/shaders/physics.vert", "resources/shaders/physics_transparent.frag");
+	Shader transLambert = Shader("E:/University/Year3_Tri1/Physics_Based_Animation/3-Timing_and_Integration/project2/resources/shaders/physics.vert", "E:/University/Year3_Tri1/Physics_Based_Animation/3-Timing_and_Integration/project2/resources/shaders/physics_transparent.frag");
 	cube.setShader(transLambert);
 
-	Shader blueParticle = Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag");
-	Shader redParticle = Shader("resources/shaders/solid.vert", "resources/shaders/solid_red.frag");
+	Shader blueParticle = Shader("E:/University/Year3_Tri1/Physics_Based_Animation/3-Timing_and_Integration/project2/resources/shaders/solid.vert", "E:/University/Year3_Tri1/Physics_Based_Animation/3-Timing_and_Integration/project2/resources/shaders/solid_blue.frag");
+	Shader redParticle = Shader("E:/University/Year3_Tri1/Physics_Based_Animation/3-Timing_and_Integration/project2/resources/shaders/solid.vert", "E:/University/Year3_Tri1/Physics_Based_Animation/3-Timing_and_Integration/project2/resources/shaders/solid_red.frag");
 
-	/*
 	//Create cone
-	Mesh cone = Mesh::Mesh("resources/models/cone2.obj");
+	//Mesh cone = Mesh::Mesh("resources/models/cone2.obj"); 
 	//Set Shader
-	cone.setShader(transLambert);
-	cone.scale(glm::vec3(3.0f));
-	cone.rotate(-(GLfloat)M_PI_2, glm::vec3(1.0f, 0.0f, 0.0f));
-	*/
+	//cone.setShader(transLambert);
+	//cone.rotate(-(GLfloat)M_PI_2, glm::vec3(1.0f, 0.0f, 0.0f));	
 
 	//// time
-	const GLfloat dt = 0.01f;
+	const GLfloat timestep = 0.01f;
 	GLfloat initTime = (GLfloat)glfwGetTime();
 	GLfloat timeAccumulated = 0.0f;
 
@@ -94,7 +93,7 @@ int main()
 				// Create particle 
 				Particle p = Particle::Particle();
 				// Set Shader
-				p.getMesh().setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
+				p.getMesh().setShader(Shader("E:/University/Year3_Tri1/Physics_Based_Animation/3-Timing_and_Integration/project2/resources/shaders/solid.vert", "E:/University/Year3_Tri1/Physics_Based_Animation/3-Timing_and_Integration/project2/resources/shaders/solid_blue.frag"));
 
 				//Set initial position
 				p.setPos(glm::vec3(0.0f, 10.0f, 0.0f));
@@ -127,9 +126,9 @@ int main()
 			Particle pSIE = Particle::Particle();
 
 			// Set Shader
-			pRef.getMesh().setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
-			pFU.getMesh().setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
-			pSIE.getMesh().setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
+			pRef.getMesh().setShader(Shader("E:/University/Year3_Tri1/Physics_Based_Animation/3-Timing_and_Integration/project2/resources/shaders/solid.vert", "E:/University/Year3_Tri1/Physics_Based_Animation/3-Timing_and_Integration/project2/resources/shaders/solid_blue.frag"));
+			pFU.getMesh().setShader(Shader("E:/University/Year3_Tri1/Physics_Based_Animation/3-Timing_and_Integration/project2/resources/shaders/solid.vert", "E:/University/Year3_Tri1/Physics_Based_Animation/3-Timing_and_Integration/project2/resources/shaders/solid_blue.frag"));
+			pSIE.getMesh().setShader(Shader("E:/University/Year3_Tri1/Physics_Based_Animation/3-Timing_and_Integration/project2/resources/shaders/solid.vert", "E:/University/Year3_Tri1/Physics_Based_Animation/3-Timing_and_Integration/project2/resources/shaders/solid_blue.frag"));
 
 			pRef.setCor(1.0f);
 			pFU.setCor(1.0f);
@@ -161,7 +160,7 @@ int main()
 				// Create particle 
 				Particle p = Particle::Particle();
 				// Set Shader
-				p.getMesh().setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
+				p.getMesh().setShader(Shader("E:/University/Year3_Tri1/Physics_Based_Animation/3-Timing_and_Integration/project2/resources/shaders/solid.vert", "E:/University/Year3_Tri1/Physics_Based_Animation/3-Timing_and_Integration/project2/resources/shaders/solid_blue.frag"));
 
 				//Set initial position
 				p.setPos(glm::vec3(0.0f, -6.0f, 0.0f));
@@ -205,7 +204,7 @@ int main()
 						// Create particle 
 						Particle p = Particle::Particle();
 						// Set Shader
-						p.getMesh().setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
+						p.getMesh().setShader(Shader("E:/University/Year3_Tri1/Physics_Based_Animation/3-Timing_and_Integration/project2/resources/shaders/solid.vert", "E:/University/Year3_Tri1/Physics_Based_Animation/3-Timing_and_Integration/project2/resources/shaders/solid_blue.frag"));
 
 						//Set initial position
 						p.setPos(glm::vec3((float)x*2.0f, (float)y*2.0f, (float)z*2.0f));
@@ -228,10 +227,10 @@ int main()
 		//Scale force
 		if (mode == 5 || mode == 4) {
 			if (glfwGetKey(app.getWindow(), GLFW_KEY_EQUAL)) {
-				coneForceScale += dt;
+				coneForceScale += timestep;
 			}
 			if (glfwGetKey(app.getWindow(), GLFW_KEY_MINUS)) {
-				coneForceScale -= dt;
+				coneForceScale -= timestep;
 			}
 		}
 		//Start Simulation
@@ -243,17 +242,18 @@ int main()
 		// Set frame time
 		GLfloat currentTime = (GLfloat)glfwGetTime() - initTime;
 		// the animation can be sped up or slowed down by multiplying currentFrame by a factor. TODO: Add user control of this variable.
-		//currentTime *= 10.0f;
+		//currentTime *= 0.1f;
 		deltaTime = currentTime - lastTime;
 		lastTime = currentTime;
 
+		//Add deltaTime to accumulator.
 		timeAccumulated += deltaTime;
 
 		//Work off accumulated time
-		while (timeAccumulated >= dt) {
+		while (timeAccumulated >= timestep) {
 			// - CAMERA -
 			// Manage interaction
-			app.doMovement(dt);
+			app.doMovement(timestep);
 
 			// - SIMULATE -
 
@@ -265,9 +265,9 @@ int main()
 					//Calculate Accelleration
 					particles[i].setAcc(force / particles[i].getMass());
 					//Calculate Current Velocity
-					particles[i].setVel(particles[i].getVel() + dt * particles[i].getAcc());
+					particles[i].setVel(particles[i].getVel() + timestep * particles[i].getAcc());
 					//Calculate New Position
-					particles[i].translate(dt * particles[i].getVel());
+					particles[i].translate(timestep * particles[i].getVel());
 
 					CheckCollisions(particles[i], cube);
 				}
@@ -284,9 +284,9 @@ int main()
 						particles[i].setAcc(force / particles[i].getMass());
 						//Calculate Current Velocity
 						glm::vec3 prevV = particles[i].getVel();
-						particles[i].setVel(prevV + dt * particles[i].getAcc());
+						particles[i].setVel(prevV + timestep * particles[i].getAcc());
 						//Calculate New Position
-						particles[i].translate(dt * prevV);
+						particles[i].translate(timestep * prevV);
 					}
 					//Semi-Implicit Euler Integration
 					if (i == 2) {
@@ -295,9 +295,9 @@ int main()
 						//Calculate Accelleration
 						particles[i].setAcc(force / particles[i].getMass());
 						//Calculate Current Velocity
-						particles[i].setVel(particles[i].getVel() + dt * particles[i].getAcc());
+						particles[i].setVel(particles[i].getVel() + timestep * particles[i].getAcc());
 						//Calculate New Position
-						particles[i].translate(dt * particles[i].getVel());
+						particles[i].translate(timestep * particles[i].getVel());
 					}
 
 					// - Collisions -
@@ -311,10 +311,12 @@ int main()
 
 					if (!firstLoop) {
 						glm::vec3 coneF = calcConeForce(particles[i].getPos());
+						//If outside the cone, colour blue.
 						if (coneF == glm::vec3(0.0f, 0.0f, 0.0f)) {
 
 							particles[i].getMesh().setShader(blueParticle);
 						}
+						//If inside, colour red.
 						else {
 							particles[i].getMesh().setShader(redParticle);
 							force += coneF * coneForceScale;
@@ -324,9 +326,9 @@ int main()
 					//Calculate Accelleration
 					particles[i].setAcc(force / particles[i].getMass());
 					//Calculate Current Velocity
-					particles[i].setVel(particles[i].getVel() + dt * particles[i].getAcc());
+					particles[i].setVel(particles[i].getVel() + timestep * particles[i].getAcc());
 					//Calculate New Position
-					particles[i].translate(dt * particles[i].getVel());
+					particles[i].translate(timestep * particles[i].getVel());
 
 					CheckCollisions(particles[i], cube);
 				}
@@ -353,9 +355,9 @@ int main()
 					//Calculate Accelleration
 					particles[i].setAcc(force / particles[i].getMass());
 					//Calculate Current Velocity
-					particles[i].setVel(particles[i].getVel() + dt * particles[i].getAcc());
+					particles[i].setVel(particles[i].getVel() + timestep * particles[i].getAcc());
 					//Calculate New Position
-					particles[i].translate(dt * particles[i].getVel());
+					particles[i].translate(timestep * particles[i].getVel());
 					//Check for collisions with the environment
 					CheckCollisions(particles[i], cube);
 				}
@@ -363,7 +365,7 @@ int main()
 			}
 
 
-			timeAccumulated -= dt;
+			timeAccumulated -= timestep;
 		}
 		
 
@@ -381,12 +383,12 @@ int main()
 		}
 
 
-		//Render Environment Last for transparency
-		/*
-		if (mode == 4) {
-			app.draw(cone);
-		}
-		*/
+		//- Render Environment Last for transparency -
+		
+//		if (mode == 4 || mode == 5) {
+//			app.draw(cone);
+//		}
+		
 		app.draw(cube);
 		app.display();
 	}
@@ -396,6 +398,7 @@ int main()
 	return EXIT_SUCCESS;
 }
 
+//Check for particle collisions with a bouding cube.
 void CheckCollisions(Particle &p, Mesh &cube)
 {
 	glm::vec3 particlePos = p.getPos();
@@ -465,6 +468,7 @@ void CheckCollisions(Particle &p, Mesh &cube)
 	}
 }
 
+//Calculate the force excerted on a particle at pos by a force cone.
 glm::vec3 calcConeForce(glm::vec3 pos) {
 	// Variables:
 	// coneTip
