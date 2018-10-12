@@ -51,10 +51,26 @@ private:
 // - Hooke's Law -
 class Hooke : public Force {
 public:
-	Hooke() {
-		Hooke(Body* b1, Body* b2, float ks, float kd, float rest) {
-
-		}
+	Hooke() {}
+	Hooke(Body* b1, Body* b2, float ks, float kd, float rest) {
+		m_ks = ks; m_kd = kd; m_rest = rest; m_b1 = b1; m_b2 = b2;
 	}
+
+	//Getters
+	Body* getB1() { return m_b1; }
+	//Setters
+	void setB1(Body* b) { m_b1 = b; }
+	void setB2(Body* b) { m_b2 = b; }
+
+	//Apply force
+	glm::vec3 apply(float mass, const glm::vec3 &pos, const glm::vec3 &vel);
+
+private:
+	float m_ks;		//Spring stiffness
+	float m_kd;		//Damping coefficent
+	float m_rest;	//Spring rest length
+
+	Body* m_b1;	//Pointer to the body connected to one extremity of the spring
+	Body* m_b2;	//Pointer to the body connected to the other extremity
 };
 

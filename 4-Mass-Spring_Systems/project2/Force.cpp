@@ -1,5 +1,5 @@
 #include "Force.h"
-
+#include "Body.h"
 
 
 Force::Force()
@@ -29,4 +29,17 @@ glm::vec3 Gravity::apply(float mass, const glm::vec3 &pos, const glm::vec3 &vel)
 //Returns the force due to drag on a body
 glm::vec3 Drag::apply(float mass, const glm::vec3 &pos, const glm::vec3 &vel) {
 	glm::vec3 Faero = (airDensity * pow(length(vel), 2) *  Cd * pCrossSecArea * -glm::normalize(vel)) / 2.0f;
+}
+
+// - Hooke's Law -
+//Returns the 
+glm::vec3 Hooke::apply(float mass, const glm::vec3 &pos, const glm::vec3 &vel) {
+	//Get distance between the two bodies
+	float curDist = length(m_b1->getPos() - m_b2->getPos());
+
+	//Find the spring's displacement from rest position
+	float displacement = curDist - m_rest;
+
+	float f = m_ks * displacement;
+	glm::vec3 Fspring = glm::normalize(m_b2->getPos() - m_b1->getPos()) * f;
 }
