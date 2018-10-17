@@ -176,6 +176,42 @@ int main()
 			}
 		}
 
+		// 3 - Chain of 10 particles fixed at either end
+		if (glfwGetKey(app.getWindow(), GLFW_KEY_3)) {
+			//Set properties and reset
+			mode = 3;
+			particles.clear();
+			pause = true;
+			hooke.setRest(1.0f);
+			hooke.setStiffness(0.0f);
+			hooke.setDamping(1.0f);
+
+			//Create Shaders
+			Shader blue = Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag");
+			Shader red = Shader("resources/shaders/solid.vert", "resources/shaders/solid_red.frag");
+
+			// Create particles
+			for (unsigned int i = 0; i < 10; i++) {
+				// Create new particle
+				Particle p = Particle::Particle();
+				//First particle
+				if (i == 0 || i ==9) {
+					// Set blue Shader
+					p.getMesh().setShader(blue);
+				}
+				//Other Particles
+				else {
+					// Set red Shader
+					p.getMesh().setShader(red);
+				}
+				//Set initial position
+				p.setPos(glm::vec3(-4.0f + i, 10.0f, 0.0f));
+				//Add particle to collection
+				particles.push_back(p);
+			}
+		}
+
+
 		// - OTHER USER INTERACTION -
 		//Start Simulation
 		if (glfwGetKey(app.getWindow(), GLFW_KEY_SPACE)) {
@@ -268,6 +304,41 @@ int main()
 						particles[i].translate(timestep * particles[i].getVel());
 						//Check for collisions with the bounding box
 						CheckCollisions(particles[i], cube);
+					}
+				}
+			}
+
+			// 3 - Chain of 10 particles fixed at either end
+			if (mode == 3 && !pause) {
+				for (unsigned int i = 0; i < particles.size(); i++) {
+					//Simulate all but the first particle
+					if (i != 0) {
+						//Calculate Forces
+						glm::vec3 force = glm::vec3(0.0f, 0.0f, 0.0f);
+						//Get references to bodies of the current and previous particles and set for calculation
+						Body b1 = (Body)particles[i];
+						Body b2 = (Body)particles[i - 1];
+						hooke.setB1(&b1);
+						hooke.setB2(&b2);
+
+						//Calculate spring force
+						force += hooke.apply(particles[i].getMass(), particles[i].getPos(), particles[i].getVel());
+						//Calculate Gravity
+						force += gravity.apply(particles[i].getMass(), particles[i].getPos(), particles[i].getVel());
+						//Calculate Accelleration
+						particles[i].setAcc(force / particles[i].getMass());
+						particles[i - 1].setAcc(-force / particles[i - 1].getMass());
+						if (i != 1) {
+							//Calculate Current Velocity
+							particles[i - 1].setVel(particles[i - 1].getVel() + timestep * particles[i - 1].getAcc());
+						}
+						if (i != 9) {
+							particles[i].setVel(particles[i].getVel() + timestep * particles[i].getAcc());
+							//Calculate New Position
+							particles[i].translate(timestep * particles[i].getVel());
+							//Check for collisions with the bounding box
+							CheckCollisions(particles[i], cube);
+						}
 					}
 				}
 			}
