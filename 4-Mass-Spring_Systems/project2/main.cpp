@@ -48,6 +48,7 @@ unsigned int mode = 10;
 bool firstLoop;
 bool pause;
 
+
 //Force
 Hooke hooke;
 Gravity gravity;
@@ -115,7 +116,7 @@ int main()
 			//Reset Time
 			timeAccumulated = 0.0f;
 		}
-		//Spring Test
+		// 1 - Spring Test
 		if (glfwGetKey(app.getWindow(), GLFW_KEY_1)) {
 			mode = 1;
 			particles.clear();
@@ -139,6 +140,40 @@ int main()
 			//Add particle to collection
 			particles.push_back(p1);
 			particles.push_back(p2);
+		}
+		// 2 - Spring Chain of 5 Particles
+		if (glfwGetKey(app.getWindow(), GLFW_KEY_2)) {
+			//Set properties and reset
+			mode = 2;
+			particles.clear();
+			pause = true;
+			hooke.setRest(0.5f);
+			hooke.setStiffness(1.0f);
+			hooke.setDamping(1.0f);
+
+			//Create Shaders
+			Shader blue = Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag");
+			Shader red = Shader("resources/shaders/solid.vert", "resources/shaders/solid_red.frag");
+
+			// Create particles
+			for (unsigned int i = 0; i < 5; i++) {
+				// Create new particle
+				Particle p = Particle::Particle();
+				//First particle
+				if (i == 0) {
+					// Set blue Shader
+					p.getMesh().setShader(blue);
+				}
+				//Other Particles
+				else {
+					// Set red Shader
+					p.getMesh().setShader(red);
+				}
+				//Set initial position
+				p.setPos(glm::vec3(0.0f - i, 10.0f, 0.0f));
+				//Add particle to collection
+				particles.push_back(p);
+			}
 		}
 
 		// - OTHER USER INTERACTION -
@@ -181,7 +216,8 @@ int main()
 					CheckCollisions(particles[i], cube);
 				}
 			}
-			// 1 - Spring Test -
+
+			// 1 - Particle Pair Spring Test -
 			if (mode == 1 && !pause) {
 				//Calculate Forces
 				glm::vec3 force = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -200,8 +236,38 @@ int main()
 				particles[0].setVel(particles[0].getVel() + timestep * particles[0].getAcc());
 				//Calculate New Position
 				particles[0].translate(timestep * particles[0].getVel());
-
+				//Check for collisions with the bounding box
 				CheckCollisions(particles[0], cube);
+			}
+
+			// 2 - Chain of 5 Particles connected by Springs -
+			if (mode == 2 && !pause) {
+				//For each particle in collection
+				for (unsigned int i = 0; i < particles.size(); i++) {
+					//Simulate all but the first particle
+					if (i != 0) {
+						//Calculate Forces
+						glm::vec3 force = glm::vec3(0.0f, 0.0f, 0.0f);
+						//Get references to bodies of the current and previous particles and set for calculation
+						Body b1 = (Body)particles[i];
+						Body b2 = (Body)particles[i - 1];
+						hooke.setB1(&b1);
+						hooke.setB2(&b2);
+
+						//Calculate spring force
+						force += hooke.apply(particles[i].getMass(), particles[i].getPos(), particles[i].getVel());
+						//Calculate Gravity
+						force += gravity.apply(particles[i].getMass(), particles[i].getPos(), particles[i].getVel());
+						//Calculate Accelleration
+						particles[i].setAcc(force / particles[i].getMass());
+						//Calculate Current Velocity
+						particles[i].setVel(particles[i].getVel() + timestep * particles[i].getAcc());
+						//Calculate New Position
+						particles[i].translate(timestep * particles[i].getVel());
+						//Check for collisions with the bounding box
+						CheckCollisions(particles[i], cube);
+					}
+				}
 			}
 
 			//Remove calculated time from the accumulator
