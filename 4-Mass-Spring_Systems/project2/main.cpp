@@ -183,8 +183,8 @@ int main()
 			particles.clear();
 			pause = true;
 			hooke.setRest(1.0f);
-			hooke.setStiffness(0.0f);
-			hooke.setDamping(1.0f);
+			hooke.setStiffness(2.0f);
+			hooke.setDamping(0.2f);
 
 			//Create Shaders
 			Shader blue = Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag");
@@ -311,10 +311,14 @@ int main()
 			// 3 - Chain of 10 particles fixed at either end
 			if (mode == 3 && !pause) {
 				for (unsigned int i = 0; i < particles.size(); i++) {
-					//Simulate all but the first particle
-					if (i != 0) {
+					//For all but the extremities
+					if (i > 0 && i < particles.size()-1) {
 						//Calculate Forces
 						glm::vec3 force = glm::vec3(0.0f, 0.0f, 0.0f);
+						//Calculate Gravity
+						force += gravity.apply(particles[i].getMass(), particles[i].getPos(), particles[i].getVel());
+
+						// - HOOKE WITH PREVIOUS -
 						//Get references to bodies of the current and previous particles and set for calculation
 						Body b1 = (Body)particles[i];
 						Body b2 = (Body)particles[i - 1];
@@ -323,22 +327,26 @@ int main()
 
 						//Calculate spring force
 						force += hooke.apply(particles[i].getMass(), particles[i].getPos(), particles[i].getVel());
-						//Calculate Gravity
-						force += gravity.apply(particles[i].getMass(), particles[i].getPos(), particles[i].getVel());
+
+						// - HOOKE WITH NEXT -
+						//Get references to bodies of the current and previous particles and set for calculation
+						Body b3 = (Body)particles[i + 1];
+						hooke.setB2(&b3);
+
+						//Calculate spring force
+						force += hooke.apply(particles[i].getMass(), particles[i].getPos(), particles[i].getVel());
+
 						//Calculate Accelleration
 						particles[i].setAcc(force / particles[i].getMass());
-						particles[i - 1].setAcc(-force / particles[i - 1].getMass());
-						if (i != 1) {
-							//Calculate Current Velocity
-							particles[i - 1].setVel(particles[i - 1].getVel() + timestep * particles[i - 1].getAcc());
-						}
-						if (i != 9) {
-							particles[i].setVel(particles[i].getVel() + timestep * particles[i].getAcc());
-							//Calculate New Position
-							particles[i].translate(timestep * particles[i].getVel());
-							//Check for collisions with the bounding box
-							CheckCollisions(particles[i], cube);
-						}
+
+						//Calculate Current Velocity
+						particles[i].setVel(particles[i].getVel() + timestep * particles[i].getAcc());
+
+						//Calculate New Position
+						particles[i].translate(timestep * particles[i].getVel());
+
+						//Check for collisions with the bounding box
+						CheckCollisions(particles[i], cube);
 					}
 				}
 			}
