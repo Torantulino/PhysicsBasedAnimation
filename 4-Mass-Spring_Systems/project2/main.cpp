@@ -194,8 +194,8 @@ int main()
 			for (unsigned int i = 0; i < 10; i++) {
 				// Create new particle
 				Particle p = Particle::Particle();
-				//First particle
-				if (i == 0 || i ==9) {
+				//First and last particles
+				if (i == 0 || i == 9) {
 					// Set blue Shader
 					p.getMesh().setShader(blue);
 				}
@@ -210,6 +210,42 @@ int main()
 				particles.push_back(p);
 			}
 		}
+
+		// 4 - Chain of 10 particles fixed at either end with plane collision (Uses same simulator as 3)
+		if (glfwGetKey(app.getWindow(), GLFW_KEY_4)) {
+			//Set properties and reset
+			mode = 3;
+			particles.clear();
+			pause = true;
+			hooke.setRest(1.0f);
+			hooke.setStiffness(2.0f);
+			hooke.setDamping(0.2f);
+
+			//Create Shaders
+			Shader blue = Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag");
+			Shader red = Shader("resources/shaders/solid.vert", "resources/shaders/solid_red.frag");
+
+			// Create particles
+			for (unsigned int i = 0; i < 10; i++) {
+				// Create new particle
+				Particle p = Particle::Particle();
+				//First and last particles
+				if (i == 0 || i == 9) {
+					// Set blue Shader
+					p.getMesh().setShader(blue);
+				}
+				//Other Particles
+				else {
+					// Set red Shader
+					p.getMesh().setShader(red);
+				}
+				//Set initial position
+				p.setPos(glm::vec3(-4.0f + i, -4.0f, 0.0f));
+				//Add particle to collection
+				particles.push_back(p);
+			}
+		}
+
 
 
 		// - OTHER USER INTERACTION -
