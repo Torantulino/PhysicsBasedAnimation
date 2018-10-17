@@ -50,6 +50,7 @@ bool pause;
 
 //Force
 Hooke hooke;
+Gravity gravity;
 
 // main function
 int main()
@@ -121,6 +122,7 @@ int main()
 			pause = true;
 			hooke.setRest(0.5f);
 			hooke.setStiffness(1.0f);
+			hooke.setDamping(1.0f);
 
 			// Create particles
 			Particle p1 = Particle::Particle();
@@ -183,13 +185,15 @@ int main()
 			if (mode == 1 && !pause) {
 				//Calculate Forces
 				glm::vec3 force = glm::vec3(0.0f, 0.0f, 0.0f);
-				
+				//Get references to bodies of each particle and set for calculation
 				Body b1 = (Body)particles[0];
 				Body b2 = (Body)particles[1];
 				hooke.setB1(&b1);
 				hooke.setB2(&b2);
+				//Calculate spring force
 				force += hooke.apply(particles[0].getMass(), particles[0].getPos(), particles[0].getVel());
-
+				//Calculate Gravity
+				force += gravity.apply(particles[0].getMass(), particles[0].getPos(), particles[0].getVel());
 				//Calculate Accelleration
 				particles[0].setAcc(force / particles[0].getMass());
 				//Calculate Current Velocity
