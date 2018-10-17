@@ -147,7 +147,7 @@ int main()
 			mode = 2;
 			particles.clear();
 			pause = true;
-			hooke.setRest(0.5f);
+			hooke.setRest(1.0f);
 			hooke.setStiffness(1.0f);
 			hooke.setDamping(1.0f);
 
@@ -260,8 +260,10 @@ int main()
 						force += gravity.apply(particles[i].getMass(), particles[i].getPos(), particles[i].getVel());
 						//Calculate Accelleration
 						particles[i].setAcc(force / particles[i].getMass());
+						particles[i - 1].setAcc(-force/ particles[i - 1].getMass());
 						//Calculate Current Velocity
 						particles[i].setVel(particles[i].getVel() + timestep * particles[i].getAcc());
+						particles[i - 1].setVel(particles[i - 1].getVel() + timestep * particles[i - 1].getAcc());
 						//Calculate New Position
 						particles[i].translate(timestep * particles[i].getVel());
 						//Check for collisions with the bounding box
