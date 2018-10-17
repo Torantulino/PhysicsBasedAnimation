@@ -61,6 +61,9 @@ public:
 	//Setters
 	void setB1(Body* b) { m_b1 = b; }
 	void setB2(Body* b) { m_b2 = b; }
+	void setRest(float rest) { m_rest = rest; }
+	void setStiffness(float stiff) { m_ks = stiff; }
+	void setDamping(float damp) { m_kd = damp; }
 
 	//Apply force
 	glm::vec3 apply(float mass, const glm::vec3 &pos, const glm::vec3 &vel);

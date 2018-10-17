@@ -23,12 +23,14 @@ glm::vec3 Force::apply(float mass, const glm::vec3 &pos, const glm::vec3 &vel) {
 glm::vec3 Gravity::apply(float mass, const glm::vec3 &pos, const glm::vec3 &vel) {
 	//F = ma
 	glm::vec3 Fg = mass * m_gravity;
+	return Fg;
 }
 
 // - Drag -
 //Returns the force due to drag on a body
 glm::vec3 Drag::apply(float mass, const glm::vec3 &pos, const glm::vec3 &vel) {
 	glm::vec3 Faero = (airDensity * pow(length(vel), 2) *  Cd * pCrossSecArea * -glm::normalize(vel)) / 2.0f;
+	return Faero;
 }
 
 // - Hooke's Law -
@@ -42,4 +44,5 @@ glm::vec3 Hooke::apply(float mass, const glm::vec3 &pos, const glm::vec3 &vel) {
 
 	float f = m_ks * displacement;
 	glm::vec3 Fspring = glm::normalize(m_b2->getPos() - m_b1->getPos()) * f;
+	return Fspring;
 }

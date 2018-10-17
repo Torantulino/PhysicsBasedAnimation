@@ -48,6 +48,9 @@ unsigned int mode = 10;
 bool firstLoop;
 bool pause;
 
+//Force
+Hooke hooke;
+
 // main function
 int main()
 {
@@ -116,13 +119,16 @@ int main()
 			mode = 1;
 			particles.clear();
 			pause = true;
+			hooke.setRest(0.5f);
+			hooke.setStiffness(1.0f);
 
 			// Create particles
 			Particle p1 = Particle::Particle();
 			Particle p2 = Particle::Particle();
 			// Set Shader
 			Shader blue = Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag");
-			p1.getMesh().setShader(blue);
+			Shader red = Shader("resources/shaders/solid.vert", "resources/shaders/solid_red.frag");
+			p1.getMesh().setShader(red);
 			p2.getMesh().setShader(blue);
 
 			//Set initial position
@@ -176,11 +182,12 @@ int main()
 			// 1 - Spring Test -
 			if (mode == 1 && !pause) {
 				//Calculate Forces
-				glm::vec3 force = particles[0].getMass() * g;
+				glm::vec3 force = glm::vec3(0.0f, 0.0f, 0.0f);
 				
-				Hooke hooke;
-				hooke.setB1(particles[0]);
-				hooke.setB2(particles[1]);
+				Body b1 = (Body)particles[0];
+				Body b2 = (Body)particles[1];
+				hooke.setB1(&b1);
+				hooke.setB2(&b2);
 				force += hooke.apply(particles[0].getMass(), particles[0].getPos(), particles[0].getVel());
 
 				//Calculate Accelleration
@@ -191,7 +198,6 @@ int main()
 				particles[0].translate(timestep * particles[0].getVel());
 
 				CheckCollisions(particles[0], cube);
-
 			}
 
 			//Remove calculated time from the accumulator
