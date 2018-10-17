@@ -71,7 +71,7 @@ int main()
 	cube.setShader(transLambert);
 
 	//// time
-	const GLfloat timestep = 0.01f;
+	const GLfloat timestep = 0.005f;
 	GLfloat initTime = (GLfloat)glfwGetTime();
 	GLfloat timeAccumulated = 0.0f;
 
@@ -271,7 +271,7 @@ int main()
 					}
 					//Set position
 					p.setPos(glm::vec3(5.0f-i, 0.0f, 5.0f-j));
-					p.setMass(0.10f);
+					p.setMass(0.01f);
 					//Add to collection
 					ps.push_back(p);
 				}
