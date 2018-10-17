@@ -32,6 +32,7 @@ GLfloat lastTime = 0.0f;
 
 // Physics Objects
 std::vector<Particle> particles;
+std::vector < std::vector<Particle> > particles2D;
 
 // Global Properties
 glm::vec3 g = glm::vec3(0.0f, -9.8f, 0.0f);
@@ -68,15 +69,6 @@ int main()
 	//Set Shader
 	Shader transLambert = Shader("resources/shaders/physics.vert", "resources/shaders/physics_transparent.frag");
 	cube.setShader(transLambert);
-
-	Shader blueParticle = Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag");
-	Shader redParticle = Shader("resources/shaders/solid.vert", "resources/shaders/solid_red.frag");
-
-	//Create cone
-	//Mesh cone = Mesh::Mesh("resources/models/cone2.obj"); 
-	//Set Shader
-	//cone.setShader(transLambert);
-	//cone.rotate(-(GLfloat)M_PI_2, glm::vec3(1.0f, 0.0f, 0.0f));	
 
 	//// time
 	const GLfloat timestep = 0.01f;
@@ -175,7 +167,6 @@ int main()
 				particles.push_back(p);
 			}
 		}
-
 		// 3 - Chain of 10 particles fixed at either end
 		if (glfwGetKey(app.getWindow(), GLFW_KEY_3)) {
 			//Set properties and reset
@@ -210,7 +201,6 @@ int main()
 				particles.push_back(p);
 			}
 		}
-
 		// 4 - Chain of 10 particles fixed at either end with plane collision (Uses same simulator as 3)
 		if (glfwGetKey(app.getWindow(), GLFW_KEY_4)) {
 			//Set properties and reset
@@ -245,7 +235,42 @@ int main()
 				particles.push_back(p);
 			}
 		}
+		// 5 - Cloth Simulation 1 - Square with fixed corners
+		if (glfwGetKey(app.getWindow(), GLFW_KEY_5)) {
+			//Set properties and reset
+			mode = 5;
+			particles.clear();
+			pause = true;
+			hooke.setRest(1.0f);
+			hooke.setStiffness(2.0f);
+			hooke.setDamping(0.2f);
 
+			//Create Shaders
+			Shader blue = Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag");
+			Shader red = Shader("resources/shaders/solid.vert", "resources/shaders/solid_red.frag");
+
+			//Create 2d Particle grid
+			for (unsigned int i = 0; i < 10; i++) {
+				std::vector<Particle> ps;
+				for (unsigned int j = 0; j < 10; j++) {
+					// Create new particle
+					Particle p = Particle::Particle();
+					//Set corners to blue
+					if (i == 0 && j == 0 || i == 9 && j == 0 || i == 0 && j == 9 || i == 9 && j == 9) {
+						p.getMesh().setShader(blue);
+					}
+					//Set rest to red
+					else {
+						p.getMesh().setShader(red);
+					}
+					//Set position
+					p.setPos(glm::vec3(5.0f-i, 0.0f, 5.0f-j));
+					//Add to collection
+					ps.push_back(p);
+				}
+				particles2D.push_back(ps);
+			}
+		}
 
 
 		// - OTHER USER INTERACTION -
@@ -403,6 +428,11 @@ int main()
 		{
 			app.draw(p.getMesh());
 
+		}
+		for each (std::vector<Particle> vp in particles2D) {
+			for each (Particle p in vp) {
+				app.draw(p.getMesh());
+			}
 		}
 
 		//- Render Environment Last for transparency -		
