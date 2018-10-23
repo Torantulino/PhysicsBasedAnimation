@@ -475,6 +475,9 @@ int main()
 								force += hooke.apply(particles2D[i][j].getMass(), particles2D[i][j].getPos(), particles2D[i][j].getVel());
 							}
 
+							//Apply Drag force
+							force += particles2D[i][j].getVel()* -0.01f;
+
 							//Calculate Accelleration
 							particles2D[i][j].setAcc(force / particles2D[i][j].getMass());
 
@@ -506,7 +509,6 @@ int main()
 		for each (Particle p in particles)
 		{
 			app.draw(p.getMesh());
-
 		}
 		for each (std::vector<Particle> vp in particles2D) {
 			for each (Particle p in vp) {
