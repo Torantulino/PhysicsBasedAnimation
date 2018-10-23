@@ -18,6 +18,7 @@ Particle::Particle()
 	// Set Dynamic Variables
 	setAcc(glm::vec3(0.0f, 0.0f, 0.0f));
 	setVel(glm::vec3(0.0f, 0.0f, 0.0f));
+	setPrevAcc(glm::vec3(0.0f, 0.0f, 0.0f));
 
 	// Physical Properties
 	setMass(0.1f);

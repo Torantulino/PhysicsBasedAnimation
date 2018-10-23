@@ -247,7 +247,7 @@ int main()
 			particles.clear();
 			particles2D.clear();
 			pause = true;
-			hooke.setRest(0.5f);
+			hooke.setRest(1.0f);
 			hooke.setStiffness(0.5f);
 			hooke.setDamping(0.5f);
 
@@ -278,6 +278,44 @@ int main()
 				particles2D.push_back(ps);
 			}
 		}
+		// 6 - Cloth Simulation 1 - Square with fixed corners (VELOCITY VERLET)
+		if (glfwGetKey(app.getWindow(), GLFW_KEY_6)) {
+			//Set properties and reset
+			mode = 6;
+			particles.clear();
+			particles2D.clear();
+			pause = true;
+			hooke.setRest(1.0f);
+			hooke.setStiffness(0.5f);
+			hooke.setDamping(0.5f);
+
+			//Create Shaders
+			Shader blue = Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag");
+			Shader red = Shader("resources/shaders/solid.vert", "resources/shaders/solid_red.frag");
+
+			//Create 2d Particle grid
+			for (unsigned int i = 0; i < 10; i++) {
+				std::vector<Particle> ps;
+				for (unsigned int j = 0; j < 10; j++) {
+					// Create new particle
+					Particle p = Particle::Particle();
+					//Set corners to blue
+					if (i == 0 && j == 0 || i == 9 && j == 0 || i == 0 && j == 9 || i == 9 && j == 9) {
+						p.getMesh().setShader(blue);
+					}
+					//Set rest to red
+					else {
+						p.getMesh().setShader(red);
+					}
+					//Set position
+					p.setPos(glm::vec3(5.0f - i, 0.0f, 5.0f - j));
+					p.setMass(0.01f);
+					//Add to collection
+					ps.push_back(p);
+				}
+				particles2D.push_back(ps);
+			}
+		}
 
 
 		// - OTHER USER INTERACTION -
@@ -298,7 +336,7 @@ int main()
 		timeAccumulated += deltaTime;
 
 		//Work off accumulated time
-		while (timeAccumulated >= timestep) {
+		while (timeAccumulated >= timestep) { 
 			// - CAMERA -
 			// Manage interaction
 			app.doMovement(timestep);
@@ -479,48 +517,48 @@ int main()
 
 							// - DIAGONAL CONNECTIONS - (CAUSING EXPLOSION)
 
-							//// - ALL BUT BACK OR RIGHT EDGES- 
-							//if (j != particles2D[i].size() - 1 && i != particles2D.size() - 1) {
-							//	//Set references to other body
-							//	Body b2 = (Body)particles2D[i + 1][j + 1];
-							//	hooke.setB2(&b2);
+							// - ALL BUT BACK OR RIGHT EDGES- 
+							if (j != particles2D[i].size() - 1 && i != particles2D.size() - 1) {
+								//Set references to other body
+								Body b2 = (Body)particles2D[i + 1][j + 1];
+								hooke.setB2(&b2);
 
-							//	//Calculate spring force
-							//	force += hooke.apply(particles2D[i][j].getMass(), particles2D[i][j].getPos(), particles2D[i][j].getVel());
+								//Calculate spring force
+								force += hooke.apply(particles2D[i][j].getMass(), particles2D[i][j].getPos(), particles2D[i][j].getVel());
 
-							//}
+							}
 
-							//// - ALL BUT FRONT OR RIGHT EDGES- 
-							//if (j != 0 && i != particles2D.size() - 1) {
-							//	//Set references to other body
-							//	Body b2 = (Body)particles2D[i + 1][j - 1];
-							//	hooke.setB2(&b2);
+							// - ALL BUT FRONT OR RIGHT EDGES- 
+							if (j != 0 && i != particles2D.size() - 1) {
+								//Set references to other body
+								Body b2 = (Body)particles2D[i + 1][j - 1];
+								hooke.setB2(&b2);
 
-							//	//Calculate spring force
-							//	force += hooke.apply(particles2D[i][j].getMass(), particles2D[i][j].getPos(), particles2D[i][j].getVel());
+								//Calculate spring force
+								force += hooke.apply(particles2D[i][j].getMass(), particles2D[i][j].getPos(), particles2D[i][j].getVel());
 
-							//}
+							}
 
-							//// - ALL BUT FRONT OR LEFT EDGES- 
-							//if (j != 0 && i != 0) {
-							//	//Set references to other body
-							//	Body b2 = (Body)particles2D[i - 1][j - 1];
-							//	hooke.setB2(&b2);
+							// - ALL BUT FRONT OR LEFT EDGES- 
+							if (j != 0 && i != 0) {
+								//Set references to other body
+								Body b2 = (Body)particles2D[i - 1][j - 1];
+								hooke.setB2(&b2);
 
-							//	//Calculate spring force
-							//	force += hooke.apply(particles2D[i][j].getMass(), particles2D[i][j].getPos(), particles2D[i][j].getVel());
+								//Calculate spring force
+								force += hooke.apply(particles2D[i][j].getMass(), particles2D[i][j].getPos(), particles2D[i][j].getVel());
 
-							//}
+							}
 
-							//// - ALL BUT BACK OR LEFT EDGES- 
-							//if (j != particles2D[i].size() - 1 && i != 0) {
-							//	//Set references to other body
-							//	Body b2 = (Body)particles2D[i - 1][j + 1];
-							//	hooke.setB2(&b2);
+							// - ALL BUT BACK OR LEFT EDGES- 
+							if (j != particles2D[i].size() - 1 && i != 0) {
+								//Set references to other body
+								Body b2 = (Body)particles2D[i - 1][j + 1];
+								hooke.setB2(&b2);
 
-							//	//Calculate spring force
-							//	force += hooke.apply(particles2D[i][j].getMass(), particles2D[i][j].getPos(), particles2D[i][j].getVel());
-							//}
+								//Calculate spring force
+								force += hooke.apply(particles2D[i][j].getMass(), particles2D[i][j].getPos(), particles2D[i][j].getVel());
+							}
 
 
 
@@ -543,6 +581,141 @@ int main()
 					}
 				}
 			}
+
+
+			// 6 - Cloth of 100 particles fixed at each corner - (Velocity Verlet)
+			if (mode == 6 && !pause) {
+				for (unsigned int i = 0; i < particles2D.size(); i++) {
+					for (unsigned int j = 0; j < particles2D[i].size(); j++) {
+						//For all but the corners
+						if (!(i == 0 && j == 0) && !(i == particles2D.size() - 1 && j == 0) && !(i == 0 && j == particles2D.size() - 1) && !(i == particles2D.size() - 1 && j == particles2D.size() - 1)) {
+							//Calculate Forces
+							glm::vec3 force = glm::vec3(0.0f, 0.0f, 0.0f);
+							//Calculate Gravity
+							force += gravity.apply(particles2D[i][j].getMass(), particles2D[i][j].getPos(), particles2D[i][j].getVel());
+
+							//Set references to current particle's body
+							Body b1 = (Body)particles2D[i][j];
+							hooke.setB1(&b1);
+
+							// - SIDE CONNECTIONS -
+
+							// - ALL BUT LEFT EDGE -
+							if (i != 0) {
+								//Set references to other body
+								Body b2 = (Body)particles2D[i - 1][j];
+								hooke.setB2(&b2);
+
+								//Calculate spring force
+								force += hooke.apply(particles2D[i][j].getMass(), particles2D[i][j].getPos(), particles2D[i][j].getVel());
+
+							}
+
+							// - ALL BUT RIGHT EDGE -
+							if (i != particles2D.size() - 1) {
+								//Set references to other body
+								Body b2 = (Body)particles2D[i + 1][j];
+								hooke.setB2(&b2);
+
+								//Calculate spring force
+								force += hooke.apply(particles2D[i][j].getMass(), particles2D[i][j].getPos(), particles2D[i][j].getVel());
+							}
+
+							// - ALL BUT FRONT EDGE - 
+							if (j != 0) {
+								//Set references to other body
+								Body b2 = (Body)particles2D[i][j - 1];
+								hooke.setB2(&b2);
+
+								//Calculate spring force
+								force += hooke.apply(particles2D[i][j].getMass(), particles2D[i][j].getPos(), particles2D[i][j].getVel());
+							}
+
+							// - ALL BUT BACK EDGE -
+							if (j != particles2D[i].size() - 1) {
+								//Set references to other body
+								Body b2 = (Body)particles2D[i][j + 1];
+								hooke.setB2(&b2);
+
+								//Calculate spring force
+								force += hooke.apply(particles2D[i][j].getMass(), particles2D[i][j].getPos(), particles2D[i][j].getVel());
+							}
+
+							// - DIAGONAL CONNECTIONS - (CAUSING EXPLOSION)
+
+							// - ALL BUT BACK OR RIGHT EDGES- 
+							if (j != particles2D[i].size() - 1 && i != particles2D.size() - 1) {
+								//Set references to other body
+								Body b2 = (Body)particles2D[i + 1][j + 1];
+								hooke.setB2(&b2);
+
+								//Calculate spring force
+								force += hooke.apply(particles2D[i][j].getMass(), particles2D[i][j].getPos(), particles2D[i][j].getVel());
+
+							}
+
+							// - ALL BUT FRONT OR RIGHT EDGES- 
+							if (j != 0 && i != particles2D.size() - 1) {
+								//Set references to other body
+								Body b2 = (Body)particles2D[i + 1][j - 1];
+								hooke.setB2(&b2);
+
+								//Calculate spring force
+								force += hooke.apply(particles2D[i][j].getMass(), particles2D[i][j].getPos(), particles2D[i][j].getVel());
+
+							}
+
+							// - ALL BUT FRONT OR LEFT EDGES- 
+							if (j != 0 && i != 0) {
+								//Set references to other body
+								Body b2 = (Body)particles2D[i - 1][j - 1];
+								hooke.setB2(&b2);
+
+								//Calculate spring force
+								force += hooke.apply(particles2D[i][j].getMass(), particles2D[i][j].getPos(), particles2D[i][j].getVel());
+
+							}
+
+							// - ALL BUT BACK OR LEFT EDGES- 
+							if (j != particles2D[i].size() - 1 && i != 0) {
+								//Set references to other body
+								Body b2 = (Body)particles2D[i - 1][j + 1];
+								hooke.setB2(&b2);
+
+								//Calculate spring force
+								force += hooke.apply(particles2D[i][j].getMass(), particles2D[i][j].getPos(), particles2D[i][j].getVel());
+							}
+
+							//Apply Drag force
+							force += particles2D[i][j].getVel()* -0.01f;
+
+							// - Velocity Verlet Integration -
+
+							//Set Previous velovity
+							particles2D[i][j].setPrevAcc(particles2D[i][j].getAcc());
+
+							//Calculate New Position
+							particles2D[i][j].translate(particles2D[i][j].getVel() * timestep + (0.5 * particles2D[i][j].getPrevAcc() * pow(timestep, 2)));
+
+							//Calculate New Accelleration
+							particles2D[i][j].setAcc(force / particles2D[i][j].getMass());
+
+							//Calculate Average Accelleration between old and new
+							glm::vec3 Aavg = (particles2D[i][j].getPrevAcc() + particles2D[i][j].getAcc()) / 2;
+
+							//Calculate Current Velocity
+							particles2D[i][j].setVel(particles2D[i][j].getVel() + timestep * Aavg);
+
+							//Check for collisions with the bounding box
+							CheckCollisions(particles2D[i][j], cube);
+						}
+					}
+				}
+			}
+
+
+
+
 			//Remove calculated time from the accumulator
 			timeAccumulated -= timestep;
 		}

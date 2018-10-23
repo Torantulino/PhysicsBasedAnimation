@@ -23,6 +23,7 @@ public:
 	glm::vec3& getVel() { return m_vel; }
 	glm::vec3& getPos() { return m_pos; }
 	std::vector<Force*> getForces() { return m_forces; }
+	glm::vec3& getPrevAcc() { return m_prevAcc; }
 
 	// Physical Properties
 	float getMass() const { return m_mass; }
@@ -38,6 +39,7 @@ public:
 	void setVel(int i, float v) { m_vel[i] = v; }	// Set the ith dimension of the velocity vector
 	void setPos(const glm::vec3 &vect) { m_pos = vect; m_mesh.setPos(vect); }
 	void setPos(int i, float p) { m_pos[i] = p; m_mesh.setPos(i, p); }	// Set the ith coordinate or the position vector
+	void setPrevAcc(const glm::vec3&vect) { m_prevAcc = vect; }
 
 	// Physical Properties
 	void setMass(float mass) { m_mass = mass; }
@@ -73,5 +75,7 @@ private:
 	glm::vec3 m_vel;	// Veloctity
 	glm::vec3 m_pos;	// Position (from mesh)
 	std::vector<Force*> m_forces; //All forces to be applied to this body
+
+	glm::vec3 m_prevAcc;
 };
 
