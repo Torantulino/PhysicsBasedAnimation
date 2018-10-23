@@ -434,6 +434,8 @@ int main()
 							Body b1 = (Body)particles2D[i][j];
 							hooke.setB1(&b1);
 
+							// - SIDE CONNECTIONS -
+
 							// - ALL BUT LEFT EDGE -
 							if (i != 0) {
 								//Set references to other body
@@ -474,6 +476,53 @@ int main()
 								//Calculate spring force
 								force += hooke.apply(particles2D[i][j].getMass(), particles2D[i][j].getPos(), particles2D[i][j].getVel());
 							}
+
+							// - DIAGONAL CONNECTIONS - (CAUSING EXPLOSION)
+
+							//// - ALL BUT BACK OR RIGHT EDGES- 
+							//if (j != particles2D[i].size() - 1 && i != particles2D.size() - 1) {
+							//	//Set references to other body
+							//	Body b2 = (Body)particles2D[i + 1][j + 1];
+							//	hooke.setB2(&b2);
+
+							//	//Calculate spring force
+							//	force += hooke.apply(particles2D[i][j].getMass(), particles2D[i][j].getPos(), particles2D[i][j].getVel());
+
+							//}
+
+							//// - ALL BUT FRONT OR RIGHT EDGES- 
+							//if (j != 0 && i != particles2D.size() - 1) {
+							//	//Set references to other body
+							//	Body b2 = (Body)particles2D[i + 1][j - 1];
+							//	hooke.setB2(&b2);
+
+							//	//Calculate spring force
+							//	force += hooke.apply(particles2D[i][j].getMass(), particles2D[i][j].getPos(), particles2D[i][j].getVel());
+
+							//}
+
+							//// - ALL BUT FRONT OR LEFT EDGES- 
+							//if (j != 0 && i != 0) {
+							//	//Set references to other body
+							//	Body b2 = (Body)particles2D[i - 1][j - 1];
+							//	hooke.setB2(&b2);
+
+							//	//Calculate spring force
+							//	force += hooke.apply(particles2D[i][j].getMass(), particles2D[i][j].getPos(), particles2D[i][j].getVel());
+
+							//}
+
+							//// - ALL BUT BACK OR LEFT EDGES- 
+							//if (j != particles2D[i].size() - 1 && i != 0) {
+							//	//Set references to other body
+							//	Body b2 = (Body)particles2D[i - 1][j + 1];
+							//	hooke.setB2(&b2);
+
+							//	//Calculate spring force
+							//	force += hooke.apply(particles2D[i][j].getMass(), particles2D[i][j].getPos(), particles2D[i][j].getVel());
+							//}
+
+
 
 							//Apply Drag force
 							force += particles2D[i][j].getVel()* -0.01f;
