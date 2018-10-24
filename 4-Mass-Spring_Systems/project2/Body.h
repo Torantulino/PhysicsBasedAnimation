@@ -22,6 +22,7 @@ public:
 	glm::vec3& getAcc() { return m_acc; }
 	glm::vec3& getVel() { return m_vel; }
 	glm::vec3& getPos() { return m_pos; }
+	glm::vec3& getPrevPos() { return m_PrevPos; }
 	std::vector<Force*> getForces() { return m_forces; }
 	glm::vec3& getPrevAcc() { return m_prevAcc; }
 
@@ -39,6 +40,8 @@ public:
 	void setVel(int i, float v) { m_vel[i] = v; }	// Set the ith dimension of the velocity vector
 	void setPos(const glm::vec3 &vect) { m_pos = vect; m_mesh.setPos(vect); }
 	void setPos(int i, float p) { m_pos[i] = p; m_mesh.setPos(i, p); }	// Set the ith coordinate or the position vector
+	void setPrevPos() { m_PrevPos = m_pos; }		// Set previous position
+
 	void setPrevAcc(const glm::vec3&vect) { m_prevAcc = vect; }
 
 	// Physical Properties
@@ -51,13 +54,14 @@ public:
 	void scale(const glm::vec3 &vect);
 
 	// - PHYSICS -
+	//Add force
 	void addForce(Force *f) { m_forces.push_back(f); }
-	//Apply all forces
-	glm::vec3 applyForces(glm::vec3 x, glm::vec3 v, float t, float dt) {
+	//Apply all forces - RETURNS ACCELERATION
+	glm::vec3 applyForces(glm::vec3 pos, glm::vec3 vel, float t, float dt) {
 		glm::vec3 fAccumulator = glm::vec3(0.0f, 0.0f, 0.0f);
 
 		for (auto &f : m_forces) {
-			fAccumulator += f->apply(getMass(), x, v);
+			fAccumulator += f->apply(getMass(), pos, vel);
 		}
 		return fAccumulator / getMass();
 	}
@@ -74,6 +78,7 @@ private:
 	glm::vec3 m_acc;	// Acceleration
 	glm::vec3 m_vel;	// Veloctity
 	glm::vec3 m_pos;	// Position (from mesh)
+	glm::vec3 m_PrevPos;// Previous Position
 	std::vector<Force*> m_forces; //All forces to be applied to this body
 
 	glm::vec3 m_prevAcc;

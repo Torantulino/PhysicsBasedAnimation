@@ -52,7 +52,9 @@ bool pause;
 
 //Force
 Hooke hooke;
-Gravity gravity;
+Gravity gravity = Gravity::Gravity();
+Gravity *grav = new Gravity(glm::vec3(0.0f, -9.8f, 0.0f));
+
 
 // main function
 int main()
@@ -90,6 +92,7 @@ int main()
 			for (int i = 0; i < 50; i++) {
 				// Create particle 
 				Particle p = Particle::Particle();
+
 				// Set Shader
 				p.getMesh().setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
 
@@ -115,9 +118,9 @@ int main()
 			particles.clear();
 			particles2D.clear();
 			pause = true;
-			hooke.setRest(0.5f);
+			hooke.setRest(1.0f);
 			hooke.setStiffness(1.0f);
-			hooke.setDamping(1.0f);
+			hooke.setDamping(0.5f);
 
 			// Create particles
 			Particle p1 = Particle::Particle();
@@ -144,14 +147,14 @@ int main()
 			pause = true;
 			hooke.setRest(1.0f);
 			hooke.setStiffness(1.0f);
-			hooke.setDamping(1.0f);
+			hooke.setDamping(.3f);
 
 			//Create Shaders
 			Shader blue = Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag");
 			Shader red = Shader("resources/shaders/solid.vert", "resources/shaders/solid_red.frag");
 
 			// Create particles
-			for (unsigned int i = 0; i < 5; i++) {
+			for (unsigned int i = 0; i < 2; i++) {
 				// Create new particle
 				Particle p = Particle::Particle();
 				//First particle
@@ -161,11 +164,14 @@ int main()
 				}
 				//Other Particles
 				else {
+					//Add Forces
+					p.addForce(&gravity);
+					p.addForce(&hooke);
 					// Set red Shader
 					p.getMesh().setShader(red);
 				}
 				//Set initial position
-				p.setPos(glm::vec3(0.0f - i, 10.0f, 0.0f));
+				p.setPos(glm::vec3(0.0f, 10.0f - i*1.5f, 0.0f));
 				//Add particle to collection
 				particles.push_back(p);
 			}
@@ -247,7 +253,7 @@ int main()
 			particles.clear();
 			particles2D.clear();
 			pause = true;
-			hooke.setRest(1.0f);
+			hooke.setRest(0.5f);
 			hooke.setStiffness(0.5f);
 			hooke.setDamping(0.5f);
 
@@ -285,9 +291,9 @@ int main()
 			particles.clear();
 			particles2D.clear();
 			pause = true;
-			hooke.setRest(1.0f);
-			hooke.setStiffness(0.5f);
-			hooke.setDamping(0.5f);
+			float rest(1.0f);
+			float stiffness(1.0f);
+			float damping(0.5f);
 
 			//Create Shaders
 			Shader blue = Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag");
@@ -305,6 +311,7 @@ int main()
 					}
 					//Set rest to red
 					else {
+						//Colour current particle red
 						p.getMesh().setShader(red);
 					}
 					//Set position
@@ -314,6 +321,83 @@ int main()
 					ps.push_back(p);
 				}
 				particles2D.push_back(ps);
+			}
+
+			//Add forces
+			for (unsigned int i = 0; i < particles2D.size(); i++) {
+				for (unsigned int j = 0; j < particles2D[i].size(); j++) {
+					//For all but the corners
+					if (!(i == 0 && j == 0) && !(i == particles2D.size() - 1 && j == 0) && !(i == 0 && j == particles2D.size() - 1) && !(i == particles2D.size() - 1 && j == particles2D.size() - 1)) {
+
+						//Set references to current particle's body
+						Body b1 = (Body)particles2D[i][j];
+						hooke.setB1(&b1);
+
+						//Gravity Force
+						particles2D[i][j].addForce(grav);
+
+						//Hooke Forces
+						// - SIDE CONNECTIONS -
+
+						// - ALL BUT LEFT EDGE -
+						if (i != 0) {
+							//Add Hooke force to Body
+							Hooke *h = new Hooke(&particles2D[i][j], &particles2D[i - 1][j], stiffness, damping, rest);
+							particles2D[i][j].addForce(h);
+						}
+
+						// - ALL BUT RIGHT EDGE -
+						if (i != particles2D.size() - 1) {
+							//Add Hooke force to Body
+							Hooke *h = new Hooke(&particles2D[i][j], &particles2D[i + 1][j], stiffness, damping, rest);
+							particles2D[i][j].addForce(h);
+						}
+
+						// - ALL BUT FRONT EDGE - 
+						if (j != 0) {
+							//Add Hooke force to Body
+							Hooke *h = new Hooke(&particles2D[i][j], &particles2D[i][j - 1], stiffness, damping, rest);
+							particles2D[i][j].addForce(h);
+						}
+
+						// - ALL BUT BACK EDGE -
+						if (j != particles2D[i].size() - 1) {
+							//Add Hooke force to Body
+							Hooke *h = new Hooke(&particles2D[i][j], &particles2D[i][j + 1], stiffness, damping, rest);
+							particles2D[i][j].addForce(h);
+						}
+
+						//// - DIAGONAL CONNECTIONS - (CAUSING EXPLOSION)
+
+						// - ALL BUT BACK OR RIGHT EDGES- 
+						if (j != particles2D[i].size() - 1 && i != particles2D.size() - 1) {
+							//Add Hooke force to Body
+							Hooke *h = new Hooke(&particles2D[i][j], &particles2D[i + 1][j + 1], stiffness, damping, rest);
+							particles2D[i][j].addForce(h);
+						}
+
+						// - ALL BUT FRONT OR RIGHT EDGES- 
+						if (j != 0 && i != particles2D.size() - 1) {
+							//Add Hooke force to Body
+							Hooke *h = new Hooke(&particles2D[i][j], &particles2D[i + 1][j - 1], stiffness, damping, rest);
+							particles2D[i][j].addForce(h);
+						}
+
+						// - ALL BUT FRONT OR LEFT EDGES- 
+						if (j != 0 && i != 0) {
+							//Add Hooke force to Body
+							Hooke *h = new Hooke(&particles2D[i][j], &particles2D[i - 1][j - 1], stiffness, damping, rest);
+							particles2D[i][j].addForce(h);
+						}
+
+						// - ALL BUT BACK OR LEFT EDGES- 
+						if (j != particles2D[i].size() - 1 && i != 0) {
+							//Add Hooke force to Body
+							Hooke *h = new Hooke(&particles2D[i][j], &particles2D[i - 1][j + 1], stiffness, damping, rest);
+							particles2D[i][j].addForce(h);
+						}
+					}
+				}
 			}
 		}
 
@@ -400,6 +484,9 @@ int main()
 						force += hooke.apply(particles[i].getMass(), particles[i].getPos(), particles[i].getVel());
 						//Calculate Gravity
 						force += gravity.apply(particles[i].getMass(), particles[i].getPos(), particles[i].getVel());
+
+						// - APPLY FORCES THEN INTEGRATE -
+
 						//Calculate Accelleration
 						particles[i].setAcc(force / particles[i].getMass());
 						particles[i - 1].setAcc(-force/ particles[i - 1].getMass());
@@ -589,132 +676,44 @@ int main()
 					for (unsigned int j = 0; j < particles2D[i].size(); j++) {
 						//For all but the corners
 						if (!(i == 0 && j == 0) && !(i == particles2D.size() - 1 && j == 0) && !(i == 0 && j == particles2D.size() - 1) && !(i == particles2D.size() - 1 && j == particles2D.size() - 1)) {
-							//Calculate Forces
-							glm::vec3 force = glm::vec3(0.0f, 0.0f, 0.0f);
-							//Calculate Gravity
-							force += gravity.apply(particles2D[i][j].getMass(), particles2D[i][j].getPos(), particles2D[i][j].getVel());
-
-							//Set references to current particle's body
-							Body b1 = (Body)particles2D[i][j];
-							hooke.setB1(&b1);
-
-							// - SIDE CONNECTIONS -
-
-							// - ALL BUT LEFT EDGE -
-							if (i != 0) {
-								//Set references to other body
-								Body b2 = (Body)particles2D[i - 1][j];
-								hooke.setB2(&b2);
-
-								//Calculate spring force
-								force += hooke.apply(particles2D[i][j].getMass(), particles2D[i][j].getPos(), particles2D[i][j].getVel());
-
-							}
-
-							// - ALL BUT RIGHT EDGE -
-							if (i != particles2D.size() - 1) {
-								//Set references to other body
-								Body b2 = (Body)particles2D[i + 1][j];
-								hooke.setB2(&b2);
-
-								//Calculate spring force
-								force += hooke.apply(particles2D[i][j].getMass(), particles2D[i][j].getPos(), particles2D[i][j].getVel());
-							}
-
-							// - ALL BUT FRONT EDGE - 
-							if (j != 0) {
-								//Set references to other body
-								Body b2 = (Body)particles2D[i][j - 1];
-								hooke.setB2(&b2);
-
-								//Calculate spring force
-								force += hooke.apply(particles2D[i][j].getMass(), particles2D[i][j].getPos(), particles2D[i][j].getVel());
-							}
-
-							// - ALL BUT BACK EDGE -
-							if (j != particles2D[i].size() - 1) {
-								//Set references to other body
-								Body b2 = (Body)particles2D[i][j + 1];
-								hooke.setB2(&b2);
-
-								//Calculate spring force
-								force += hooke.apply(particles2D[i][j].getMass(), particles2D[i][j].getPos(), particles2D[i][j].getVel());
-							}
-
-							// - DIAGONAL CONNECTIONS - (CAUSING EXPLOSION)
-
-							// - ALL BUT BACK OR RIGHT EDGES- 
-							if (j != particles2D[i].size() - 1 && i != particles2D.size() - 1) {
-								//Set references to other body
-								Body b2 = (Body)particles2D[i + 1][j + 1];
-								hooke.setB2(&b2);
-
-								//Calculate spring force
-								force += hooke.apply(particles2D[i][j].getMass(), particles2D[i][j].getPos(), particles2D[i][j].getVel());
-
-							}
-
-							// - ALL BUT FRONT OR RIGHT EDGES- 
-							if (j != 0 && i != particles2D.size() - 1) {
-								//Set references to other body
-								Body b2 = (Body)particles2D[i + 1][j - 1];
-								hooke.setB2(&b2);
-
-								//Calculate spring force
-								force += hooke.apply(particles2D[i][j].getMass(), particles2D[i][j].getPos(), particles2D[i][j].getVel());
-
-							}
-
-							// - ALL BUT FRONT OR LEFT EDGES- 
-							if (j != 0 && i != 0) {
-								//Set references to other body
-								Body b2 = (Body)particles2D[i - 1][j - 1];
-								hooke.setB2(&b2);
-
-								//Calculate spring force
-								force += hooke.apply(particles2D[i][j].getMass(), particles2D[i][j].getPos(), particles2D[i][j].getVel());
-
-							}
-
-							// - ALL BUT BACK OR LEFT EDGES- 
-							if (j != particles2D[i].size() - 1 && i != 0) {
-								//Set references to other body
-								Body b2 = (Body)particles2D[i - 1][j + 1];
-								hooke.setB2(&b2);
-
-								//Calculate spring force
-								force += hooke.apply(particles2D[i][j].getMass(), particles2D[i][j].getPos(), particles2D[i][j].getVel());
-							}
-
 							//Apply Drag force
-							force += particles2D[i][j].getVel()* -0.01f;
+							//force += particles2D[i][j].getVel()* -0.01f;
 
-							// - Velocity Verlet Integration -
+							//// - Velocity Verlet Integration -
+							////Set Previous accelleration
+							//particles2D[i][j].setPrevAcc(particles2D[i][j].getAcc());
 
-							//Set Previous velovity
-							particles2D[i][j].setPrevAcc(particles2D[i][j].getAcc());
+							////Calculate New Position
+							//particles2D[i][j].translate(particles2D[i][j].getVel() * timestep + (0.5 * particles2D[i][j].getPrevAcc() * pow(timestep, 2)));
 
-							//Calculate New Position
-							particles2D[i][j].translate(particles2D[i][j].getVel() * timestep + (0.5 * particles2D[i][j].getPrevAcc() * pow(timestep, 2)));
+							////Calculate New Accelleration
+							//particles2D[i][j].setAcc(particles2D[i][j].applyForces(particles2D[i][j].getPos(), particles2D[i][j].getVel(), 1, timestep));
 
-							//Calculate New Accelleration
-							particles2D[i][j].setAcc(force / particles2D[i][j].getMass());
+							////Calculate Average Accelleration between old and new
+							//glm::vec3 Aavg = (particles2D[i][j].getPrevAcc() + particles2D[i][j].getAcc()) / 2;
 
-							//Calculate Average Accelleration between old and new
-							glm::vec3 Aavg = (particles2D[i][j].getPrevAcc() + particles2D[i][j].getAcc()) / 2;
+							////Calculate Current Velocity
+							//particles2D[i][j].setVel(particles2D[i][j].getVel() + timestep * Aavg);
+
+							////Check for collisions with the bounding box
+							//CheckCollisions(particles2D[i][j], cube);
+
+							//Calculate Accelleration
+							particles2D[i][j].setAcc(particles2D[i][j].applyForces(particles2D[i][j].getPos(), particles2D[i][j].getVel(), 1, timestep));
 
 							//Calculate Current Velocity
-							particles2D[i][j].setVel(particles2D[i][j].getVel() + timestep * Aavg);
+							particles2D[i][j].setVel(particles2D[i][j].getVel() + timestep * particles2D[i][j].getAcc());
+
+							//Calculate New Position
+							particles2D[i][j].translate(timestep * particles2D[i][j].getVel());
 
 							//Check for collisions with the bounding box
 							CheckCollisions(particles2D[i][j], cube);
+
 						}
 					}
 				}
 			}
-
-
-
 
 			//Remove calculated time from the accumulator
 			timeAccumulated -= timestep;
