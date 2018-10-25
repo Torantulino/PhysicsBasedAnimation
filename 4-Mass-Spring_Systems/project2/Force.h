@@ -58,6 +58,7 @@ public:
 
 	//Getters
 	Body* getB1() { return m_b1; }
+
 	//Setters
 	void setB1(Body* b) { m_b1 = b; }
 	void setB2(Body* b) { m_b2 = b; }

@@ -56,6 +56,8 @@ Gravity gravity = Gravity::Gravity();
 Gravity *grav = new Gravity(glm::vec3(0.0f, -9.8f, 0.0f));
 
 
+
+
 // main function
 int main()
 {
@@ -64,12 +66,16 @@ int main()
 	app.initRender();
 	Application::camera.setCameraPosition(glm::vec3(0.0f, 5.0f, 10.0f));
 			
+	// Create Shaders
+	Shader blue = Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag");
+	Shader red = Shader("resources/shaders/solid.vert", "resources/shaders/solid_red.frag");
+	Shader transLambert = Shader("resources/shaders/physics.vert", "resources/shaders/physics_transparent.frag");
+
 	// - Create Cube -
 	Mesh cube = Mesh::Mesh(Mesh::CUBE);
 	// scale up x5
 	cube.scale(glm::vec3(10.0f, 10.0f, 10.0f));
 	//Set Shader
-	Shader transLambert = Shader("resources/shaders/physics.vert", "resources/shaders/physics_transparent.frag");
 	cube.setShader(transLambert);
 
 	//// time
@@ -126,8 +132,6 @@ int main()
 			Particle p1 = Particle::Particle();
 			Particle p2 = Particle::Particle();
 			// Set Shader
-			Shader blue = Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag");
-			Shader red = Shader("resources/shaders/solid.vert", "resources/shaders/solid_red.frag");
 			p1.getMesh().setShader(red);
 			p2.getMesh().setShader(blue);
 
@@ -148,10 +152,6 @@ int main()
 			hooke.setRest(1.0f);
 			hooke.setStiffness(1.0f);
 			hooke.setDamping(.3f);
-
-			//Create Shaders
-			Shader blue = Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag");
-			Shader red = Shader("resources/shaders/solid.vert", "resources/shaders/solid_red.frag");
 
 			// Create particles
 			for (unsigned int i = 0; i < 2; i++) {
@@ -187,10 +187,6 @@ int main()
 			hooke.setStiffness(2.0f);
 			hooke.setDamping(0.2f);
 
-			//Create Shaders
-			Shader blue = Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag");
-			Shader red = Shader("resources/shaders/solid.vert", "resources/shaders/solid_red.frag");
-
 			// Create particles
 			for (unsigned int i = 0; i < 10; i++) {
 				// Create new particle
@@ -222,10 +218,6 @@ int main()
 			hooke.setStiffness(2.0f);
 			hooke.setDamping(0.2f);
 
-			//Create Shaders
-			Shader blue = Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag");
-			Shader red = Shader("resources/shaders/solid.vert", "resources/shaders/solid_red.frag");
-
 			// Create particles
 			for (unsigned int i = 0; i < 10; i++) {
 				// Create new particle
@@ -256,10 +248,6 @@ int main()
 			hooke.setRest(0.5f);
 			hooke.setStiffness(0.5f);
 			hooke.setDamping(0.5f);
-
-			//Create Shaders
-			Shader blue = Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag");
-			Shader red = Shader("resources/shaders/solid.vert", "resources/shaders/solid_red.frag");
 
 			//Create 2d Particle grid
 			for (unsigned int i = 0; i < 10; i++) {
@@ -295,10 +283,6 @@ int main()
 			float stiffness(1.0f);
 			float damping(0.5f);
 
-			//Create Shaders
-			Shader blue = Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag");
-			Shader red = Shader("resources/shaders/solid.vert", "resources/shaders/solid_red.frag");
-
 			//Create 2d Particle grid
 			for (unsigned int i = 0; i < 10; i++) {
 				std::vector<Particle> ps;
@@ -323,8 +307,49 @@ int main()
 				particles2D.push_back(ps);
 			}
 
+			//Make cloth connections
 			CreateCloth(particles2D, stiffness, damping, rest);
 		}
+		// 7 - Flag Simulation - Square fixed at two corners with wind.
+		if (glfwGetKey(app.getWindow(), GLFW_KEY_7)) {
+			//Set properties and reset
+			mode = 7;
+			particles.clear();
+			particles2D.clear();
+			pause = true;
+			float rest(1.0f);
+			float stiffness(1.0f);
+			float damping(0.5f); 
+
+			//Create 2d Particle grid
+			for (unsigned int i = 0; i < 10; i++) {
+				std::vector<Particle> ps;
+				for (unsigned int j = 0; j < 10; j++) {
+					// Create new particle
+					Particle p = Particle::Particle();
+					//Set two corners to blue
+					if (i == 0 && j == 0 ||  i == 0 && j == 9) {
+						p.getMesh().setShader(blue);
+					}
+					//Set rest to red
+					else {
+						//Colour current particle red
+						p.getMesh().setShader(red);
+					}
+					//Set position
+					p.setPos(glm::vec3(5.0f - i, 10.0f, 5.0f - j));
+					p.setMass(0.01f);
+					p.setCor(0.3f);
+					//Add to collection
+					ps.push_back(p);
+				}
+				particles2D.push_back(ps);
+			}
+
+			//Make cloth connections
+			CreateCloth(particles2D, stiffness, damping, rest);
+		}
+
 
 
 		// - OTHER USER INTERACTION -
@@ -594,7 +619,6 @@ int main()
 				}
 			}
 
-
 			// 6 - Cloth of 100 particles fixed at each corner - (Velocity Verlet)
 			if (mode == 6 && !pause) {
 				for (unsigned int i = 0; i < particles2D.size(); i++) {
@@ -629,6 +653,9 @@ int main()
 							//Calculate Current Velocity
 							particles2D[i][j].setVel(particles2D[i][j].getVel() + timestep * particles2D[i][j].getAcc());
 
+							//Apply Drag force
+							particles2D[i][j].setVel(particles2D[i][j].getVel()*0.997);
+
 							//Calculate New Position
 							particles2D[i][j].translate(timestep * particles2D[i][j].getVel());
 
@@ -640,7 +667,33 @@ int main()
 				}
 			}
 
-			//Remove calculated time from the accumulator
+			// 7 - Cloth of 100 particles fixed at each corner - (Velocity Verlet)
+			if (mode == 7 && !pause) {
+				for (unsigned int i = 0; i < particles2D.size(); i++) {
+					for (unsigned int j = 0; j < particles2D[i].size(); j++) {
+						//For all but the corners
+						if (!(i == 0 && j == 0) && !(i == 0 && j == particles2D.size() - 1)) {
+
+							//Calculate Accelleration
+							particles2D[i][j].setAcc(particles2D[i][j].applyForces(particles2D[i][j].getPos(), particles2D[i][j].getVel(), 1, timestep));
+
+							//Calculate Current Velocity
+							particles2D[i][j].setVel(particles2D[i][j].getVel() + timestep * particles2D[i][j].getAcc());
+
+							//Apply Drag force
+							particles2D[i][j].setVel(particles2D[i][j].getVel()*0.997);
+
+							//Calculate New Position
+							particles2D[i][j].translate(timestep * particles2D[i][j].getVel());
+
+							//Check for collisions with the bounding box
+							CheckCollisions(particles2D[i][j], cube);
+						}
+					}
+				}
+			}
+
+			// - Remove calculated time from the accumulator -
 			timeAccumulated -= timestep;
 		}
 		
@@ -677,76 +730,69 @@ void CreateCloth(std::vector<std::vector<Particle> > &p2D, float stiffness, floa
 	//Add forces
 	for (unsigned int i = 0; i < p2D.size(); i++) {
 		for (unsigned int j = 0; j < p2D[i].size(); j++) {
-			//For all but the corners
-			if (!(i == 0 && j == 0) && !(i == p2D.size() - 1 && j == 0) && !(i == 0 && j == p2D.size() - 1) && !(i == p2D.size() - 1 && j == p2D.size() - 1)) {
+			
+			//Gravity Force
+			p2D[i][j].addForce(grav);
 
-				//Set references to current particle's body
-				Body b1 = (Body)p2D[i][j];
-				hooke.setB1(&b1);
+			//Hooke Forces
+			// - SIDE CONNECTIONS -
 
-				//Gravity Force
-				p2D[i][j].addForce(grav);
+			// - ALL BUT LEFT EDGE -
+			if (i != 0) {
+				//Add Hooke force to Body
+				Hooke *h = new Hooke(&p2D[i][j], &p2D[i - 1][j], stiffness, damping, rest);
+				p2D[i][j].addForce(h);
+			}
 
-				//Hooke Forces
-				// - SIDE CONNECTIONS -
+			// - ALL BUT RIGHT EDGE -
+			if (i != p2D.size() - 1) {
+				//Add Hooke force to Body
+				Hooke *h = new Hooke(&p2D[i][j], &p2D[i + 1][j], stiffness, damping, rest);
+				p2D[i][j].addForce(h);
+			}
 
-				// - ALL BUT LEFT EDGE -
-				if (i != 0) {
-					//Add Hooke force to Body
-					Hooke *h = new Hooke(&p2D[i][j], &p2D[i - 1][j], stiffness, damping, rest);
-					p2D[i][j].addForce(h);
-				}
+			// - ALL BUT FRONT EDGE - 
+			if (j != 0) {
+				//Add Hooke force to Body
+				Hooke *h = new Hooke(&p2D[i][j], &p2D[i][j - 1], stiffness, damping, rest);
+				p2D[i][j].addForce(h);
+			}
 
-				// - ALL BUT RIGHT EDGE -
-				if (i != p2D.size() - 1) {
-					//Add Hooke force to Body
-					Hooke *h = new Hooke(&p2D[i][j], &p2D[i + 1][j], stiffness, damping, rest);
-					p2D[i][j].addForce(h);
-				}
+			// - ALL BUT BACK EDGE -
+			if (j != p2D[i].size() - 1) {
+				//Add Hooke force to Body
+				Hooke *h = new Hooke(&p2D[i][j], &p2D[i][j + 1], stiffness, damping, rest);
+				p2D[i][j].addForce(h);
+			}
 
-				// - ALL BUT FRONT EDGE - 
-				if (j != 0) {
-					//Add Hooke force to Body
-					Hooke *h = new Hooke(&p2D[i][j], &p2D[i][j - 1], stiffness, damping, rest);
-					p2D[i][j].addForce(h);
-				}
+			// - DIAGONAL CONNECTIONS
 
-				// - ALL BUT BACK EDGE -
-				if (j != p2D[i].size() - 1) {
-					//Add Hooke force to Body
-					Hooke *h = new Hooke(&p2D[i][j], &p2D[i][j + 1], stiffness, damping, rest);
-					p2D[i][j].addForce(h);
-				}
+			// - ALL BUT BACK OR RIGHT EDGES- 
+			if (j != p2D[i].size() - 1 && i != p2D.size() - 1) {
+				//Add Hooke force to Body
+				Hooke *h = new Hooke(&p2D[i][j], &p2D[i + 1][j + 1], stiffness, damping, rest);
+				p2D[i][j].addForce(h);
+			}
 
-				//// - DIAGONAL CONNECTIONS - (CAUSING EXPLOSION)
+			// - ALL BUT FRONT OR RIGHT EDGES- 
+			if (j != 0 && i != p2D.size() - 1) {
+				//Add Hooke force to Body
+				Hooke *h = new Hooke(&p2D[i][j], &p2D[i + 1][j - 1], stiffness, damping, rest);
+				p2D[i][j].addForce(h);
+			}
 
-				// - ALL BUT BACK OR RIGHT EDGES- 
-				if (j != p2D[i].size() - 1 && i != p2D.size() - 1) {
-					//Add Hooke force to Body
-					Hooke *h = new Hooke(&p2D[i][j], &p2D[i + 1][j + 1], stiffness, damping, rest);
-					p2D[i][j].addForce(h);
-				}
+			// - ALL BUT FRONT OR LEFT EDGES- 
+			if (j != 0 && i != 0) {
+				//Add Hooke force to Body
+				Hooke *h = new Hooke(&p2D[i][j], &p2D[i - 1][j - 1], stiffness, damping, rest);
+				p2D[i][j].addForce(h);
+			}
 
-				// - ALL BUT FRONT OR RIGHT EDGES- 
-				if (j != 0 && i != p2D.size() - 1) {
-					//Add Hooke force to Body
-					Hooke *h = new Hooke(&p2D[i][j], &p2D[i + 1][j - 1], stiffness, damping, rest);
-					p2D[i][j].addForce(h);
-				}
-
-				// - ALL BUT FRONT OR LEFT EDGES- 
-				if (j != 0 && i != 0) {
-					//Add Hooke force to Body
-					Hooke *h = new Hooke(&p2D[i][j], &p2D[i - 1][j - 1], stiffness, damping, rest);
-					p2D[i][j].addForce(h);
-				}
-
-				// - ALL BUT BACK OR LEFT EDGES- 
-				if (j != p2D[i].size() - 1 && i != 0) {
-					//Add Hooke force to Body
-					Hooke *h = new Hooke(&p2D[i][j], &p2D[i - 1][j + 1], stiffness, damping, rest);
-					p2D[i][j].addForce(h);
-				}
+			// - ALL BUT BACK OR LEFT EDGES- 
+			if (j != p2D[i].size() - 1 && i != 0) {
+				//Add Hooke force to Body
+				Hooke *h = new Hooke(&p2D[i][j], &p2D[i - 1][j + 1], stiffness, damping, rest);
+				p2D[i][j].addForce(h);
 			}
 		}
 	}

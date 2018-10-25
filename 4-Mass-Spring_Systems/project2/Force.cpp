@@ -42,27 +42,15 @@ glm::vec3 Hooke::apply(float mass, const glm::vec3 &pos, const glm::vec3 &vel) {
 	//Find the spring's displacement from rest position
 	float displacement = curDist - m_rest;
 
-
-	//if (displacement > m_rest * 2) {
-	//	m_b1->setPos(m_b1->getPrevPos());
-
-	//	// - Get values again -
-	//	//Get distance between the two bodies
-	//	curDist = length(m_b1->getPos() - m_b2->getPos());
-
-	//	//Find the spring's displacement from rest position
-	//	displacement = curDist - m_rest;
-	//}
-
 	//Calculate spring force
 	float f = m_ks * displacement;
 
-	//Calculate scalar projection of velocity along spring axis
-	float projVel = dot(vel, m_b2->getPos() - m_b1->getPos());
+	//Calculate scalar projection of relative velocity along spring axis
+	//float projVel = dot(m_b1->getVel() - m_b2->getVel(), m_b2->getPos() - m_b1->getPos())/length(m_b2->getPos() - m_b1->getPos());
+	float projVel = dot(m_b1->getVel() - m_b2->getVel(), glm::normalize(m_b2->getPos() - m_b1->getPos()));
 
 	//Calculate damping force
 	f -= m_kd * projVel;
-
 
 	//Store position for next loop
 	m_b1->setPrevPos();
