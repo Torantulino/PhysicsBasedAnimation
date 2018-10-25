@@ -5,7 +5,7 @@
 class Triangle
 {
 public:
-	Triangle() {}
+	Triangle();
 	~Triangle();
 
 	Triangle(Particle* p1, Particle* p2, Particle* p3) { setP1(p1), setP2(p2), setP3(p3); }
@@ -20,7 +20,10 @@ public:
 	glm::vec3 getVel() { CalculateVelocity(); return m_velocity; }
 	glm::vec3 getNormal() { CalculateNormal(); return m_normal; }
 	float getArea() { CalculateArea(); return m_area; }
-
+	
+	//Rendering
+	Vertex* getVertices() { Vertex vertices[] = { Vertex(m_p1->getPos()), Vertex(m_p2->getPos()), Vertex(m_p3->getPos()) }; return vertices; }
+	glm::vec3* getNormals() { glm::vec3 norm = getNormal(); glm::vec3 normals[] = { norm, norm, norm }; return normals; }
 
 	// - SETTERS -
 	//Particles

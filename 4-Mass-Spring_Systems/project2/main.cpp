@@ -25,6 +25,7 @@
 #include "Mesh.h"
 #include "Particle.h"
 #include "main.h"
+#include "Triangle.h"
 
 // time
 GLfloat deltaTime = 0.0f;
@@ -33,6 +34,8 @@ GLfloat lastTime = 0.0f;
 // Physics Objects
 std::vector<Particle> particles;
 std::vector < std::vector<Particle> > particles2D;
+std::vector<Triangle*> triangles;
+
 
 // Global Properties
 glm::vec3 g = glm::vec3(0.0f, -9.8f, 0.0f);
@@ -309,6 +312,9 @@ int main()
 
 			//Make cloth connections
 			CreateCloth(particles2D, stiffness, damping, rest);
+
+			//Triangulate for rendering
+			triangles = TriangulateGrid(particles2D);
 		}
 		// 7 - Flag Simulation - Square fixed at two corners with wind.
 		if (glfwGetKey(app.getWindow(), GLFW_KEY_7)) {
@@ -715,6 +721,14 @@ int main()
 			}
 		}
 
+		//Draw Triangles
+		for each (Triangle* tri in triangles) {
+			Mesh triMesh;
+			triMesh.initMesh(tri->getVertices(), tri->getNormals());
+			triMesh.setShader(red);
+			app.draw(triMesh);
+		}
+
 		//- Render Environment Last for transparency -		
 		app.draw(cube);
 		app.display();
@@ -913,4 +927,23 @@ glm::vec3 calcConeForce(glm::vec3 pos) {
 
 
 	return force;
+}
+
+std::vector<Triangle*> TriangulateGrid(std::vector<std::vector<Particle> > &p2D) {
+	std::vector<Triangle*> tris;
+	//For every particle in grid
+	for (unsigned int i = 0; i < p2D.size(); i++) {
+		for (unsigned int j = 0; j < p2D[i].size(); j++) {
+			//Down Triangle
+			if (i != p2D.size() - 1 && j != p2D.size() - 1) {
+				Triangle* tri = new Triangle(&p2D[i][j], &p2D[i+1][j], &p2D[i][j+1]);
+				tris.push_back(tri);
+			}
+			//Up Triangle
+			if (i != p2D.size() - 1 && j != 0) {
+				Triangle* tri = new Triangle(&p2D[i][j], &p2D[i + 1][j - 1], &p2D[i + 1][j]);
+				tris.push_back(tri);
+			}
+		}
+	}
 }
