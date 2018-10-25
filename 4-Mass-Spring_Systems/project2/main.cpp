@@ -323,82 +323,7 @@ int main()
 				particles2D.push_back(ps);
 			}
 
-			//Add forces
-			for (unsigned int i = 0; i < particles2D.size(); i++) {
-				for (unsigned int j = 0; j < particles2D[i].size(); j++) {
-					//For all but the corners
-					if (!(i == 0 && j == 0) && !(i == particles2D.size() - 1 && j == 0) && !(i == 0 && j == particles2D.size() - 1) && !(i == particles2D.size() - 1 && j == particles2D.size() - 1)) {
-
-						//Set references to current particle's body
-						Body b1 = (Body)particles2D[i][j];
-						hooke.setB1(&b1);
-
-						//Gravity Force
-						particles2D[i][j].addForce(grav);
-
-						//Hooke Forces
-						// - SIDE CONNECTIONS -
-
-						// - ALL BUT LEFT EDGE -
-						if (i != 0) {
-							//Add Hooke force to Body
-							Hooke *h = new Hooke(&particles2D[i][j], &particles2D[i - 1][j], stiffness, damping, rest);
-							particles2D[i][j].addForce(h);
-						}
-
-						// - ALL BUT RIGHT EDGE -
-						if (i != particles2D.size() - 1) {
-							//Add Hooke force to Body
-							Hooke *h = new Hooke(&particles2D[i][j], &particles2D[i + 1][j], stiffness, damping, rest);
-							particles2D[i][j].addForce(h);
-						}
-
-						// - ALL BUT FRONT EDGE - 
-						if (j != 0) {
-							//Add Hooke force to Body
-							Hooke *h = new Hooke(&particles2D[i][j], &particles2D[i][j - 1], stiffness, damping, rest);
-							particles2D[i][j].addForce(h);
-						}
-
-						// - ALL BUT BACK EDGE -
-						if (j != particles2D[i].size() - 1) {
-							//Add Hooke force to Body
-							Hooke *h = new Hooke(&particles2D[i][j], &particles2D[i][j + 1], stiffness, damping, rest);
-							particles2D[i][j].addForce(h);
-						}
-
-						//// - DIAGONAL CONNECTIONS - (CAUSING EXPLOSION)
-
-						// - ALL BUT BACK OR RIGHT EDGES- 
-						if (j != particles2D[i].size() - 1 && i != particles2D.size() - 1) {
-							//Add Hooke force to Body
-							Hooke *h = new Hooke(&particles2D[i][j], &particles2D[i + 1][j + 1], stiffness, damping, rest);
-							particles2D[i][j].addForce(h);
-						}
-
-						// - ALL BUT FRONT OR RIGHT EDGES- 
-						if (j != 0 && i != particles2D.size() - 1) {
-							//Add Hooke force to Body
-							Hooke *h = new Hooke(&particles2D[i][j], &particles2D[i + 1][j - 1], stiffness, damping, rest);
-							particles2D[i][j].addForce(h);
-						}
-
-						// - ALL BUT FRONT OR LEFT EDGES- 
-						if (j != 0 && i != 0) {
-							//Add Hooke force to Body
-							Hooke *h = new Hooke(&particles2D[i][j], &particles2D[i - 1][j - 1], stiffness, damping, rest);
-							particles2D[i][j].addForce(h);
-						}
-
-						// - ALL BUT BACK OR LEFT EDGES- 
-						if (j != particles2D[i].size() - 1 && i != 0) {
-							//Add Hooke force to Body
-							Hooke *h = new Hooke(&particles2D[i][j], &particles2D[i - 1][j + 1], stiffness, damping, rest);
-							particles2D[i][j].addForce(h);
-						}
-					}
-				}
-			}
+			CreateCloth(particles2D, stiffness, damping, rest);
 		}
 
 
@@ -745,6 +670,86 @@ int main()
 	app.terminate();
 
 	return EXIT_SUCCESS;
+}
+
+void CreateCloth(std::vector<std::vector<Particle> > &p2D, float stiffness, float damping, float rest)
+{
+	//Add forces
+	for (unsigned int i = 0; i < p2D.size(); i++) {
+		for (unsigned int j = 0; j < p2D[i].size(); j++) {
+			//For all but the corners
+			if (!(i == 0 && j == 0) && !(i == p2D.size() - 1 && j == 0) && !(i == 0 && j == p2D.size() - 1) && !(i == p2D.size() - 1 && j == p2D.size() - 1)) {
+
+				//Set references to current particle's body
+				Body b1 = (Body)p2D[i][j];
+				hooke.setB1(&b1);
+
+				//Gravity Force
+				p2D[i][j].addForce(grav);
+
+				//Hooke Forces
+				// - SIDE CONNECTIONS -
+
+				// - ALL BUT LEFT EDGE -
+				if (i != 0) {
+					//Add Hooke force to Body
+					Hooke *h = new Hooke(&p2D[i][j], &p2D[i - 1][j], stiffness, damping, rest);
+					p2D[i][j].addForce(h);
+				}
+
+				// - ALL BUT RIGHT EDGE -
+				if (i != p2D.size() - 1) {
+					//Add Hooke force to Body
+					Hooke *h = new Hooke(&p2D[i][j], &p2D[i + 1][j], stiffness, damping, rest);
+					p2D[i][j].addForce(h);
+				}
+
+				// - ALL BUT FRONT EDGE - 
+				if (j != 0) {
+					//Add Hooke force to Body
+					Hooke *h = new Hooke(&p2D[i][j], &p2D[i][j - 1], stiffness, damping, rest);
+					p2D[i][j].addForce(h);
+				}
+
+				// - ALL BUT BACK EDGE -
+				if (j != p2D[i].size() - 1) {
+					//Add Hooke force to Body
+					Hooke *h = new Hooke(&p2D[i][j], &p2D[i][j + 1], stiffness, damping, rest);
+					p2D[i][j].addForce(h);
+				}
+
+				//// - DIAGONAL CONNECTIONS - (CAUSING EXPLOSION)
+
+				// - ALL BUT BACK OR RIGHT EDGES- 
+				if (j != p2D[i].size() - 1 && i != p2D.size() - 1) {
+					//Add Hooke force to Body
+					Hooke *h = new Hooke(&p2D[i][j], &p2D[i + 1][j + 1], stiffness, damping, rest);
+					p2D[i][j].addForce(h);
+				}
+
+				// - ALL BUT FRONT OR RIGHT EDGES- 
+				if (j != 0 && i != p2D.size() - 1) {
+					//Add Hooke force to Body
+					Hooke *h = new Hooke(&p2D[i][j], &p2D[i + 1][j - 1], stiffness, damping, rest);
+					p2D[i][j].addForce(h);
+				}
+
+				// - ALL BUT FRONT OR LEFT EDGES- 
+				if (j != 0 && i != 0) {
+					//Add Hooke force to Body
+					Hooke *h = new Hooke(&p2D[i][j], &p2D[i - 1][j - 1], stiffness, damping, rest);
+					p2D[i][j].addForce(h);
+				}
+
+				// - ALL BUT BACK OR LEFT EDGES- 
+				if (j != p2D[i].size() - 1 && i != 0) {
+					//Add Hooke force to Body
+					Hooke *h = new Hooke(&p2D[i][j], &p2D[i - 1][j + 1], stiffness, damping, rest);
+					p2D[i][j].addForce(h);
+				}
+			}
+		}
+	}
 }
 
 //Check for particle collisions with a bouding cube.
