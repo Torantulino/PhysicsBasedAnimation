@@ -5,3 +5,6 @@ void CreateCloth(std::vector<std::vector<Particle> >& p2D, float stiffness, floa
 std::vector<Triangle*> TriangulateGrid(std::vector<std::vector<Particle> > &p2D);
 
 glm::vec3 calcConeForce(glm::vec3 pos);
+
+glm::vec3 calcConeForce(glm::vec3 Triangle, float DoM, float CoM);
+

@@ -15,12 +15,14 @@ public:
 	Particle* getP1() { return m_p1; }
 	Particle* getP2() { return m_p2; }
 	Particle* getP3() { return m_p3; }
+	std::vector<Particle*>  getParticles() { std::vector<Particle*> ps; ps.push_back(m_p1); ps.push_back(m_p2); ps.push_back(m_p3); }
 
 	//Properties
 	glm::vec3 getVel() { CalculateVelocity(); return m_velocity; }
 	glm::vec3 getNormal() { CalculateNormal(); return m_normal; }
 	float getArea() { CalculateArea(); return m_area; }
-	
+	glm::vec3 getPos() { glm::vec3 pos = (getP1()->getPos() + getP2()->getPos() + getP3()->getPos()) / 3; }
+
 	//Rendering
 	Vertex* getVertices() { Vertex vertices[] = { Vertex(m_p1->getPos()), Vertex(m_p2->getPos()), Vertex(m_p3->getPos()) }; return vertices; }
 	glm::vec3* getNormals() { glm::vec3 norm = getNormal(); glm::vec3 normals[] = { norm, norm, norm }; return normals; }

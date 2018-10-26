@@ -675,6 +675,7 @@ int main()
 
 			// 7 - Cloth of 100 particles fixed at each corner - (Velocity Verlet)
 			if (mode == 7 && !pause) {
+				//Particle Forces
 				for (unsigned int i = 0; i < particles2D.size(); i++) {
 					for (unsigned int j = 0; j < particles2D[i].size(); j++) {
 						//For all but the corners
@@ -695,6 +696,22 @@ int main()
 							//Check for collisions with the bounding box
 							CheckCollisions(particles2D[i][j], cube);
 						}
+					}
+
+				}
+				//Triangle Forces
+				for (unsigned int i = 0; i < triangles.size(); i++){
+					//Calculate wind force on triangle
+					glm::vec3 f = calcConeForce(triangles[i], 1, 1);
+
+					//For each particle in the triangle 
+					for each(Particle* p in triangles[i]->getParticles()) {
+						//Calculate accelleration
+						glm::vec3 a = f / p->getMass();
+						//Calculate veloity
+						p->setVel(p->getVel() + timestep * p->getAcc());
+						//Calculate New Position
+						p->translate(timestep * p->getVel());
 					}
 				}
 			}
@@ -928,6 +945,60 @@ glm::vec3 calcConeForce(glm::vec3 pos) {
 
 	return force;
 }
+
+//Calculate the force excerted on a triangle by a force cone.
+glm::vec3 calcConeForce(Triangle* tri, float DoM, float CoD) {
+	// Variables:
+	// coneTip
+	// coneAxis 
+	// coneRad 
+	// coneHeight
+
+	// - Determine position within cone -
+
+	//Calculate the distance along the 'height'/spine of the cone
+	float projToAxis = dot(tri->getPos() -coneTip, coneAxis);
+
+	//If 'above' or 'below' cone, force is 0 (outsideb  the cone)
+	if (projToAxis > coneHeight || projToAxis < 0) {
+		return glm::vec3(0.0f, 0.0f, 0.0f);
+	}
+
+	//Calculate the radius of the cone at the current projection
+	float radAtProj = (projToAxis / coneHeight) * coneRad;
+
+	//Calculate the current point's distance/radius from the spine of the cone
+	float distFromSpine = length((tri->getPos() - coneTip) - projToAxis * coneAxis);
+
+	//If this distance is greater than the radius at the current point then it is outside the cone.
+	if (distFromSpine > radAtProj) {
+		return glm::vec3(0.0f, 0.0f, 0.0f);
+	}
+
+	// - Calculate wind speed based on position within cone -
+	//Calculate falloff due to 'height' along spine
+	float hFalloff = 1 - (projToAxis / coneHeight);
+	//Calculate falloff due to radial distance
+	float rFalloff = 1 - (distFromSpine / radAtProj);
+	// Calculate total falloff
+	float tFalloff = hFalloff * rFalloff;
+
+	// - Calculate wind direction -
+	//Get vector from cone tip to particle position.
+	glm::vec3 tipToPos = tri->getPos() - coneTip;
+	//Use normalized vector as direction away from tip
+	glm::vec3 vWind = glm::normalize(tipToPos) * tFalloff;
+	
+	//Calculate velocity relative to wind
+	glm::vec3 vel = tri->getVel() - vWind;
+	//Calculate cross-sectional area
+	float cArea = tri->getArea() * (glm::dot(vel, tri->getNormal())/ glm::length(vel) );
+
+	glm::vec3 fAero = 1/2 * DoM * pow(glm::length(vel),2) * CoD * cArea * tri->getNormal();
+
+	return fAero;
+}
+
 
 std::vector<Triangle*> TriangulateGrid(std::vector<std::vector<Particle> > &p2D) {
 	std::vector<Triangle*> tris;
