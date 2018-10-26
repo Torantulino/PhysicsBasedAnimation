@@ -1,6 +1,8 @@
 #include "Force.h"
 #include "Body.h"
 #include "Triangle.h"
+#include <ctime>
+
 
 Force::Force()
 {
@@ -68,6 +70,12 @@ glm::vec3 Wind::apply(float mass, const glm::vec3 &pos, const glm::vec3 &vel) {
 	// coneRad 
 	// coneHeight
 
+	time_t current_time;
+	current_time = time(NULL);
+
+	float z = sin(current_time);
+	m_coneTip = glm::vec3(16.0f, z, z);
+
 	// - Determine position within cone -
 
 	//Calculate the distance along the 'height'/spine of the cone
@@ -75,6 +83,10 @@ glm::vec3 Wind::apply(float mass, const glm::vec3 &pos, const glm::vec3 &vel) {
 
 	//If 'above' or 'below' cone, force is 0 (outsideb  the cone)
 	if (projToAxis >= m_coneHeight || projToAxis <= 0) {
+		//Set shader back to red
+		for each(Particle *p in m_tri->getParticles()) {
+			p->getMesh().setShader(r);
+		}
 		return glm::vec3(0.0f, 0.0f, 0.0f);
 	}
 
@@ -86,6 +98,10 @@ glm::vec3 Wind::apply(float mass, const glm::vec3 &pos, const glm::vec3 &vel) {
 
 	//If this distance is greater than the radius at the current point then it is outside the cone.
 	if (distFromSpine >= radAtProj) {
+		//Set shader back to red
+		for each(Particle *p in m_tri->getParticles()) {
+			p->getMesh().setShader(r);
+		}
 		return glm::vec3(0.0f, 0.0f, 0.0f);
 	}
 
@@ -103,6 +119,15 @@ glm::vec3 Wind::apply(float mass, const glm::vec3 &pos, const glm::vec3 &vel) {
 	//Use normalized vector as direction away from tip
 	glm::vec3 windVel = glm::normalize(tipToPos) * tFalloff;
 	
+	//Set Shader to blue if in the cone
+	if (windVel != glm::vec3(0.0f, 0.0f, 0.0f)) {
+
+		for each(Particle *p in m_tri->getParticles()) {
+			p->getMesh().setShader(b);
+		}
+	}
+
+
 	windVel *= 10.0f;
 	
 	//Calculate velocity relative to wind
@@ -115,9 +140,6 @@ glm::vec3 Wind::apply(float mass, const glm::vec3 &pos, const glm::vec3 &vel) {
 	//Divide by 3 for particle
 	fAero /= 3.0f;
 
-	float rnd = ((double)rand() / (RAND_MAX)) + 1;
-
-	fAero *= rnd;
 	
 	return fAero;
 }

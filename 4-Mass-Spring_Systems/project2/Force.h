@@ -1,6 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
 #include <iostream>
+#include "Shader.h"
 
 class Triangle;
 class Body;
@@ -102,8 +103,11 @@ class Wind : public Force {
 		float m_CoD;
 		glm::vec3 m_coneTip = glm::vec3(16.0f, 0.0f, 0.0f);
 		glm::vec3 m_coneAxis = glm::vec3(-1.0f, 0.0f, 0.0f);
-		float m_coneRad = 5.0f;
+		float m_coneRad = 2.5f;
 		float m_coneHeight = 20.0f;
 		float m_coneForceScale = 5.0f;
+
+		Shader b = Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag");
+		Shader r = Shader("resources/shaders/solid.vert", "resources/shaders/solid_red.frag");
 };
 

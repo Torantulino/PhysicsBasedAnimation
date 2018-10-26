@@ -250,10 +250,10 @@ int main()
 			CreateCloth(particles2D, stiffness, damping, rest);
 
 		}
-		// 6 - Cloth Simulation 1 - Square with fixed corners (VELOCITY VERLET)
-		if (glfwGetKey(app.getWindow(), GLFW_KEY_6)) {
+		// 5 - Cloth Simulation 1 - Square with fixed corners (VELOCITY VERLET)
+		if (glfwGetKey(app.getWindow(), GLFW_KEY_5)) {
 			//Set properties and reset
-			mode = 6;
+			mode = 5;
 			particles.clear();
 			particles2D.clear();
 			triangles.clear();
@@ -290,10 +290,10 @@ int main()
 			CreateCloth(particles2D, stiffness, damping, rest);
 
 		}
-		// 7 - Flag Simulation - Square fixed at two corners with wind.
-		if (glfwGetKey(app.getWindow(), GLFW_KEY_7)) {
+		// 6 - Flag Simulation - Square fixed at two corners with wind.
+		if (glfwGetKey(app.getWindow(), GLFW_KEY_6)) {
 			//Set properties and reset
-			mode = 7;
+			mode = 6;
 			particles.clear();
 			particles2D.clear();
 			triangles.clear();
@@ -456,8 +456,8 @@ int main()
 				}
 			}
 
-			// 6 - Cloth of 100 particles fixed at each corner 
-			if (mode == 6 && !pause) {
+			// 5 - Cloth of 100 particles fixed at each corner 
+			if (mode == 5 && !pause) {
 				for (unsigned int i = 0; i < particles2D.size(); i++) {
 					for (unsigned int j = 0; j < particles2D[i].size(); j++) {
 						//For all but the corners
@@ -482,8 +482,8 @@ int main()
 				}
 			}
 
-			// 7 - Cloth of 100 particles fixed at each corner 
-			if (mode == 7 && !pause) {
+			// 6 - Cloth of 100 particles fixed at each corner 
+			if (mode == 6 && !pause) {
 				//Particle Forces
 				for (unsigned int i = 0; i < particles2D.size(); i++) {
 					for (unsigned int j = 0; j < particles2D[i].size(); j++) {
