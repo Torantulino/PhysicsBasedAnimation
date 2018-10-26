@@ -74,7 +74,8 @@ glm::vec3 Wind::apply(float mass, const glm::vec3 &pos, const glm::vec3 &vel) {
 	current_time = time(NULL);
 
 	float z = sin(current_time);
-	m_coneTip = glm::vec3(16.0f, z, z);
+	float y = tan(current_time);
+	m_coneTip = glm::vec3(16.0f, y, z);
 
 	// - Determine position within cone -
 
@@ -139,7 +140,6 @@ glm::vec3 Wind::apply(float mass, const glm::vec3 &pos, const glm::vec3 &vel) {
 
 	//Divide by 3 for particle
 	fAero /= 3.0f;
-
 	
 	return fAero;
 }
