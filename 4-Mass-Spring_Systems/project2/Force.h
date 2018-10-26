@@ -100,8 +100,8 @@ class Wind : public Force {
 		Triangle* m_tri;	//Pointer to the triangle being acted upon
 		float m_DoM;
 		float m_CoD;
-		glm::vec3 m_coneTip = glm::vec3(0.0f, -21.0f, 0.0f);
-		glm::vec3 m_coneAxis = glm::vec3(0.0f, 1.0f, 0.0f);
+		glm::vec3 m_coneTip = glm::vec3(21.0f, 0.0f, 0.0f);
+		glm::vec3 m_coneAxis = glm::vec3(-1.0f, 0.0f, 0.0f);
 		float m_coneRad = 5.0f;
 		float m_coneHeight = 20.0f;
 		float m_coneForceScale = 5.0f;

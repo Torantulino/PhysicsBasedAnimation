@@ -297,8 +297,6 @@ int main()
 			//Make cloth connections
 			CreateCloth(particles2D, stiffness, damping, rest);
 
-			//Triangulate for rendering
-			triangles = TriangulateGrid(particles2D);
 		}
 		// 7 - Flag Simulation - Square fixed at two corners with wind.
 		if (glfwGetKey(app.getWindow(), GLFW_KEY_7)) {
@@ -336,7 +334,7 @@ int main()
 				}
 				particles2D.push_back(ps);
 			}
-			//Triangulate for rendering
+			//Triangulate
 			triangles = TriangulateGrid(particles2D);
 
 			//Make cloth connections

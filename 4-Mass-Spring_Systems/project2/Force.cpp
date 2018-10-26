@@ -115,6 +115,5 @@ glm::vec3 Wind::apply(float mass, const glm::vec3 &pos, const glm::vec3 &vel) {
 	//Divide by 3 for particle
 	fAero /= 3.0f;
 	
-	glm::vec3 a = fAero / mass;
-	return a;
+	return fAero;
 }

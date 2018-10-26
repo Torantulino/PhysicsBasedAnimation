@@ -54,7 +54,6 @@ private:
 		float l = glm::length(cross);
 		m_area = (0.5) * l; 
 	}
-	
-	
+
 	void CalculateNormal() { m_normal = glm::cross((m_p2->getPos() - m_p1->getPos()), (m_p3->getPos() - m_p1->getPos())) / glm::length(glm::cross((m_p2->getPos() - m_p1->getPos()), (m_p3->getPos() - m_p1->getPos()))); }
 };
