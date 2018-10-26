@@ -701,8 +701,8 @@ int main()
 				}
 				//Triangle Forces
 				for (unsigned int i = 0; i < triangles.size(); i++){
-					//Calculate wind force on triangle
-					glm::vec3 f = calcConeForce(triangles[i], 1, 1);
+					//Calculate wind force on each particle in triangle (overall / 3)
+					glm::vec3 f = calcConeForce(triangles[i], 1, 1) / 3;
 
 					//For each particle in the triangle 
 					for each(Particle* p in triangles[i]->getParticles()) {
