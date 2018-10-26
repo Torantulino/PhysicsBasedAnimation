@@ -326,7 +326,7 @@ int main()
 						p.getMesh().setShader(red);
 					}
 					//Set position
-					p.setPos(glm::vec3(5.0f - i, 10.0f, 5.0f - j));
+					p.setPos(glm::vec3(6.5f, 10.0f-i, 5.0f - j));
 					p.setMass(0.01f);
 					p.setCor(0.3f);
 					//Add to collection
@@ -695,6 +695,8 @@ int main()
 		// clear buffer
 		app.clear();
 
+
+
 		// draw particles
 		for each (Particle p in particles)
 		{
@@ -708,9 +710,9 @@ int main()
 
 		////Draw Triangles
 		//for each (Triangle *tri in triangles) {
-		//	Mesh triMesh;
+ 		//	Mesh triMesh = Mesh::Mesh();
 		//	triMesh.initMesh(tri->getVertices(), tri->getNormals());
-		//	triMesh.setShader(red);
+		//	triMesh.setShader(blue);
 		//	app.draw(triMesh);
 		//}
 

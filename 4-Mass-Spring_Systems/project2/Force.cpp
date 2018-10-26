@@ -74,7 +74,7 @@ glm::vec3 Wind::apply(float mass, const glm::vec3 &pos, const glm::vec3 &vel) {
 	float projToAxis = dot(pos - m_coneTip, m_coneAxis);
 
 	//If 'above' or 'below' cone, force is 0 (outsideb  the cone)
-	if (projToAxis > m_coneHeight || projToAxis < 0) {
+	if (projToAxis >= m_coneHeight || projToAxis <= 0) {
 		return glm::vec3(0.0f, 0.0f, 0.0f);
 	}
 
@@ -85,7 +85,7 @@ glm::vec3 Wind::apply(float mass, const glm::vec3 &pos, const glm::vec3 &vel) {
 	float distFromSpine = length((pos - m_coneTip) - projToAxis * m_coneAxis);
 
 	//If this distance is greater than the radius at the current point then it is outside the cone.
-	if (distFromSpine > radAtProj) {
+	if (distFromSpine >= radAtProj) {
 		return glm::vec3(0.0f, 0.0f, 0.0f);
 	}
 
@@ -103,7 +103,7 @@ glm::vec3 Wind::apply(float mass, const glm::vec3 &pos, const glm::vec3 &vel) {
 	//Use normalized vector as direction away from tip
 	glm::vec3 windVel = glm::normalize(tipToPos) * tFalloff;
 	
-	windVel *= 1.0f;
+	windVel *= 10.0f;
 	
 	//Calculate velocity relative to wind
 	glm::vec3 V = m_tri->getVel() - windVel;
@@ -114,6 +114,10 @@ glm::vec3 Wind::apply(float mass, const glm::vec3 &pos, const glm::vec3 &vel) {
 
 	//Divide by 3 for particle
 	fAero /= 3.0f;
+
+	float rnd = ((double)rand() / (RAND_MAX)) + 1;
+
+	fAero *= rnd;
 	
 	return fAero;
 }
