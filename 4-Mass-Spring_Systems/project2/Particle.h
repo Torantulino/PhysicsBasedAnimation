@@ -8,4 +8,3 @@ public:
 	Particle();
 	~Particle();
 };
-

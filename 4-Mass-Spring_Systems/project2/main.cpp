@@ -1,31 +1,8 @@
 #pragma once
 // Math constants
 #define _USE_MATH_DEFINES
-#include <cmath>  
-#include <random>
 
-// Std. Includes
-#include <string>
-#include <time.h>
-#include <iostream>
-
-// GLM
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/matrix_operation.hpp>
-#include "glm/ext.hpp"
-
-// Other Libs
-#include "SOIL2/SOIL2.h"
-
-// project includes
-#include "Application.h"
-#include "Shader.h"
-#include "Mesh.h"
-#include "Particle.h"
 #include "main.h"
-#include "Triangle.h"
 
 // time
 GLfloat deltaTime = 0.0f;
@@ -41,10 +18,10 @@ std::vector<Triangle*> triangles;
 glm::vec3 g = glm::vec3(0.0f, -9.8f, 0.0f);
 
 //cone properties
-glm::vec3 coneTip;
-glm::vec3 coneAxis;
-float coneRad;
-float coneHeight;
+glm::vec3 coneTip = glm::vec3(0.0f, -21.0f, 0.0f);
+glm::vec3 coneAxis = glm::vec3(0.0f, 1.0f, 0.0f);
+float coneRad = 5.0f;
+float coneHeight = 20.0f;
 float coneForceScale = 5.0f;
 
 //other
@@ -95,6 +72,7 @@ int main()
 			mode = 0;
 			particles.clear();
 			particles2D.clear();
+			triangles.clear();
 			pause = true;
 
 			//Create Particles
@@ -126,6 +104,7 @@ int main()
 			mode = 1;
 			particles.clear();
 			particles2D.clear();
+			triangles.clear();
 			pause = true;
 			hooke.setRest(1.0f);
 			hooke.setStiffness(1.0f);
@@ -151,6 +130,7 @@ int main()
 			mode = 2;
 			particles.clear();
 			particles2D.clear();
+			triangles.clear();
 			pause = true;
 			hooke.setRest(1.0f);
 			hooke.setStiffness(1.0f);
@@ -185,6 +165,7 @@ int main()
 			mode = 3;
 			particles.clear();
 			particles2D.clear();
+			triangles.clear();
 			pause = true;
 			hooke.setRest(1.0f);
 			hooke.setStiffness(2.0f);
@@ -216,6 +197,7 @@ int main()
 			mode = 3;
 			particles.clear();
 			particles2D.clear();
+			triangles.clear();
 			pause = true;
 			hooke.setRest(1.0f);
 			hooke.setStiffness(2.0f);
@@ -247,6 +229,7 @@ int main()
 			mode = 5;
 			particles.clear();
 			particles2D.clear();
+			triangles.clear();
 			pause = true;
 			hooke.setRest(0.5f);
 			hooke.setStiffness(0.5f);
@@ -281,6 +264,7 @@ int main()
 			mode = 6;
 			particles.clear();
 			particles2D.clear();
+			triangles.clear();
 			pause = true;
 			float rest(1.0f);
 			float stiffness(1.0f);
@@ -322,6 +306,7 @@ int main()
 			mode = 7;
 			particles.clear();
 			particles2D.clear();
+			triangles.clear();
 			pause = true;
 			float rest(1.0f);
 			float stiffness(1.0f);
@@ -351,12 +336,12 @@ int main()
 				}
 				particles2D.push_back(ps);
 			}
+			//Triangulate for rendering
+			triangles = TriangulateGrid(particles2D);
 
 			//Make cloth connections
 			CreateCloth(particles2D, stiffness, damping, rest);
 		}
-
-
 
 		// - OTHER USER INTERACTION -
 		//Start Simulation
@@ -699,21 +684,6 @@ int main()
 					}
 
 				}
-				//Triangle Forces
-				for (unsigned int i = 0; i < triangles.size(); i++){
-					//Calculate wind force on each particle in triangle (overall / 3)
-					glm::vec3 f = calcConeForce(triangles[i], 1, 1) / 3;
-
-					//For each particle in the triangle 
-					for each(Particle* p in triangles[i]->getParticles()) {
-						//Calculate accelleration
-						glm::vec3 a = f / p->getMass();
-						//Calculate veloity
-						p->setVel(p->getVel() + timestep * p->getAcc());
-						//Calculate New Position
-						p->translate(timestep * p->getVel());
-					}
-				}
 			}
 
 			// - Remove calculated time from the accumulator -
@@ -738,13 +708,13 @@ int main()
 			}
 		}
 
-		//Draw Triangles
-		for each (Triangle* tri in triangles) {
-			Mesh triMesh;
-			triMesh.initMesh(tri->getVertices(), tri->getNormals());
-			triMesh.setShader(red);
-			app.draw(triMesh);
-		}
+		////Draw Triangles
+		//for each (Triangle *tri in triangles) {
+		//	Mesh triMesh;
+		//	triMesh.initMesh(tri->getVertices(), tri->getNormals());
+		//	triMesh.setShader(red);
+		//	app.draw(triMesh);
+		//}
 
 		//- Render Environment Last for transparency -		
 		app.draw(cube);
@@ -946,59 +916,6 @@ glm::vec3 calcConeForce(glm::vec3 pos) {
 	return force;
 }
 
-//Calculate the force excerted on a triangle by a force cone.
-glm::vec3 calcConeForce(Triangle* tri, float DoM, float CoD) {
-	// Variables:
-	// coneTip
-	// coneAxis 
-	// coneRad 
-	// coneHeight
-
-	// - Determine position within cone -
-
-	//Calculate the distance along the 'height'/spine of the cone
-	float projToAxis = dot(tri->getPos() -coneTip, coneAxis);
-
-	//If 'above' or 'below' cone, force is 0 (outsideb  the cone)
-	if (projToAxis > coneHeight || projToAxis < 0) {
-		return glm::vec3(0.0f, 0.0f, 0.0f);
-	}
-
-	//Calculate the radius of the cone at the current projection
-	float radAtProj = (projToAxis / coneHeight) * coneRad;
-
-	//Calculate the current point's distance/radius from the spine of the cone
-	float distFromSpine = length((tri->getPos() - coneTip) - projToAxis * coneAxis);
-
-	//If this distance is greater than the radius at the current point then it is outside the cone.
-	if (distFromSpine > radAtProj) {
-		return glm::vec3(0.0f, 0.0f, 0.0f);
-	}
-
-	// - Calculate wind speed based on position within cone -
-	//Calculate falloff due to 'height' along spine
-	float hFalloff = 1 - (projToAxis / coneHeight);
-	//Calculate falloff due to radial distance
-	float rFalloff = 1 - (distFromSpine / radAtProj);
-	// Calculate total falloff
-	float tFalloff = hFalloff * rFalloff;
-
-	// - Calculate wind direction -
-	//Get vector from cone tip to particle position.
-	glm::vec3 tipToPos = tri->getPos() - coneTip;
-	//Use normalized vector as direction away from tip
-	glm::vec3 vWind = glm::normalize(tipToPos) * tFalloff;
-	
-	//Calculate velocity relative to wind
-	glm::vec3 vel = tri->getVel() - vWind;
-	//Calculate cross-sectional area
-	float cArea = tri->getArea() * (glm::dot(vel, tri->getNormal())/ glm::length(vel) );
-
-	glm::vec3 fAero = 1/2 * DoM * pow(glm::length(vel),2) * CoD * cArea * tri->getNormal();
-
-	return fAero;
-}
-
 
 std::vector<Triangle*> TriangulateGrid(std::vector<std::vector<Particle> > &p2D) {
 	std::vector<Triangle*> tris;
@@ -1007,14 +924,25 @@ std::vector<Triangle*> TriangulateGrid(std::vector<std::vector<Particle> > &p2D)
 		for (unsigned int j = 0; j < p2D[i].size(); j++) {
 			//Down Triangle
 			if (i != p2D.size() - 1 && j != p2D.size() - 1) {
-				Triangle* tri = new Triangle(&p2D[i][j], &p2D[i+1][j], &p2D[i][j+1]);
+				Triangle *tri = new Triangle(&p2D[i][j], &p2D[i+1][j], &p2D[i][j+1]);
+				//Add Wind force to Body
+				Wind *w = new Wind(tri, 1.0f, 1.0f);
+				p2D[i][j].addForce(w);
+				p2D[i + 1][j].addForce(w);
+				p2D[i][j + 1].addForce(w);
 				tris.push_back(tri);
 			}
 			//Up Triangle
 			if (i != p2D.size() - 1 && j != 0) {
-				Triangle* tri = new Triangle(&p2D[i][j], &p2D[i + 1][j - 1], &p2D[i + 1][j]);
+				Triangle *tri = new Triangle(&p2D[i][j], &p2D[i + 1][j - 1], &p2D[i + 1][j]);
+				//Add Wind force to Body
+				Wind *w = new Wind(tri, 1.0f, 1.0f);
+				p2D[i][j].addForce(w);
+				p2D[i][j].addForce(w);
+				p2D[i][j].addForce(w);
 				tris.push_back(tri);
 			}
 		}
 	}
+	return tris;
 }

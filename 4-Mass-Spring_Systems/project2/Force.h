@@ -2,6 +2,7 @@
 #include <glm/glm.hpp>
 #include <iostream>
 
+class Triangle;
 class Body;
 
 class Force
@@ -76,5 +77,33 @@ private:
 
 	Body* m_b1;	//Pointer to the body connected to one extremity of the spring
 	Body* m_b2;	//Pointer to the body connected to the other extremity
+};
+
+class Wind : public Force {
+
+	public:
+		Wind() {}
+		Wind(Triangle * tri, float DoM, float CoM) {
+			setT(tri); m_DoM = DoM; m_CoD = CoM;
+		}
+
+		//Apply force
+		glm::vec3 apply(float mass, const glm::vec3 &pos, const glm::vec3 &vel);
+
+		//Setters
+		void setT(Triangle* t) { m_tri = t; }
+		void setDoM(float dom) { m_DoM = dom; }
+		void setCoD(float cod) { m_CoD = cod; }
+		void setTri(Triangle *tri) { m_tri = tri; }
+
+	private:
+		Triangle* m_tri;	//Pointer to the triangle being acted upon
+		float m_DoM;
+		float m_CoD;
+		glm::vec3 m_coneTip = glm::vec3(0.0f, -21.0f, 0.0f);
+		glm::vec3 m_coneAxis = glm::vec3(0.0f, 1.0f, 0.0f);
+		float m_coneRad = 5.0f;
+		float m_coneHeight = 20.0f;
+		float m_coneForceScale = 5.0f;
 };
 
