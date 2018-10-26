@@ -106,23 +106,31 @@ int main()
 			particles2D.clear();
 			triangles.clear();
 			pause = true;
-			hooke.setRest(1.0f);
-			hooke.setStiffness(1.0f);
-			hooke.setDamping(0.5f);
+			float rest(2.0f);
+			float stiffness(1.0f);
+			float damping(0.1f);
 
-			// Create particles
-			Particle p1 = Particle::Particle();
-			Particle p2 = Particle::Particle();
-			// Set Shader
-			p1.getMesh().setShader(red);
-			p2.getMesh().setShader(blue);
 
-			//Set initial position
-			p1.setPos(glm::vec3(-2.0f, 10.0f, 0.0f));
-			p2.setPos(glm::vec3(2.0f, 10.0f, 0.0f));
-			//Add particle to collection
-			particles.push_back(p1);
-			particles.push_back(p2);
+			std::vector<Particle> ps;
+
+			for (unsigned int i= 0; i<2; i++){
+				// Create particle
+				Particle p = Particle::Particle();
+				// Set Shader
+				p.getMesh().setShader(red);
+				//Set initial position
+				p.setPos(glm::vec3(0.0f, 10.0f-i, 0.0f));
+				//Set Mass
+				p.setMass(0.1f);
+				//Add particle to collection
+				ps.push_back(p);
+
+			}
+			//Add vector to collection
+			particles2D.push_back(ps);
+
+			//Make cloth connections
+			CreateCloth(particles2D, stiffness, damping, rest);
 		}
 		// 2 - Spring Chain of 5 Particles
 		if (glfwGetKey(app.getWindow(), GLFW_KEY_2)) {
@@ -132,12 +140,14 @@ int main()
 			particles2D.clear();
 			triangles.clear();
 			pause = true;
-			hooke.setRest(1.0f);
-			hooke.setStiffness(1.0f);
-			hooke.setDamping(.3f);
+			float rest(1.3f);
+			float stiffness(1.0f);
+			float damping(0.03f);
+
+			std::vector<Particle> ps;
 
 			// Create particles
-			for (unsigned int i = 0; i < 2; i++) {
+			for (unsigned int i = 0; i < 5; i++) {
 				// Create new particle
 				Particle p = Particle::Particle();
 				//First particle
@@ -147,17 +157,19 @@ int main()
 				}
 				//Other Particles
 				else {
-					//Add Forces
-					p.addForce(&gravity);
-					p.addForce(&hooke);
 					// Set red Shader
 					p.getMesh().setShader(red);
 				}
 				//Set initial position
-				p.setPos(glm::vec3(0.0f, 10.0f - i*1.5f, 0.0f));
+				p.setPos(glm::vec3(0.0f, 10.0f - i*2.5f, 0.0f));
+				p.setMass(0.01f);
 				//Add particle to collection
-				particles.push_back(p);
+				ps.push_back(p);
 			}
+			//Add to 2d array
+			particles2D.push_back(ps);
+			//Make cloth connections
+			CreateCloth(particles2D, stiffness, damping, rest);
 		}
 		// 3 - Chain of 10 particles fixed at either end
 		if (glfwGetKey(app.getWindow(), GLFW_KEY_3)) {
@@ -384,59 +396,57 @@ int main()
 
 			// 1 - Particle Pair Spring Test -
 			if (mode == 1 && !pause) {
-				//Calculate Forces
-				glm::vec3 force = glm::vec3(0.0f, 0.0f, 0.0f);
-				//Get references to bodies of each particle and set for calculation
-				Body b1 = (Body)particles[0];
-				Body b2 = (Body)particles[1];
-				hooke.setB1(&b1);
-				hooke.setB2(&b2);
-				//Calculate spring force
-				force += hooke.apply(particles[0].getMass(), particles[0].getPos(), particles[0].getVel());
-				//Calculate Gravity
-				force += gravity.apply(particles[0].getMass(), particles[0].getPos(), particles[0].getVel());
-				//Calculate Accelleration
-				particles[0].setAcc(force / particles[0].getMass());
-				//Calculate Current Velocity
-				particles[0].setVel(particles[0].getVel() + timestep * particles[0].getAcc());
-				//Calculate New Position
-				particles[0].translate(timestep * particles[0].getVel());
-				//Check for collisions with the bounding box
-				CheckCollisions(particles[0], cube);
+				//Particle Forces
+				for (unsigned int i = 0; i < particles2D.size(); i++) {
+					for (unsigned int j = 0; j < particles2D[i].size(); j++) {
+						//For all but the corners
+						if (!(i == 0 && j == 0) && !(i == 0 && j == particles2D.size() - 1)) {
+
+							//Calculate Accelleration
+							particles2D[i][j].setAcc(particles2D[i][j].applyForces(particles2D[i][j].getPos(), particles2D[i][j].getVel(), 1, timestep));
+
+							//Calculate Current Velocity
+							particles2D[i][j].setVel(particles2D[i][j].getVel() + timestep * particles2D[i][j].getAcc());
+
+							//Apply Drag force
+							particles2D[i][j].setVel(particles2D[i][j].getVel()*0.997);
+
+							//Calculate New Position
+							particles2D[i][j].translate(timestep * particles2D[i][j].getVel());
+
+							//Check for collisions with the bounding box
+							CheckCollisions(particles2D[i][j], cube);
+						}
+					}
+
+				}
 			}
 
 			// 2 - Chain of 5 Particles connected by Springs -
 			if (mode == 2 && !pause) {
-				//For each particle in collection
-				for (unsigned int i = 0; i < particles.size(); i++) {
-					//Simulate all but the first particle
-					if (i != 0) {
-						//Calculate Forces
-						glm::vec3 force = glm::vec3(0.0f, 0.0f, 0.0f);
-						//Get references to bodies of the current and previous particles and set for calculation
-						Body b1 = (Body)particles[i];
-						Body b2 = (Body)particles[i - 1];
-						hooke.setB1(&b1);
-						hooke.setB2(&b2);
+				//Particle Forces
+				for (unsigned int i = 0; i < particles2D.size(); i++) {
+					for (unsigned int j = 0; j < particles2D[i].size(); j++) {
+						//For all but the corners
+						if (!(i == 0 && j == 0) && !(i == 0 && j == particles2D.size() - 1)) {
 
-						//Calculate spring force
-						force += hooke.apply(particles[i].getMass(), particles[i].getPos(), particles[i].getVel());
-						//Calculate Gravity
-						force += gravity.apply(particles[i].getMass(), particles[i].getPos(), particles[i].getVel());
+							//Calculate Accelleration
+							particles2D[i][j].setAcc(particles2D[i][j].applyForces(particles2D[i][j].getPos(), particles2D[i][j].getVel(), 1, timestep));
 
-						// - APPLY FORCES THEN INTEGRATE -
+							//Calculate Current Velocity
+							particles2D[i][j].setVel(particles2D[i][j].getVel() + timestep * particles2D[i][j].getAcc());
 
-						//Calculate Accelleration
-						particles[i].setAcc(force / particles[i].getMass());
-						particles[i - 1].setAcc(-force/ particles[i - 1].getMass());
-						//Calculate Current Velocity
-						particles[i].setVel(particles[i].getVel() + timestep * particles[i].getAcc());
-						particles[i - 1].setVel(particles[i - 1].getVel() + timestep * particles[i - 1].getAcc());
-						//Calculate New Position
-						particles[i].translate(timestep * particles[i].getVel());
-						//Check for collisions with the bounding box
-						CheckCollisions(particles[i], cube);
+							//Apply Drag force
+							particles2D[i][j].setVel(particles2D[i][j].getVel()*0.997);
+
+							//Calculate New Position
+							particles2D[i][j].translate(timestep * particles2D[i][j].getVel());
+
+							//Check for collisions with the bounding box
+							CheckCollisions(particles2D[i][j], cube);
+						}
 					}
+
 				}
 			}
 
@@ -915,7 +925,6 @@ glm::vec3 calcConeForce(glm::vec3 pos) {
 
 	return force;
 }
-
 
 std::vector<Triangle*> TriangulateGrid(std::vector<std::vector<Particle> > &p2D) {
 	std::vector<Triangle*> tris;
