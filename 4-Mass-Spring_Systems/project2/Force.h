@@ -107,7 +107,7 @@ class Wind : public Force {
 		float m_coneHeight = 20.0f;
 		float m_coneForceScale = 5.0f;
 
-		Shader b = Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag");
-		Shader r = Shader("resources/shaders/solid.vert", "resources/shaders/solid_red.frag");
+		Shader r = Shader("H:/PhysicsBasedAnimation/4-Mass-Spring_Systems/project2/resources/shaders/solid.vert", "H:/PhysicsBasedAnimation/4-Mass-Spring_Systems/project2/resources/shaders/solid_red.frag");
+		Shader b = Shader("H:/PhysicsBasedAnimation/4-Mass-Spring_Systems/project2/resources/shaders/solid.vert", "H:/PhysicsBasedAnimation/4-Mass-Spring_Systems/project2/resources/shaders/solid_blue.frag");
 };
 

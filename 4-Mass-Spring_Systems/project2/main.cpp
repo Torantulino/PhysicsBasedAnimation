@@ -47,9 +47,9 @@ int main()
 	Application::camera.setCameraPosition(glm::vec3(0.0f, 5.0f, 10.0f));
 			
 	// Create Shaders
-	Shader blue = Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag");
-	Shader red = Shader("resources/shaders/solid.vert", "resources/shaders/solid_red.frag");
-	Shader transLambert = Shader("resources/shaders/physics.vert", "resources/shaders/physics_transparent.frag");
+	Shader blue = Shader("H:/PhysicsBasedAnimation/4-Mass-Spring_Systems/project2/resources/shaders/solid.vert", "H:/PhysicsBasedAnimation/4-Mass-Spring_Systems/project2/resources/shaders/solid_blue.frag");
+	Shader red = Shader("H:/PhysicsBasedAnimation/4-Mass-Spring_Systems/project2/resources/shaders/solid.vert", "H:/PhysicsBasedAnimation/4-Mass-Spring_Systems/project2/resources/shaders/solid_red.frag");
+	Shader transLambert = Shader("H:/PhysicsBasedAnimation/4-Mass-Spring_Systems/project2/resources/shaders/physics.vert", "H:/PhysicsBasedAnimation/4-Mass-Spring_Systems/project2/resources/shaders/physics_transparent.frag");
 
 	// - Create Cube -
 	Mesh cube = Mesh::Mesh(Mesh::CUBE);
@@ -81,7 +81,7 @@ int main()
 				Particle p = Particle::Particle();
 
 				// Set Shader
-				p.getMesh().setShader(Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag"));
+				p.getMesh().setShader(Shader("H:/PhysicsBasedAnimation/4-Mass-Spring_Systems/project2/resources/shaders/solid.vert", "H:/PhysicsBasedAnimation/4-Mass-Spring_Systems/project2/resources/shaders/solid_blue.frag"));
 
 				//Set initial position
 				p.setPos(glm::vec3(0.0f, 10.0f, 0.0f));
