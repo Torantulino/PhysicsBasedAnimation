@@ -12,6 +12,7 @@ GLfloat lastTime = 0.0f;
 std::vector<Particle> particles;
 std::vector < std::vector<Particle> > particles2D;
 std::vector<Triangle*> triangles;
+std::vector<RigidBody> rigidbodies;
 
 
 // Global Properties
@@ -31,8 +32,6 @@ bool pause;
 
 
 //Force
-Hooke hooke;
-Gravity gravity = Gravity::Gravity();
 Gravity *grav = new Gravity(glm::vec3(0.0f, -9.8f, 0.0f));
 
 
@@ -73,11 +72,21 @@ int main()
 			particles.clear();
 			particles2D.clear();
 			triangles.clear();
+ 			//rigidbodies.clear();		## Somehow causes Infinite loop, yet not when stepped through. ##
 			pause = true;
 
 			//Create cube rigidbody
 			RigidBody rbCube = RigidBody();
-			//rbCube.setMesh();
+			Mesh m	= Mesh::Mesh(Mesh::CUBE);
+			rbCube.setMesh(m);
+			rbCube.getMesh().setShader(blue);
+			rbCube.setAngVel(glm::vec3(2.0f, 0.0f, 0.0f));
+
+			//Add gravity force
+			rbCube.addForce(grav);
+
+			//Add to collection
+			rigidbodies.push_back(rbCube);
 
 			//Reset Time
 			timeAccumulated = 0.0f;
@@ -110,17 +119,29 @@ int main()
 
 			// 0 - Test Simulation
 			if (mode == 0 && !pause) {
-				for (unsigned int i = 0; i < particles.size(); i++) {
+				for (unsigned int i = 0; i < rigidbodies.size(); i++) {
+					
+					//Calculate current angular velocity
+					rigidbodies[i].setAngVel(rigidbodies[i].getAngVel() + timestep * rigidbodies[i].getAngAcc());
+					//Create skew symmetric matrix for w
+					glm::mat3 angVelSkew = glm::matrixCross3(rigidbodies[i].getAngVel());
+					//Create 3x3 rotation matrix from rigidbody rotation matrix
+					glm::mat3 R = glm::mat3(rigidbodies[i].getRotate());
+					//Update rotation Matrix
+					R += timestep * angVelSkew*R;
+					R = glm::orthonormalize(R);
+					rigidbodies[i].setRotate(glm::mat4(R));
+					
 					//Calculate Forces
-					glm::vec3 force = particles[i].getMass() * g;
+					glm::vec3 force = rigidbodies[i].getMass() * g;
 					//Calculate Accelleration
-					particles[i].setAcc(force / particles[i].getMass());
+					rigidbodies[i].setAcc(force / rigidbodies[i].getMass());
 					//Calculate Current Velocity
-					particles[i].setVel(particles[i].getVel() + timestep * particles[i].getAcc());
+					rigidbodies[i].setVel(rigidbodies[i].getVel() + timestep * rigidbodies[i].getAcc());
 					//Calculate New Position
-					particles[i].translate(timestep * particles[i].getVel());
+					rigidbodies[i].translate(timestep * rigidbodies[i].getVel());
 
-					CheckCollisions(particles[i], cube);
+					//CheckCollisions(rigidbodies[i], cube);
 				}
 			}
 
@@ -147,6 +168,10 @@ int main()
 			for each (Particle p in vp) {
 				app.draw(p.getMesh());
 			}
+		}
+		//Draw rigidbodies
+		for each (RigidBody rb in rigidbodies) {
+			app.draw(rb.getMesh());
 		}
 
 		//- Render Environment Last for transparency -		

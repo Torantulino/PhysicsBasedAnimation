@@ -40,6 +40,7 @@ public:
 	void setPos(const glm::vec3 &vect) { m_pos = vect; m_mesh.setPos(vect); }
 	void setPos(int i, float p) { m_pos[i] = p; m_mesh.setPos(i, p); }	// Set the ith coordinate or the position vector
 	void setPrevPos() { m_PrevPos = m_pos; }		// Set previous position
+	void setRotate(const glm::mat4 &mat) { m_mesh.setRotate(mat); }
 
 	void setPrevAcc(const glm::vec3&vect) { m_prevAcc = vect; }
 

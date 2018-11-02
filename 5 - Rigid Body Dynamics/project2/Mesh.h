@@ -93,6 +93,8 @@ public:
 		m_shader.Use();
 	}
 
+	void setRotate(const glm::mat4 &mat) { m_rotate = mat; }
+
 	// get buffers and array references
 	GLuint getVertexArrayObject() const { return m_vertexArrayObject; }
 	GLuint getVertexBuffer() const { return m_vertexBuffer; }
