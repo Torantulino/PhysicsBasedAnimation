@@ -22,6 +22,7 @@
 #include "Mesh.h"
 #include "Particle.h"
 #include "Triangle.h"
+#include "RigidBody.h"
 
 void CheckCollisions(Particle &p, Mesh &cube);
 

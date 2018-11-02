@@ -75,8 +75,9 @@ int main()
 			triangles.clear();
 			pause = true;
 
-			//Create cube
-			Mesh rbCube = Mesh::Mesh(Mesh::CUBE);
+			//Create cube rigidbody
+			RigidBody rbCube = RigidBody();
+			//rbCube.setMesh();
 
 			//Reset Time
 			timeAccumulated = 0.0f;

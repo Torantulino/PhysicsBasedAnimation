@@ -1,7 +1,8 @@
 #pragma once
 #include "Body.h"
 
-class RigidBody
+class RigidBody :
+	public Body
 {
 public:
 	RigidBody();
