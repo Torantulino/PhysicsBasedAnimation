@@ -58,7 +58,7 @@ int main()
 	cube.setShader(transLambert);
 
 	//// time
-	const GLfloat timestep = 0.005f;
+	const GLfloat timestep = 0.033f;
 	GLfloat initTime = (GLfloat)glfwGetTime();
 	GLfloat timeAccumulated = 0.0f;
 
@@ -141,7 +141,8 @@ int main()
 					//Calculate New Position
 					rigidbodies[i].translate(timestep * rigidbodies[i].getVel());
 
-					//CheckCollisions(rigidbodies[i], cube);
+					//Check for collisions with bounding cube
+					CheckCollisions(rigidbodies[i], cube);
 				}
 			}
 
@@ -326,6 +327,64 @@ void CheckCollisions(Particle &p, Mesh &cube)
 		p.setVel(p.getVel()*p.getCor());
 	}
 }
+
+//Check for rigidbody collisions with a bouding cube.
+void CheckCollisions(RigidBody &rb, Mesh &cube)
+{
+	std::vector<Vertex> localVertices = rb.getMesh().getVertices();
+	std::vector<glm::vec3> globalVertexCoords;
+	glm::vec3 cubePos = cube.getPos();
+	glm::mat4 cubeScale = cube.getScale();
+
+	//Obtain global vertex coordinates
+	for each (Vertex v in localVertices)
+	{
+		glm::vec3 gV = glm::vec4(v.getCoord(), 1.0f) * rb.getMesh().getModel();
+		globalVertexCoords.push_back(gV);
+	}
+
+	bool collision = false;
+	glm::vec3 collisionCoord;
+	for each (glm::vec3 vCoord in globalVertexCoords)
+	{
+		//Check for collision with ground
+		//Right
+		if (vCoord.x > cubePos.x + cubeScale[0][0]) {
+			collision = true;
+			collisionCoord = vCoord;
+		}
+		//Left
+		if (vCoord.x < cubePos.x - cubeScale[0][0]) {
+			collision = true;
+			collisionCoord = vCoord;
+		}
+		//Up
+		if (vCoord.y > cubePos.y + cubeScale[1][1]) {
+			collision = true;
+			collisionCoord = vCoord;
+		}
+		//Down
+		if (vCoord.y < cubePos.y - cubeScale[1][1]) {
+			collision = true;
+			collisionCoord = vCoord;
+		}
+		//Front
+		if (vCoord.z > cubePos.z + cubeScale[2][2]) {
+			collision = true;
+			collisionCoord = vCoord;
+		}
+		//Back
+		if (vCoord.z < cubePos.z - cubeScale[2][2]) {
+			collision = true;
+			collisionCoord = vCoord;
+		}
+	}
+	if (collision) {
+		pause = true;
+		std::cout << glm::to_string(collisionCoord);
+	}
+}
+
 
 //Calculate the force excerted on a particle at pos by a force cone.
 glm::vec3 calcConeForce(glm::vec3 pos) {

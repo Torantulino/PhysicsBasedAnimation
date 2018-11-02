@@ -158,6 +158,8 @@ break;
 		break;
 	}
 
+	// - Obtain unique vertices - 
+
 	m_vertices = std::vector<Vertex>(std::begin(vertices), std::end(vertices));
 	std::vector<glm::vec3> uniques;
 

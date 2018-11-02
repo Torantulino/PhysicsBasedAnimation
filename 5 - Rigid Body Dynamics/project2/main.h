@@ -26,6 +26,8 @@
 
 void CheckCollisions(Particle &p, Mesh &cube);
 
+void CheckCollisions(RigidBody &rb, Mesh &cube);
+
 void CreateCloth(std::vector<std::vector<Particle> >& p2D, float stiffness, float damping, float rest);
 
 std::vector<Triangle*> TriangulateGrid(std::vector<std::vector<Particle> > &p2D);
