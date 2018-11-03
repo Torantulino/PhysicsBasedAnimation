@@ -68,14 +68,15 @@ int main()
 		// - MODE SWITCHING -
 		// 0 - Test Sim
 		if (glfwGetKey(app.getWindow(), GLFW_KEY_0)) {
-			mode = 0;
+ 			mode = 0;
 			particles.clear();
 			particles2D.clear();
 			triangles.clear();
- 			//rigidbodies.clear();		## Somehow causes Infinite loop, yet not when stepped through. ##
+ 			rigidbodies.clear();		
 			pause = true;
 
-			//Create cube rigidbody
+													//- HEISEN BUG! -
+			//Create cube rigidbody					//## Running this without a breakpoint sometimes causes infinite loop + memory leak of unknown cause##.
 			RigidBody rbCube = RigidBody();
 			Mesh m	= Mesh::Mesh(Mesh::CUBE);
 			rbCube.setMesh(m);
@@ -335,11 +336,12 @@ void CheckCollisions(RigidBody &rb, Mesh &cube)
 	std::vector<glm::vec3> globalVertexCoords;
 	glm::vec3 cubePos = cube.getPos();
 	glm::mat4 cubeScale = cube.getScale();
+	glm::vec3 overShoot;
 
 	//Obtain global vertex coordinates
 	for each (Vertex v in localVertices)
 	{
-		glm::vec3 gV = glm::vec4(v.getCoord(), 1.0f) * rb.getMesh().getModel();
+		glm::vec3 gV = rb.getMesh().getModel() * glm::vec4(v.getCoord(), 1.0f);
 		globalVertexCoords.push_back(gV);
 	}
 
@@ -352,36 +354,59 @@ void CheckCollisions(RigidBody &rb, Mesh &cube)
 		if (vCoord.x > cubePos.x + cubeScale[0][0]) {
 			collision = true;
 			collisionCoord = vCoord;
+
+			//Calculate collision overshoot
+			overShoot = glm::vec3(cubeScale[0][0], vCoord.y, vCoord.z) - vCoord;
 		}
 		//Left
 		if (vCoord.x < cubePos.x - cubeScale[0][0]) {
 			collision = true;
 			collisionCoord = vCoord;
+
+			//Calculate collision overshoot
+			overShoot = glm::vec3(-cubeScale[0][0], vCoord.y, vCoord.z) - vCoord;
 		}
 		//Up
 		if (vCoord.y > cubePos.y + cubeScale[1][1]) {
 			collision = true;
 			collisionCoord = vCoord;
+
+			//Calculate collision overshoot
+			overShoot = glm::vec3(vCoord.x, cubeScale[1][1], vCoord.z) - vCoord;
 		}
 		//Down
 		if (vCoord.y < cubePos.y - cubeScale[1][1]) {
 			collision = true;
 			collisionCoord = vCoord;
+
+			//Calculate collision overshoot
+			overShoot = glm::vec3(vCoord.x, -cubeScale[1][1], vCoord.z) - vCoord;
 		}
 		//Front
 		if (vCoord.z > cubePos.z + cubeScale[2][2]) {
 			collision = true;
 			collisionCoord = vCoord;
+
+			//Calculate collision overshoot
+			overShoot = glm::vec3(vCoord.x, vCoord.y, cubeScale[2][2]) - vCoord;
 		}
 		//Back
 		if (vCoord.z < cubePos.z - cubeScale[2][2]) {
 			collision = true;
 			collisionCoord = vCoord;
+
+			//Calculate collision overshoot
+			overShoot = glm::vec3(vCoord.x, vCoord.y, -cubeScale[2][2]) - vCoord;
 		}
 	}
 	if (collision) {
 		pause = true;
-		std::cout << glm::to_string(collisionCoord);
+		std::cout << "Collision detected at at: " << glm::to_string(collisionCoord);
+
+		//Move rb back to collision plane
+
+		rb.setPos(rb.getPos() + overShoot);
+		return;
 	}
 }
 
