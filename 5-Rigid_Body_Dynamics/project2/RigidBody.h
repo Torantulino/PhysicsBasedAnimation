@@ -10,7 +10,7 @@ public:
 
 	// - SETTERS -
 	void setAngVel(const glm::vec3 &omega) { m_angVel = omega; }
-	void setAngAccl(const glm::vec3 &alpha) { m_angAcc = alpha; }
+	void setAngAcc(const glm::vec3 &alpha) { m_angAcc = alpha; }
 	void setInvIneria(const glm::mat3 &invInertia) { m_invInertia = invInertia; }
 
 	// - GETTERS -

@@ -82,6 +82,7 @@ int main()
 			rbCube.setMesh(m);
 			rbCube.getMesh().setShader(blue);
 			rbCube.setAngVel(glm::vec3(2.0f, 0.0f, 0.0f));
+			rbCube.setAngAcc(glm::vec3(0.0f, 1.0f, 0.0f));
 
 			//Add gravity force
 			rbCube.addForce(grav);
