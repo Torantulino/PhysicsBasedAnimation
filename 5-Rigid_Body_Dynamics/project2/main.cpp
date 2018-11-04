@@ -93,6 +93,40 @@ int main()
 			//Reset Time
 			timeAccumulated = 0.0f;
 		}
+		// 1 - Experimenting with impulses
+		if (glfwGetKey(app.getWindow(), GLFW_KEY_0)) {
+ 			mode = 1;
+			particles.clear();
+			particles2D.clear();
+			triangles.clear();
+ 			rigidbodies.clear();		
+			pause = true;
+
+													//- HEISEN BUG! -
+			//Create cube rigidbody					//## Running this without a breakpoint sometimes causes infinite loop + memory leak of unknown cause##.
+			RigidBody rbCube = RigidBody();
+			Mesh m	= Mesh::Mesh(Mesh::CUBE);
+			rbCube.setMesh(m);
+			rbCube.getMesh().setShader(blue);
+			//Scale
+			rbCube.scale(glm::vec3(1.0f, 3.0f, 1.0f));
+
+			//Create inertia tensor in body space
+			glm::mat3 inertiaBS = glm::mat3( ((1 / 12) * rbCube.getMass() * (pow(rbCube.getScale()[2][2], 2) + pow(rbCube.getScale()[3][3], 2))), 0.0f, 0.0f,
+									0.0f, ((1 / 12) * rbCube.getMass() * (pow(rbCube.getScale()[1][1], 2) + pow(rbCube.getScale()[3][3], 2))), 0.0f,
+									0.0f, 0.0f, ((1 / 12) * rbCube.getMass() * (pow(rbCube.getScale()[1][1], 2) + pow(rbCube.getScale()[2][2], 2))) );
+
+
+
+			//Add gravity force
+			//rbCube.addForce(grav);
+
+			//Add to collection
+			rigidbodies.push_back(rbCube);
+
+			//Reset Time
+			timeAccumulated = 0.0f;
+		}
 
 		// - OTHER USER INTERACTION -
 		//Start Simulation
@@ -121,6 +155,34 @@ int main()
 
 			// 0 - Test Simulation
 			if (mode == 0 && !pause) {
+				for (unsigned int i = 0; i < rigidbodies.size(); i++) {
+					
+					//Calculate current angular velocity
+					rigidbodies[i].setAngVel(rigidbodies[i].getAngVel() + timestep * rigidbodies[i].getAngAcc());
+					//Create skew symmetric matrix for w
+					glm::mat3 angVelSkew = glm::matrixCross3(rigidbodies[i].getAngVel());
+					//Create 3x3 rotation matrix from rigidbody rotation matrix
+					glm::mat3 R = glm::mat3(rigidbodies[i].getRotate());
+					//Update rotation Matrix
+					R += timestep * angVelSkew*R;
+					R = glm::orthonormalize(R);
+					rigidbodies[i].setRotate(glm::mat4(R));
+					
+					//Calculate Forces
+					glm::vec3 force = rigidbodies[i].getMass() * g;
+					//Calculate Accelleration
+					rigidbodies[i].setAcc(force / rigidbodies[i].getMass());
+					//Calculate Current Velocity
+					rigidbodies[i].setVel(rigidbodies[i].getVel() + timestep * rigidbodies[i].getAcc());
+					//Calculate New Position
+					rigidbodies[i].translate(timestep * rigidbodies[i].getVel());
+
+					//Check for collisions with bounding cube
+					CheckCollisions(rigidbodies[i], cube);
+				}
+			}
+			// 1 - Impulses
+			if (mode == 1 && !pause) {
 				for (unsigned int i = 0; i < rigidbodies.size(); i++) {
 					
 					//Calculate current angular velocity
