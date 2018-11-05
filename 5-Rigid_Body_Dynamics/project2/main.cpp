@@ -94,7 +94,7 @@ int main()
 			timeAccumulated = 0.0f;
 		}
 		// 1 - Experimenting with impulses
-		if (glfwGetKey(app.getWindow(), GLFW_KEY_0)) {
+		if (glfwGetKey(app.getWindow(), GLFW_KEY_1)) {
  			mode = 1;
 			particles.clear();
 			particles2D.clear();
@@ -112,9 +112,9 @@ int main()
 			rbCube.scale(glm::vec3(1.0f, 3.0f, 1.0f));
 
 			//Create inertia tensor in body space
-			glm::mat3 inertiaBS = glm::mat3( ((1 / 12) * rbCube.getMass() * (pow(rbCube.getScale()[2][2], 2) + pow(rbCube.getScale()[3][3], 2))), 0.0f, 0.0f,
-									0.0f, ((1 / 12) * rbCube.getMass() * (pow(rbCube.getScale()[1][1], 2) + pow(rbCube.getScale()[3][3], 2))), 0.0f,
-									0.0f, 0.0f, ((1 / 12) * rbCube.getMass() * (pow(rbCube.getScale()[1][1], 2) + pow(rbCube.getScale()[2][2], 2))) );
+			glm::mat3 inertiaBS = glm::mat3( ((1 / 12) * rbCube.getMass() * (pow(rbCube.getScale()[1][1], 2) + pow(rbCube.getScale()[2][2], 2))), 0.0f, 0.0f,
+									0.0f, ((1 / 12) * rbCube.getMass() * (pow(rbCube.getScale()[0][0], 2) + pow(rbCube.getScale()[2][2], 2))), 0.0f,
+									0.0f, 0.0f, ((1 / 12) * rbCube.getMass() * (pow(rbCube.getScale()[0][0], 2) + pow(rbCube.getScale()[1][1], 2))) );
 
 
 
