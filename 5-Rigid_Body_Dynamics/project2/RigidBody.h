@@ -12,7 +12,7 @@ public:
 	void setAngVel(const glm::vec3 &omega) { m_angVel = omega; }
 	void setAngAcc(const glm::vec3 &alpha) { m_angAcc = alpha; }
 	void setInvIneria(const glm::mat3 &invInertia) { m_invInertia = invInertia; }
-	void setInvIneria() { m_invInertia = getRotate() * m_InertiaBS * pow(getRotate(), getTranslate()); } //is T the Translation matrix?
+	void setInvIneria() { m_invInertia = getRotate() * m_InertiaBS * glm::transpose(getRotate()); } //is T the Translation matrix?
 	void setInertiaBS() { m_InertiaBS = glm::mat3((
 						(1 / 12) * getMass() * (pow(getScale()[2][2], 2) + pow(getScale()[3][3], 2))), 0.0f, 0.0f,
 						0.0f, ((1 / 12) * getMass() * (pow(getScale()[1][1], 2) + pow(getScale()[3][3], 2))), 0.0f,
