@@ -108,15 +108,18 @@ int main()
 			Mesh m	= Mesh::Mesh(Mesh::CUBE);
 			rbCube.setMesh(m);
 			rbCube.getMesh().setShader(blue);
+			
 			//Scale
-			rbCube.scale(glm::vec3(1.0f, 3.0f, 1.0f));
+			rbCube.rbScale(glm::vec3(1.0f, 3.0f, 1.0f));			//This also calcuates and sets the inverse inertia tensor
+			rbCube.rbSetMass(5.0f);
+			rbCube.setCoM(glm::vec3(0.0f, 0.0f, 0.0f));
 
-			//Create inertia tensor in body space
-			glm::mat3 inertiaBS = glm::mat3( ((1 / 12) * rbCube.getMass() * (pow(rbCube.getScale()[1][1], 2) + pow(rbCube.getScale()[2][2], 2))), 0.0f, 0.0f,
-									0.0f, ((1 / 12) * rbCube.getMass() * (pow(rbCube.getScale()[0][0], 2) + pow(rbCube.getScale()[2][2], 2))), 0.0f,
-									0.0f, 0.0f, ((1 / 12) * rbCube.getMass() * (pow(rbCube.getScale()[0][0], 2) + pow(rbCube.getScale()[1][1], 2))) );
+			//Set initial Body Space inertia tensor
+			rbCube.setInertiaBS();
 
-
+			//Create and Test impulse
+			Impulse imp = Impulse(glm::vec3(-2.0f, 0.0f, 0.0f), glm::vec3(0.0f, 10.0f, 0.0f));
+			rbCube.impulses.push_back(imp);
 
 			//Add gravity force
 			//rbCube.addForce(grav);
@@ -157,6 +160,9 @@ int main()
 			if (mode == 0 && !pause) {
 				for (unsigned int i = 0; i < rigidbodies.size(); i++) {
 					
+					//Calculate Forces
+					glm::vec3 force = rigidbodies[i].getMass() * g;
+
 					//Calculate current angular velocity
 					rigidbodies[i].setAngVel(rigidbodies[i].getAngVel() + timestep * rigidbodies[i].getAngAcc());
 					//Create skew symmetric matrix for w
@@ -166,17 +172,15 @@ int main()
 					//Update rotation Matrix
 					R += timestep * angVelSkew*R;
 					R = glm::orthonormalize(R);
-					rigidbodies[i].setRotate(glm::mat4(R));
+					rigidbodies[i].rbSetRotate(glm::mat4(R));
 					
-					//Calculate Forces
-					glm::vec3 force = rigidbodies[i].getMass() * g;
+					// - LINEAR DYNAMICS -
 					//Calculate Accelleration
-					rigidbodies[i].setAcc(force / rigidbodies[i].getMass());
+					rigidbodies[i].setAcc(rigidbodies[i].applyForces(rigidbodies[i].getPos(), rigidbodies[i].getVel(), 1, timestep));
 					//Calculate Current Velocity
 					rigidbodies[i].setVel(rigidbodies[i].getVel() + timestep * rigidbodies[i].getAcc());
 					//Calculate New Position
 					rigidbodies[i].translate(timestep * rigidbodies[i].getVel());
-
 					//Check for collisions with bounding cube
 					CheckCollisions(rigidbodies[i], cube);
 				}
@@ -185,8 +189,16 @@ int main()
 			if (mode == 1 && !pause) {
 				for (unsigned int i = 0; i < rigidbodies.size(); i++) {
 					
+					// - ROTATIONAL DYNAMICS - 
+
+					//Summate Impulses - I^-1(r X j)
+					glm::vec3 rotImpSum = glm::vec3(0.0f, 0.0f, 0.0f);
+					for each (Impulse imp in rigidbodies[i].impulses)
+					{
+						rotImpSum += rigidbodies[i].getInvInertia() * glm::cross((imp.getPoA() - rigidbodies[i].getCoM()), imp.getValue());
+					}
 					//Calculate current angular velocity
-					rigidbodies[i].setAngVel(rigidbodies[i].getAngVel() + timestep * rigidbodies[i].getAngAcc());
+					rigidbodies[i].setAngVel(rigidbodies[i].getAngVel() + timestep * rigidbodies[i].getAngAcc() + rotImpSum);
 					//Create skew symmetric matrix for w
 					glm::mat3 angVelSkew = glm::matrixCross3(rigidbodies[i].getAngVel());
 					//Create 3x3 rotation matrix from rigidbody rotation matrix
@@ -196,15 +208,20 @@ int main()
 					R = glm::orthonormalize(R);
 					rigidbodies[i].setRotate(glm::mat4(R));
 					
-					//Calculate Forces
-					glm::vec3 force = rigidbodies[i].getMass() * g;
+					// - LINEAR DYNAMICS -
 					//Calculate Accelleration
-					rigidbodies[i].setAcc(force / rigidbodies[i].getMass());
+					rigidbodies[i].setAcc(rigidbodies[i].applyForces(rigidbodies[i].getPos(), rigidbodies[i].getVel(), 1, timestep));
+					//Summate Impulses - j/m
+					glm::vec3 linImpSum = glm::vec3(0.0f, 0.0f, 0.0f);
+					while (!rigidbodies[i].impulses.empty())
+					{
+						linImpSum += (rigidbodies[i].impulses.back().getValue() / rigidbodies[i].getMass());
+						rigidbodies[i].impulses.pop_back();
+					}
 					//Calculate Current Velocity
-					rigidbodies[i].setVel(rigidbodies[i].getVel() + timestep * rigidbodies[i].getAcc());
+					rigidbodies[i].setVel(rigidbodies[i].getVel() + timestep * rigidbodies[i].getAcc() + linImpSum);
 					//Calculate New Position
 					rigidbodies[i].translate(timestep * rigidbodies[i].getVel());
-
 					//Check for collisions with bounding cube
 					CheckCollisions(rigidbodies[i], cube);
 				}
