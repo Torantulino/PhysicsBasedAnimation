@@ -31,10 +31,10 @@ public:
 	glm::mat3 getInvInertia() { return m_invInertia; }
 
 	// - METHODS -
-	void rbScale(glm::vec3 vect) { Body::scale(vect); setInertiaBS(); setInvIneria(); }						//Update body space inertia tensor and inverse global space inertia tensor
-	void rbSetMass(float mass) { Body::setMass(mass); setInertiaBS(); setInvIneria(); }						//Update body space inertia tensor and inverse global space inertia tensor
-	void rbSetRotate(const glm::mat4 &mat) { Body::setRotate(mat); setInvIneria(); }						//Update only inverse global space inertia tensor
-	void rbRotate(float angle, const glm::vec3 &vect) { Body::rotate(angle, vect); setInvIneria(); }		//Update only inverse global space inertia tensor
+	void scale(glm::vec3 vect) { Body::scale(vect); setInertiaBS(); setInvIneria(); }						//Update body space inertia tensor and inverse global space inertia tensor
+	void setMass(float mass) { Body::setMass(mass); setInertiaBS(); setInvIneria(); }						//Update body space inertia tensor and inverse global space inertia tensor
+	void setRotate(const glm::mat4 &mat) { Body::setRotate(mat); setInvIneria(); }						//Update only inverse global space inertia tensor
+	void rotate(float angle, const glm::vec3 &vect) { Body::rotate(angle, vect); setInvIneria(); }		//Update only inverse global space inertia tensor
 
 	//Properties
 	std::vector<Impulse> impulses;	//Impulses due to act on this object

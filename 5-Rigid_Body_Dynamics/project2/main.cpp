@@ -116,8 +116,8 @@ int main()
 			rbCube.getMesh().setShader(blue);
 			
 			//Scale
-			rbCube.rbSetMass(5.0f);
-			rbCube.rbScale(glm::vec3(1.0f, 3.0f, 1.0f));
+			rbCube.setMass(5.0f);
+			rbCube.scale(glm::vec3(1.0f, 3.0f, 1.0f));
 			rbCube.setCoM(glm::vec3(0.0f, 0.0f, 0.0f));
 
 			//Set velocity
@@ -178,7 +178,7 @@ int main()
 					//Update rotation Matrix
 					R += timestep * angVelSkew*R;
 					R = glm::orthonormalize(R);
-					rigidbodies[i].rbSetRotate(glm::mat4(R));
+					rigidbodies[i].setRotate(glm::mat4(R));
 					
 					// - LINEAR DYNAMICS -
 					//Calculate Accelleration
