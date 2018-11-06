@@ -67,7 +67,11 @@ int main()
 	{
 		// - MODE SWITCHING -
 		// 0 - Test Sim
-		if (glfwGetKey(app.getWindow(), GLFW_KEY_0)) {
+		static bool flag = true;
+		static bool flag1 = true;
+		if (glfwGetKey(app.getWindow(), GLFW_KEY_0) && flag) {
+			flag = false;
+			flag1 = true;
  			mode = 0;
 			particles.clear();
 			particles2D.clear();
@@ -94,8 +98,10 @@ int main()
 			timeAccumulated = 0.0f;
 		}
 		// 1 - Experimenting with impulses
-		if (glfwGetKey(app.getWindow(), GLFW_KEY_1)) {
- 			mode = 1;
+		if (glfwGetKey(app.getWindow(), GLFW_KEY_1) && flag1) {
+			flag1 = false;
+			flag = true;
+			mode = 1;
 			particles.clear();
 			particles2D.clear();
 			triangles.clear();
