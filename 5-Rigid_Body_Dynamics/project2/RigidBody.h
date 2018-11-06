@@ -1,6 +1,8 @@
 #pragma once
 #include "Body.h"
 #include "Impulse.h"
+#include <iostream>
+#include "glm/gtx/string_cast.hpp"
 
 class RigidBody :
 	public Body
@@ -14,12 +16,13 @@ public:
 	void setAngAcc(const glm::vec3 &alpha) { m_angAcc = alpha; }
 	void setCoM(glm::vec3 CoM) { m_CoM = CoM; }
 	void setInvIneria(const glm::mat3 &invInertia) { m_invInertia = invInertia; }
-	void setInvIneria() { m_invInertia = getRotate() * m_InertiaBS * glm::transpose(getRotate()); } //is T the Translation matrix?
-	void setInertiaBS() { m_InertiaBS = glm::mat3((
-						(1 / 12) * getMass() * (pow(getScale()[1][1], 2) + pow(getScale()[2][2], 2))), 0.0f, 0.0f,
-						0.0f, ((1 / 12) * getMass() * (pow(getScale()[0][0], 2) + pow(getScale()[2][2], 2))), 0.0f,
-						0.0f, 0.0f, ((1 / 12) * getMass() * (pow(getScale()[0][0], 2) + pow(getScale()[1][1], 2)))); }
-
+	void setInvIneria() { m_invInertia = Body::getRotate() * glm::inverse(m_InertiaBS) * glm::transpose(Body::getRotate()); } //is T the Translation matrix?
+	void setInertiaBS() {
+		m_InertiaBS = glm::mat3((
+			(1.0f / 12.0f) * Body::getMass() * (pow(Body::getScale()[1][1], 2.0f) + pow(Body::getScale()[2][2], 2.0f))), 0.0f, 0.0f,
+			0.0f, ((1.0f / 12.0f) * Body::getMass() * (pow(Body::getScale()[0][0], 2.0f) + pow(Body::getScale()[2][2], 2.0f))), 0.0f,
+			0.0f, 0.0f, ((1.0f / 12.0f) * Body::getMass() * (pow(Body::getScale()[0][0], 2.0f) + pow(Body::getScale()[1][1], 2.0f))));
+	}
 
 	// - GETTERS -
 	glm::vec3 getAngVel() { return m_angVel; }
@@ -28,10 +31,10 @@ public:
 	glm::mat3 getInvInertia() { return m_invInertia; }
 
 	// - METHODS -
-	void rbScale(glm::vec3 vect) { scale(vect); setInertiaBS(); setInvIneria(); }					//Update body space inertia tensor and inverse global space inertia tensor
-	void rbSetMass(float mass) { setMass(mass); setInertiaBS(); setInvIneria(); }					//Update body space inertia tensor and inverse global space inertia tensor
-	void rbSetRotate(const glm::mat4 &mat) { setRotate(mat); setInvIneria(); }						//Update only inverse global space inertia tensor
-	void rbRotate(float angle, const glm::vec3 &vect) { rotate(angle, vect); setInvIneria(); }		//Update only inverse global space inertia tensor
+	void rbScale(glm::vec3 vect) { Body::scale(vect); setInertiaBS(); setInvIneria(); }						//Update body space inertia tensor and inverse global space inertia tensor
+	void rbSetMass(float mass) { Body::setMass(mass); setInertiaBS(); setInvIneria(); }						//Update body space inertia tensor and inverse global space inertia tensor
+	void rbSetRotate(const glm::mat4 &mat) { Body::setRotate(mat); setInvIneria(); }						//Update only inverse global space inertia tensor
+	void rbRotate(float angle, const glm::vec3 &vect) { Body::rotate(angle, vect); setInvIneria(); }		//Update only inverse global space inertia tensor
 
 	//Properties
 	std::vector<Impulse> impulses;	//Impulses due to act on this object

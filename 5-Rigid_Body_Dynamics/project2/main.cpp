@@ -116,15 +116,15 @@ int main()
 			rbCube.getMesh().setShader(blue);
 			
 			//Scale
-			rbCube.rbScale(glm::vec3(1.0f, 3.0f, 1.0f));			//This also calcuates and sets the inverse inertia tensor
 			rbCube.rbSetMass(5.0f);
+			rbCube.rbScale(glm::vec3(1.0f, 3.0f, 1.0f));
 			rbCube.setCoM(glm::vec3(0.0f, 0.0f, 0.0f));
 
-			//Set initial Body Space inertia tensor
-			rbCube.setInertiaBS();
+			//Set velocity
+			rbCube.setVel(glm::vec3(3.0f, 0.0f, 0.0f));
 
 			//Create and Test impulse
-			Impulse imp = Impulse(glm::vec3(-2.0f, 0.0f, 0.0f), glm::vec3(0.0f, 10.0f, 0.0f));
+			Impulse imp = Impulse(glm::vec3(-15.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 			rbCube.impulses.push_back(imp);
 
 			//Add gravity force
