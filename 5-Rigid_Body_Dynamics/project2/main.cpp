@@ -121,7 +121,7 @@ int main()
 			rbCube.setCoM(glm::vec3(0.0f, 0.0f, 0.0f));
 
 			//Set velocity
-			rbCube.setVel(glm::vec3(3.0f, 0.0f, 0.0f));
+			rbCube.setVel(glm::vec3(0.0f, 0.0f, 0.0f));
 
 			//Create and Test impulse
 			Impulse imp = Impulse(glm::vec3(-15.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -196,15 +196,8 @@ int main()
 				for (unsigned int i = 0; i < rigidbodies.size(); i++) {
 					
 					// - ROTATIONAL DYNAMICS - 
-
-					//Summate Impulses - I^-1(r X j)
-					glm::vec3 rotImpSum = glm::vec3(0.0f, 0.0f, 0.0f);
-					for each (Impulse imp in rigidbodies[i].impulses)
-					{
-						rotImpSum += rigidbodies[i].getInvInertia() * glm::cross((imp.getPoA() - rigidbodies[i].getCoM()), imp.getValue());
-					}
 					//Calculate current angular velocity
-					rigidbodies[i].setAngVel(rigidbodies[i].getAngVel() + timestep * rigidbodies[i].getAngAcc() + rotImpSum);
+					rigidbodies[i].setAngVel(rigidbodies[i].getAngVel() + timestep * rigidbodies[i].getAngAcc() + sumImpulsesAng(rigidbodies[i]));
 					//Create skew symmetric matrix for w
 					glm::mat3 angVelSkew = glm::matrixCross3(rigidbodies[i].getAngVel());
 					//Create 3x3 rotation matrix from rigidbody rotation matrix
@@ -217,15 +210,8 @@ int main()
 					// - LINEAR DYNAMICS -
 					//Calculate Accelleration
 					rigidbodies[i].setAcc(rigidbodies[i].applyForces(rigidbodies[i].getPos(), rigidbodies[i].getVel(), 1, timestep));
-					//Summate Impulses - j/m
-					glm::vec3 linImpSum = glm::vec3(0.0f, 0.0f, 0.0f);
-					while (!rigidbodies[i].impulses.empty())
-					{
-						linImpSum += (rigidbodies[i].impulses.back().getValue() / rigidbodies[i].getMass());
-						rigidbodies[i].impulses.pop_back();
-					}
 					//Calculate Current Velocity
-					rigidbodies[i].setVel(rigidbodies[i].getVel() + timestep * rigidbodies[i].getAcc() + linImpSum);
+					rigidbodies[i].setVel(rigidbodies[i].getVel() + timestep * rigidbodies[i].getAcc() + sumImpulsesLin(rigidbodies[i]));
 					//Calculate New Position
 					rigidbodies[i].translate(timestep * rigidbodies[i].getVel());
 					//Check for collisions with bounding cube
@@ -271,6 +257,30 @@ int main()
 
 	return EXIT_SUCCESS;
 }
+
+//Summate impulses returning resulting angular velocity (Must be called before linear)
+glm::vec3 sumImpulsesAng(RigidBody &rb) {
+	//Summate Impulses - I^-1(r X j)
+	glm::vec3 rotImpSum = glm::vec3(0.0f, 0.0f, 0.0f);
+	for each (Impulse imp in rb.impulses)
+	{
+		rotImpSum += rb.getInvInertia() * glm::cross((imp.getPoA() - rb.getCoM()), imp.getValue());
+	}
+	return rotImpSum;
+}
+
+//Summate impulses returning resulting linear velocity (Must be called AFTER angular as pops)
+glm::vec3 sumImpulsesLin(RigidBody &rb) {
+	//Summate Impulses - j/m
+	glm::vec3 linImpSum = glm::vec3(0.0f, 0.0f, 0.0f);
+	while (!rb.impulses.empty())
+	{
+		linImpSum += (rb.impulses.back().getValue() / rb.getMass());
+		rb.impulses.pop_back();
+	}
+	return linImpSum;
+}
+
 
 void CreateCloth(std::vector<std::vector<Particle> > &p2D, float stiffness, float damping, float rest)
 {

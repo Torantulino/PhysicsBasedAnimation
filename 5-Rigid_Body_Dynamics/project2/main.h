@@ -24,6 +24,9 @@
 #include "Triangle.h"
 #include "RigidBody.h"
 
+glm::vec3 sumImpulsesLin(RigidBody &rb);
+
+glm::vec3 sumImpulsesAng(RigidBody &rb);
 
 void CheckCollisions(Particle &p, Mesh &cube);
 
