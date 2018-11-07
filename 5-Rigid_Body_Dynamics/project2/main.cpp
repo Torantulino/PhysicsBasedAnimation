@@ -119,16 +119,18 @@ int main()
 			rbCube.setMass(5.0f);
 			rbCube.scale(glm::vec3(1.0f, 3.0f, 1.0f));
 			rbCube.setCoM(glm::vec3(0.0f, 0.0f, 0.0f));
+			rbCube.setCor(1.0f);
+			rbCube.setPos(glm::vec3(0.0f, 0.0f, 0.0f));
 
 			//Set velocity
 			rbCube.setVel(glm::vec3(0.0f, 0.0f, 0.0f));
 
 			//Create and Test impulse
-			Impulse imp = Impulse(glm::vec3(-15.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			Impulse imp = Impulse(glm::vec3(-10.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 			rbCube.impulses.push_back(imp);
 
 			//Add gravity force
-			//rbCube.addForce(grav);
+			rbCube.addForce(grav);
 
 			//Add to collection
 			rigidbodies.push_back(rbCube);
@@ -264,7 +266,7 @@ glm::vec3 sumImpulsesAng(RigidBody &rb) {
 	glm::vec3 rotImpSum = glm::vec3(0.0f, 0.0f, 0.0f);
 	for each (Impulse imp in rb.impulses)
 	{
-		rotImpSum += rb.getInvInertia() * glm::cross((imp.getPoA() - rb.getCoM()), imp.getValue());
+		rotImpSum += glm::length(imp.getValue()) * rb.getInvInertia() * glm::cross((imp.getPoA() - rb.getCoM()), glm::normalize(imp.getValue()));
 	}
 	return rotImpSum;
 }
@@ -429,79 +431,119 @@ void CheckCollisions(Particle &p, Mesh &cube)
 void CheckCollisions(RigidBody &rb, Mesh &cube)
 {
 	std::vector<Vertex> localVertices = rb.getMesh().getVertices();
-	std::vector<glm::vec3> globalVertexCoords;
+	std::vector<std::pair<glm::vec3, glm::vec3> > vertexCoordsGlobalLocal;
 	glm::vec3 cubePos = cube.getPos();
 	glm::mat4 cubeScale = cube.getScale();
 	glm::vec3 overShoot;
+	glm::vec3 planeNormal;
 
 	//Obtain global vertex coordinates
 	for each (Vertex v in localVertices)
 	{
+		glm::vec3 scaledLocalCoord = v.getCoord() * rb.getRotate() * rb.getScale();
 		glm::vec3 gV = rb.getMesh().getModel() * glm::vec4(v.getCoord(), 1.0f);
-		globalVertexCoords.push_back(gV);
+		vertexCoordsGlobalLocal.push_back(std::pair<glm::vec3, glm::vec3> (gV, scaledLocalCoord));
 	}
 
 	bool collision = false;
-	glm::vec3 collisionCoord;
-	for each (glm::vec3 vCoord in globalVertexCoords)
+	glm::vec3 globalCollisionCoord;
+	glm::vec3 localCollisionCoord;
+	for each (std::pair<glm::vec3, glm::vec3> vCoordPair in vertexCoordsGlobalLocal)
 	{
 		//Check for collision with ground
 		//Right
-		if (vCoord.x > cubePos.x + cubeScale[0][0]) {
+		if (vCoordPair.first.x > cubePos.x + cubeScale[0][0]) {
 			collision = true;
-			collisionCoord = vCoord;
+			globalCollisionCoord = vCoordPair.first;
+			localCollisionCoord = vCoordPair.second;
+			planeNormal = glm::vec3(-1.0f, 0.0f, 0.0f);
 
 			//Calculate collision overshoot
-			overShoot = glm::vec3(cubeScale[0][0], vCoord.y, vCoord.z) - vCoord;
+			overShoot = glm::vec3(cubeScale[0][0], vCoordPair.first.y, vCoordPair.first.z) - vCoordPair.first;
 		}
 		//Left
-		if (vCoord.x < cubePos.x - cubeScale[0][0]) {
+		if (vCoordPair.first.x < cubePos.x - cubeScale[0][0]) {
 			collision = true;
-			collisionCoord = vCoord;
+			globalCollisionCoord = vCoordPair.first;
+			localCollisionCoord = vCoordPair.second;
+			planeNormal = glm::vec3(1.0f, 0.0f, 0.0f);
 
 			//Calculate collision overshoot
-			overShoot = glm::vec3(-cubeScale[0][0], vCoord.y, vCoord.z) - vCoord;
+			overShoot = glm::vec3(-cubeScale[0][0], vCoordPair.first.y, vCoordPair.first.z) - vCoordPair.first;
 		}
 		//Up
-		if (vCoord.y > cubePos.y + cubeScale[1][1]) {
+		if (vCoordPair.first.y > cubePos.y + cubeScale[1][1]) {
 			collision = true;
-			collisionCoord = vCoord;
+			globalCollisionCoord = vCoordPair.first;
+			localCollisionCoord = vCoordPair.second;
+			planeNormal = glm::vec3(0.0f, -1.0f, 0.0f);
 
 			//Calculate collision overshoot
-			overShoot = glm::vec3(vCoord.x, cubeScale[1][1], vCoord.z) - vCoord;
+			overShoot = glm::vec3(vCoordPair.first.x, cubeScale[1][1], vCoordPair.first.z) - vCoordPair.first;
 		}
 		//Down
-		if (vCoord.y < cubePos.y - cubeScale[1][1]) {
+		if (vCoordPair.first.y < cubePos.y - cubeScale[1][1]) {
 			collision = true;
-			collisionCoord = vCoord;
+			globalCollisionCoord = vCoordPair.first;
+			localCollisionCoord = vCoordPair.second;
+			planeNormal = glm::vec3(0.0f, 1.0f, 0.0f);
 
 			//Calculate collision overshoot
-			overShoot = glm::vec3(vCoord.x, -cubeScale[1][1], vCoord.z) - vCoord;
+			overShoot = glm::vec3(vCoordPair.first.x, -cubeScale[1][1], vCoordPair.first.z) - vCoordPair.first;
 		}
 		//Front
-		if (vCoord.z > cubePos.z + cubeScale[2][2]) {
+		if (vCoordPair.first.z > cubePos.z + cubeScale[2][2]) {
 			collision = true;
-			collisionCoord = vCoord;
+			globalCollisionCoord = vCoordPair.first;
+			localCollisionCoord = vCoordPair.second;
+			planeNormal = glm::vec3(0.0f, 0.0f, -1.0f);
 
 			//Calculate collision overshoot
-			overShoot = glm::vec3(vCoord.x, vCoord.y, cubeScale[2][2]) - vCoord;
+			overShoot = glm::vec3(vCoordPair.first.x, vCoordPair.first.y, cubeScale[2][2]) - vCoordPair.first;
 		}
 		//Back
-		if (vCoord.z < cubePos.z - cubeScale[2][2]) {
+		if (vCoordPair.first.z < cubePos.z - cubeScale[2][2]) {
 			collision = true;
-			collisionCoord = vCoord;
+			globalCollisionCoord = vCoordPair.first;
+			localCollisionCoord = vCoordPair.second;
+			planeNormal = glm::vec3(0.0f, 0.0f, 1.0f);
 
 			//Calculate collision overshoot
-			overShoot = glm::vec3(vCoord.x, vCoord.y, -cubeScale[2][2]) - vCoord;
+			overShoot = glm::vec3(vCoordPair.first.x, vCoordPair.first.y, -cubeScale[2][2]) - vCoordPair.first;
 		}
 	}
 	if (collision) {
-		pause = true;
-		std::cout << "Collision detected at at: " << glm::to_string(collisionCoord);
+		//pause = true;
+		std::cout << "Collision detected at at: " << glm::to_string(globalCollisionCoord) << std::endl;
 
 		//Move rb back to collision plane
-
 		rb.setPos(rb.getPos() + overShoot);
+
+		//Apply plane based collision impulse
+		Impulse imp;
+
+		//Set point of application
+		imp.setPoA(localCollisionCoord);
+
+		//Calculate distance from CoM
+		glm::vec3 r = imp.getPoA() - rb.getCoM();
+
+		//Calculate impulse magnitude
+		float impMag =	(-(1 + rb.getCor()) * glm::dot(rb.getVel(), planeNormal)) /
+							((1.0f/rb.getMass()) + glm::dot(planeNormal, (rb.getInvInertia() * glm::cross( glm::cross(r, planeNormal), r))));
+
+		std::cout << "Impulse magnitude: " << std::to_string(impMag) << std::endl;
+
+		//Calculate impulse vector
+		glm::vec3 impVect = impMag * planeNormal;
+
+		imp.setValue(impVect);
+
+		rb.impulses.push_back(imp);
+
+		std::cout << "Applying Impulse: " << glm::to_string(impVect) << std::endl;
+		std::cout << "PoA: " << glm::to_string(imp.getPoA()) << std::endl;
+
 		return;
 	}
 }
