@@ -99,7 +99,7 @@ int main()
 		}
 		// 1 - Experimenting with impulses
 		if (glfwGetKey(app.getWindow(), GLFW_KEY_1) && flag1) {
-			flag1 = false;
+			flag1 = false;	//## Running this without flag sometimes causes infinite loop + memory leak of unknown cause##.
 			flag = true;
 			mode = 1;
 			particles.clear();
@@ -108,8 +108,8 @@ int main()
  			rigidbodies.clear();		
 			pause = true;
 
-													//- HEISEN BUG! -
-			//Create cube rigidbody					//## Running this without a breakpoint sometimes causes infinite loop + memory leak of unknown cause##.
+													
+			//Create cube rigidbody					
 			RigidBody rbCube = RigidBody();
 			Mesh m	= Mesh::Mesh(Mesh::CUBE);
 			rbCube.setMesh(m);
@@ -201,8 +201,7 @@ int main()
 					
 					// - ROTATIONAL DYNAMICS - 
 					//Calculate current angular velocity
-					//rigidbodies[i].setAngVel(rigidbodies[i].getAngVel() + timestep * rigidbodies[i].getAngAcc() + sumImpulsesAng(rigidbodies[i]));
-					rigidbodies[i].setAngVel(rigidbodies[i].getAngVel() + timestep * rigidbodies[i].getAngAcc());
+					rigidbodies[i].setAngVel(rigidbodies[i].getAngVel() + timestep * rigidbodies[i].getAngAcc() + sumImpulsesAng(rigidbodies[i]));
 					//Create skew symmetric matrix for w
 					glm::mat3 angVelSkew = glm::matrixCross3(rigidbodies[i].getAngVel());
 					//Create 3x3 rotation matrix from rigidbody rotation matrix
@@ -216,8 +215,7 @@ int main()
 					//Calculate Accelleration
 					rigidbodies[i].setAcc(rigidbodies[i].applyForces(rigidbodies[i].getPos(), rigidbodies[i].getVel(), 1, timestep));
 					//Calculate Current Velocity
-					//rigidbodies[i].setVel(rigidbodies[i].getVel() + timestep * rigidbodies[i].getAcc() + sumImpulsesLin(rigidbodies[i]));
-					rigidbodies[i].setVel(rigidbodies[i].getVel() + timestep * rigidbodies[i].getAcc());
+					rigidbodies[i].setVel(rigidbodies[i].getVel() + timestep * rigidbodies[i].getAcc() + sumImpulsesLin(rigidbodies[i]));
 					//Calculate New Position
 					rigidbodies[i].translate(timestep * rigidbodies[i].getVel());
 					//Check for collisions with bounding cube
@@ -541,19 +539,15 @@ void CheckCollisions(RigidBody &rb, Mesh &cube)
 		glm::vec3 pointVel = glm::vec3(rb.getVel() + glm::cross(rb.getAngVel(),  r));
 
 		//Calculate impulse magnitude
-		float num = -(1.0f + 1.0f) * glm::dot(pointVel, planeNormal);
+		float num = -(1.0f + rb.getCor()) * glm::dot(pointVel, planeNormal);
 		float denom = 1.0f / rb.getMass() + glm::dot(planeNormal, (glm::cross(rb.getInvInertia() * glm::cross(r, planeNormal), r)));
 		float impMag =	num/denom;
 
-		planeNormal = glm::vec3(0.0f, 1.0f, 0.0f);
 		//Set impulse magnitude and direction
 		imp.setMag(impMag);
 		imp.setDir(planeNormal);
 
 		rb.impulses.push_back(imp);
-		rb.setAngVel(rb.getAngVel() + (imp.getMag() * rb.getInvInertia() * glm::cross(r, imp.getDir())));
-		rb.setVel(rb.getVel() + ((rb.impulses.back().getMag() / rb.getMass()) * rb.impulses.back().getDir()));
-
 
 		std::cout << "Impulse magnitude: " << std::to_string(impMag) << std::endl;
 		std::cout << "Impulse Direction: " << glm::to_string(planeNormal) << std::endl;
