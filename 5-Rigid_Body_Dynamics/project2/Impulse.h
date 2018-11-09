@@ -8,18 +8,21 @@ public:
 	~Impulse();
 
 	//Constructor
-	Impulse(glm::vec3 Imp, glm::vec3 PoA) { m_impulse = Imp; m_PoA = PoA;}
+	Impulse(glm::vec3 dir, float mag, glm::vec3 PoA) { m_dir = dir; m_mag = mag; m_PoA = PoA; }
 
 	// - GETTERS -
-	glm::vec3 getValue() { return m_impulse; }
+	glm::vec3 getDir() { return m_dir; }
 	glm::vec3 getPoA() { return m_PoA; }
+	float getMag() { return m_mag; }
 
 	// - SETTERS -
-	void setValue(glm::vec3 Imp) { m_impulse = Imp; }
+	void setDir(glm::vec3 Imp) { m_dir = Imp; }
 	void setPoA(glm::vec3 PoA) { m_PoA = PoA; }
+	void setMag(float mag) { m_mag = mag; }
 
 private:
-	glm::vec3 m_impulse;	//Magnitude and direction of the impulse
-	glm::vec3 m_PoA;		//Point of application coordinates
+	glm::vec3 m_dir;	//Direction of impulse
+	glm::vec3 m_PoA;	//Point of application coordinates
+	float m_mag;		//Magnitude of Impulse
 };
 
