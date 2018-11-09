@@ -119,15 +119,17 @@ int main()
 			rbCube.setMass(5.0f);
 			rbCube.scale(glm::vec3(1.0f, 3.0f, 1.0f));
 			rbCube.setCoM(glm::vec3(0.0f, 0.0f, 0.0f));
-			rbCube.setCor(0.6f);
+			rbCube.setCor(1.0f);
 			rbCube.setPos(glm::vec3(0.0f, 0.0f, 0.0f));
+			//rbCube.rotate(1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+			rbCube.setAngVel(glm::vec3(0.0f, 0.0f, 1.0f));
 
 			//Set velocity
 			rbCube.setVel(glm::vec3(0.0f, 0.0f, 0.0f));
 
 			//Create and Test impulse
-			Impulse imp = Impulse(glm::vec3(-1.0f, 0.0f, 0.0f), 10.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-			rbCube.impulses.push_back(imp);
+			//Impulse imp = Impulse(glm::vec3(-1.0f, 0.0f, 0.0f), 10.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+			//rbCube.impulses.push_back(imp);
 
 			//Add gravity force
 			rbCube.addForce(grav);
@@ -199,7 +201,8 @@ int main()
 					
 					// - ROTATIONAL DYNAMICS - 
 					//Calculate current angular velocity
-					rigidbodies[i].setAngVel(rigidbodies[i].getAngVel() + timestep * rigidbodies[i].getAngAcc() + sumImpulsesAng(rigidbodies[i]));
+					//rigidbodies[i].setAngVel(rigidbodies[i].getAngVel() + timestep * rigidbodies[i].getAngAcc() + sumImpulsesAng(rigidbodies[i]));
+					rigidbodies[i].setAngVel(rigidbodies[i].getAngVel() + timestep * rigidbodies[i].getAngAcc());
 					//Create skew symmetric matrix for w
 					glm::mat3 angVelSkew = glm::matrixCross3(rigidbodies[i].getAngVel());
 					//Create 3x3 rotation matrix from rigidbody rotation matrix
@@ -213,7 +216,8 @@ int main()
 					//Calculate Accelleration
 					rigidbodies[i].setAcc(rigidbodies[i].applyForces(rigidbodies[i].getPos(), rigidbodies[i].getVel(), 1, timestep));
 					//Calculate Current Velocity
-					rigidbodies[i].setVel(rigidbodies[i].getVel() + timestep * rigidbodies[i].getAcc() + sumImpulsesLin(rigidbodies[i]));
+					//rigidbodies[i].setVel(rigidbodies[i].getVel() + timestep * rigidbodies[i].getAcc() + sumImpulsesLin(rigidbodies[i]));
+					rigidbodies[i].setVel(rigidbodies[i].getVel() + timestep * rigidbodies[i].getAcc());
 					//Calculate New Position
 					rigidbodies[i].translate(timestep * rigidbodies[i].getVel());
 					//Check for collisions with bounding cube
@@ -267,6 +271,8 @@ glm::vec3 sumImpulsesAng(RigidBody &rb) {
 	for each (Impulse imp in rb.impulses)
 	{
 		rotImpSum += imp.getMag() * rb.getInvInertia() * glm::cross((imp.getPoA() - rb.getPos()), imp.getDir());
+
+
 		std::cout << "r: " << glm::to_string(imp.getPoA() - rb.getPos()) << std::endl;
 		std::cout << "r magnitude: " << std::to_string(glm::length(imp.getPoA() - rb.getPos())) << std::endl << std::endl;
 	}
@@ -526,7 +532,7 @@ void CheckCollisions(RigidBody &rb, Mesh &cube)
 		Impulse imp;
 
 		//Set point of application
-		imp.setPoA(averageCoord);
+		imp.setPoA(averageCoord + overShoot);
 
 		//Calculate distance from CoM
 		glm::vec3 r = imp.getPoA() - rb.getPos();
@@ -535,15 +541,19 @@ void CheckCollisions(RigidBody &rb, Mesh &cube)
 		glm::vec3 pointVel = glm::vec3(rb.getVel() + glm::cross(rb.getAngVel(),  r));
 
 		//Calculate impulse magnitude
-		float impMag =	(-(1 + rb.getCor()) * glm::dot(rb.getVel(), planeNormal)) /
-							(1.0f/rb.getMass()) + glm::dot(planeNormal, ( glm::cross(rb.getInvInertia() * glm::cross(r, planeNormal), r)));
+		float num = -(1.0f + 1.0f) * glm::dot(pointVel, planeNormal);
+		float denom = 1.0f / rb.getMass() + glm::dot(planeNormal, (glm::cross(rb.getInvInertia() * glm::cross(r, planeNormal), r)));
+		float impMag =	num/denom;
 
-
+		planeNormal = glm::vec3(0.0f, 1.0f, 0.0f);
 		//Set impulse magnitude and direction
 		imp.setMag(impMag);
 		imp.setDir(planeNormal);
 
 		rb.impulses.push_back(imp);
+		rb.setAngVel(rb.getAngVel() + (imp.getMag() * rb.getInvInertia() * glm::cross(r, imp.getDir())));
+		rb.setVel(rb.getVel() + ((rb.impulses.back().getMag() / rb.getMass()) * rb.impulses.back().getDir()));
+
 
 		std::cout << "Impulse magnitude: " << std::to_string(impMag) << std::endl;
 		std::cout << "Impulse Direction: " << glm::to_string(planeNormal) << std::endl;
