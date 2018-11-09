@@ -126,7 +126,7 @@ int main()
 			rbCube.setVel(glm::vec3(0.0f, 0.0f, 0.0f));
 
 			//Create and Test impulse
-			Impulse imp = Impulse(glm::vec3(-10.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			Impulse imp = Impulse(glm::vec3(-1.0f, 0.0f, 0.0f), 10.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 			rbCube.impulses.push_back(imp);
 
 			//Add gravity force
@@ -266,7 +266,7 @@ glm::vec3 sumImpulsesAng(RigidBody &rb) {
 	glm::vec3 rotImpSum = glm::vec3(0.0f, 0.0f, 0.0f);
 	for each (Impulse imp in rb.impulses)
 	{
-		rotImpSum += glm::length(imp.getValue()) * rb.getInvInertia() * glm::cross((imp.getPoA() - rb.getPos()), glm::normalize(imp.getValue()));
+		rotImpSum += imp.getMag() * rb.getInvInertia() * glm::cross((imp.getPoA() - rb.getPos()), imp.getDir());
 		std::cout << "r: " << glm::to_string(imp.getPoA() - rb.getPos()) << std::endl;
 		std::cout << "r magnitude: " << std::to_string(glm::length(imp.getPoA() - rb.getPos())) << std::endl << std::endl;
 	}
@@ -279,7 +279,7 @@ glm::vec3 sumImpulsesLin(RigidBody &rb) {
 	glm::vec3 linImpSum = glm::vec3(0.0f, 0.0f, 0.0f);
 	while (!rb.impulses.empty())
 	{
-		linImpSum += (rb.impulses.back().getValue() / rb.getMass());
+		linImpSum += (rb.impulses.back().getMag() / rb.getMass()) * rb.impulses.back().getDir();
 		rb.impulses.pop_back();
 	}
 	return linImpSum;
@@ -538,16 +538,15 @@ void CheckCollisions(RigidBody &rb, Mesh &cube)
 		float impMag =	(-(1 + rb.getCor()) * glm::dot(rb.getVel(), planeNormal)) /
 							(1.0f/rb.getMass()) + glm::dot(planeNormal, ( glm::cross(rb.getInvInertia() * glm::cross(r, planeNormal), r)));
 
-		std::cout << "Impulse magnitude: " << std::to_string(impMag) << std::endl;
 
-		//Calculate impulse vector
-		glm::vec3 impVect = impMag * planeNormal;
-
-		imp.setValue(impVect);
+		//Set impulse magnitude and direction
+		imp.setMag(impMag);
+		imp.setDir(planeNormal);
 
 		rb.impulses.push_back(imp);
 
-		std::cout << "Applying Impulse: " << glm::to_string(impVect) << std::endl;
+		std::cout << "Impulse magnitude: " << std::to_string(impMag) << std::endl;
+		std::cout << "Impulse Direction: " << glm::to_string(planeNormal) << std::endl;
 		std::cout << "PoA: " << glm::to_string(imp.getPoA()) << std::endl;
 
 		return;
