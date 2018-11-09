@@ -267,6 +267,8 @@ glm::vec3 sumImpulsesAng(RigidBody &rb) {
 	for each (Impulse imp in rb.impulses)
 	{
 		rotImpSum += glm::length(imp.getValue()) * rb.getInvInertia() * glm::cross((imp.getPoA() - rb.getPos()), glm::normalize(imp.getValue()));
+		std::cout << "r: " << glm::to_string(imp.getPoA() - rb.getPos()) << std::endl;
+		std::cout << "r magnitude: " << std::to_string(glm::length(imp.getPoA() - rb.getPos())) << std::endl << std::endl;
 	}
 	return rotImpSum;
 }
@@ -527,11 +529,14 @@ void CheckCollisions(RigidBody &rb, Mesh &cube)
 		imp.setPoA(averageCoord);
 
 		//Calculate distance from CoM
-		glm::vec3 r = imp.getPoA() - rb.getCoM();
+		glm::vec3 r = imp.getPoA() - rb.getPos();
+
+		//Calculate velocity of point
+		glm::vec3 pointVel = glm::vec3(rb.getVel() + glm::cross(rb.getAngVel(),  r));
 
 		//Calculate impulse magnitude
 		float impMag =	(-(1 + rb.getCor()) * glm::dot(rb.getVel(), planeNormal)) /
-							(1.0f/rb.getMass()) + glm::dot(planeNormal, (rb.getInvInertia() * glm::cross( glm::cross(r, planeNormal), r)));
+							(1.0f/rb.getMass()) + glm::dot(planeNormal, ( glm::cross(rb.getInvInertia() * glm::cross(r, planeNormal), r)));
 
 		std::cout << "Impulse magnitude: " << std::to_string(impMag) << std::endl;
 
