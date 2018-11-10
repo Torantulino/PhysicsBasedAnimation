@@ -60,17 +60,21 @@ int main()
 	//// time
 	const GLfloat timestep = 0.033f;
 	GLfloat initTime = (GLfloat)glfwGetTime();
+	GLfloat simStartTime;
 	GLfloat timeAccumulated = 0.0f;
+
+	//flags
+	static bool firstShot;
 
 	// Game loop
 	while (!glfwWindowShouldClose(app.getWindow()))
 	{
-		// - MODE SWITCHING -
-		// 0 - Test Sim
 		static bool flag = true;
 		static bool flag1 = true;
+		// - MODE SWITCHING -
+		// 0 - 2.1 Application of an impulse (1 & 2)
 		if (glfwGetKey(app.getWindow(), GLFW_KEY_0) && flag) {
-			flag = false;
+			flag = false;					//## Running this without flag sometimes causes infinite loop + memory leak of unknown cause##.
 			flag1 = true;
  			mode = 0;
 			particles.clear();
@@ -78,18 +82,30 @@ int main()
 			triangles.clear();
  			rigidbodies.clear();		
 			pause = true;
+			firstShot = true;
 
-													//- HEISEN BUG! -
-			//Create cube rigidbody					//## Running this without a breakpoint sometimes causes infinite loop + memory leak of unknown cause##.
+			//Create rigidbody
 			RigidBody rbCube = RigidBody();
 			Mesh m	= Mesh::Mesh(Mesh::CUBE);
 			rbCube.setMesh(m);
 			rbCube.getMesh().setShader(blue);
-			rbCube.setAngVel(glm::vec3(2.0f, 0.0f, 0.0f));
-			rbCube.setAngAcc(glm::vec3(0.0f, 1.0f, 0.0f));
+			
+			//Set static properties
+			rbCube.scale(glm::vec3(1.0f, 3.0f, 1.0f));
+			rbCube.setMass(2.0f);
+			rbCube.setCoM(glm::vec3(0.0f, 0.0f, 0.0f));
+			rbCube.setCor(1.0f);
+			rbCube.setPos(glm::vec3(0.0f, 0.0f, 0.0f));
+			//rbCube.rotate(1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
 
-			//Add gravity force
-			rbCube.addForce(grav);
+			std::cout << "Inverse inertia matrix: " << glm::to_string(rbCube.getInvInertia()) << std::endl;
+
+			//Set dynamic properties
+			rbCube.setAngVel(glm::vec3(0.0f, 0.0f, 0.0f));
+			rbCube.setVel(glm::vec3(2.0f, 0.0f, 0.0f));
+
+			//Add forces
+			//rbCube.addForce(grav);
 
 			//Add to collection
 			rigidbodies.push_back(rbCube);
@@ -145,6 +161,7 @@ int main()
 		//Start Simulation
 		if (glfwGetKey(app.getWindow(), GLFW_KEY_SPACE)) {
 			pause = false;
+			simStartTime = (GLfloat)glfwGetTime();
 		}
 
 		// - TIME -
@@ -169,12 +186,17 @@ int main()
 			// 0 - Test Simulation
 			if (mode == 0 && !pause) {
 				for (unsigned int i = 0; i < rigidbodies.size(); i++) {
-					
-					//Calculate Forces
-					glm::vec3 force = rigidbodies[i].getMass() * g;
 
+
+					if (currentTime - simStartTime > 2 && firstShot) {
+						firstShot = false;
+						Impulse imp (glm::vec3(-1.0f, 0.0f, 0.0f),4.0f, glm::vec3(0.0f, -1.0f, 0.0f));
+						rigidbodies[i].impulses.push_back(imp);
+					}
+
+					// - ROTATIONAL DYNAMICS - 
 					//Calculate current angular velocity
-					rigidbodies[i].setAngVel(rigidbodies[i].getAngVel() + timestep * rigidbodies[i].getAngAcc());
+					rigidbodies[i].setAngVel(rigidbodies[i].getAngVel() + timestep * rigidbodies[i].getAngAcc() + sumImpulsesAng(rigidbodies[i]));
 					//Create skew symmetric matrix for w
 					glm::mat3 angVelSkew = glm::matrixCross3(rigidbodies[i].getAngVel());
 					//Create 3x3 rotation matrix from rigidbody rotation matrix
@@ -183,12 +205,12 @@ int main()
 					R += timestep * angVelSkew*R;
 					R = glm::orthonormalize(R);
 					rigidbodies[i].setRotate(glm::mat4(R));
-					
+
 					// - LINEAR DYNAMICS -
 					//Calculate Accelleration
 					rigidbodies[i].setAcc(rigidbodies[i].applyForces(rigidbodies[i].getPos(), rigidbodies[i].getVel(), 1, timestep));
 					//Calculate Current Velocity
-					rigidbodies[i].setVel(rigidbodies[i].getVel() + timestep * rigidbodies[i].getAcc());
+					rigidbodies[i].setVel(rigidbodies[i].getVel() + timestep * rigidbodies[i].getAcc() + sumImpulsesLin(rigidbodies[i]));
 					//Calculate New Position
 					rigidbodies[i].translate(timestep * rigidbodies[i].getVel());
 					//Check for collisions with bounding cube
