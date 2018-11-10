@@ -71,11 +71,15 @@ int main()
 	{
 		static bool flag = true;
 		static bool flag1 = true;
+		static bool flag2 = true;
+		static bool flag3 = true;
 		// - MODE SWITCHING -
 		// 0 - 2.1 Application of an impulse (1 & 2)
 		if (glfwGetKey(app.getWindow(), GLFW_KEY_0) && flag) {
 			flag = false;					//## Running this without flag sometimes causes infinite loop + memory leak of unknown cause##.
 			flag1 = true;
+			flag2 = true;
+			flag3 = true;
  			mode = 0;
 			particles.clear();
 			particles2D.clear();
@@ -113,10 +117,12 @@ int main()
 			//Reset Time
 			timeAccumulated = 0.0f;
 		}
-		// 1 - Experimenting with impulses
+		// 1 - 2.2 Collision Detection
 		if (glfwGetKey(app.getWindow(), GLFW_KEY_1) && flag1) {
-			flag1 = false;	//## Running this without flag sometimes causes infinite loop + memory leak of unknown cause##.
+			flag1 = false;					//## Running this without flag sometimes causes infinite loop + memory leak of unknown cause##.
 			flag = true;
+			flag2 = true;
+			flag3 = true;
 			mode = 1;
 			particles.clear();
 			particles2D.clear();
@@ -124,28 +130,103 @@ int main()
  			rigidbodies.clear();		
 			pause = true;
 
-													
-			//Create cube rigidbody					
+			//Create rigidbody
 			RigidBody rbCube = RigidBody();
-			Mesh m	= Mesh::Mesh(Mesh::CUBE);
+			Mesh m = Mesh::Mesh(Mesh::CUBE);
 			rbCube.setMesh(m);
 			rbCube.getMesh().setShader(blue);
-			
-			//Scale
-			rbCube.setMass(5.0f);
+
+			//Set static properties
 			rbCube.scale(glm::vec3(1.0f, 3.0f, 1.0f));
+			rbCube.setMass(2.0f);
 			rbCube.setCoM(glm::vec3(0.0f, 0.0f, 0.0f));
 			rbCube.setCor(1.0f);
 			rbCube.setPos(glm::vec3(0.0f, 0.0f, 0.0f));
 			//rbCube.rotate(1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-			rbCube.setAngVel(glm::vec3(0.0f, 0.0f, 1.0f));
 
-			//Set velocity
+			//Set dynamic properties
+			rbCube.setAngVel(glm::vec3(0.0f, 0.0f, 0.0f));
+			rbCube.setVel(glm::vec3(2.0f, 0.0f, 0.0f));
+
+			//Add gravity force
+			rbCube.addForce(grav);
+
+			//Add to collection
+			rigidbodies.push_back(rbCube);
+
+			//Reset Time
+			timeAccumulated = 0.0f;
+		}
+		// 2 - 2.3 Collision Response (1)
+		if (glfwGetKey(app.getWindow(), GLFW_KEY_2) && flag2) {
+			flag2 = false;
+			flag = true;
+			flag1 = true;							//## Running this without flag sometimes causes infinite loop + memory leak of unknown cause##.
+			flag3 = true;
+			mode = 1;
+			particles.clear();
+			particles2D.clear();
+			triangles.clear();
+ 			rigidbodies.clear();		
+			pause = true;
+
+			//Create rigidbody
+			RigidBody rbCube = RigidBody();
+			Mesh m = Mesh::Mesh(Mesh::CUBE);
+			rbCube.setMesh(m);
+			rbCube.getMesh().setShader(blue);
+
+			//Set static properties
+			rbCube.scale(glm::vec3(1.0f, 3.0f, 1.0f));
+			rbCube.setMass(2.0f);
+			rbCube.setCoM(glm::vec3(0.0f, 0.0f, 0.0f));
+			rbCube.setCor(1.0f);
+			rbCube.setPos(glm::vec3(0.0f, 0.0f, 0.0f));
+			//rbCube.rotate(1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+
+			//Set dynamic properties
+			rbCube.setAngVel(glm::vec3(0.0f, 0.0f, 0.5f));
 			rbCube.setVel(glm::vec3(0.0f, 0.0f, 0.0f));
 
-			//Create and Test impulse
-			//Impulse imp = Impulse(glm::vec3(-1.0f, 0.0f, 0.0f), 10.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-			//rbCube.impulses.push_back(imp);
+			//Add gravity force
+			rbCube.addForce(grav);
+
+			//Add to collection
+			rigidbodies.push_back(rbCube);
+
+			//Reset Time
+			timeAccumulated = 0.0f;
+		}
+		// 3 - 2.3 Collision Response (2)
+		if (glfwGetKey(app.getWindow(), GLFW_KEY_3) && flag3) {
+			flag3 = false;
+			flag = true;
+			flag1 = true;							//## Running this without flag sometimes causes infinite loop + memory leak of unknown cause##.
+			flag2 = true;
+			mode = 1;
+			particles.clear();
+			particles2D.clear();
+			triangles.clear();
+ 			rigidbodies.clear();		
+			pause = true;
+
+			//Create rigidbody
+			RigidBody rbCube = RigidBody();
+			Mesh m = Mesh::Mesh(Mesh::CUBE);
+			rbCube.setMesh(m);
+			rbCube.getMesh().setShader(blue);
+
+			//Set static properties
+			rbCube.scale(glm::vec3(1.0f, 3.0f, 1.0f));
+			rbCube.setMass(2.0f);
+			rbCube.setCoM(glm::vec3(0.0f, 0.0f, 0.0f));
+			rbCube.setCor(0.7f);
+			rbCube.setPos(glm::vec3(0.0f, 0.0f, 0.0f));
+			//rbCube.rotate(1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+
+			//Set dynamic properties
+			rbCube.setAngVel(glm::vec3(0.1f, 0.1f, 0.1f));
+			rbCube.setVel(glm::vec3(0.0f, 0.0f, 0.0f));
 
 			//Add gravity force
 			rbCube.addForce(grav);
@@ -483,6 +564,9 @@ void CheckCollisions(RigidBody &rb, Mesh &cube)
 			collisionsCoords.push_back(vCoord);
 			planeNormal = glm::vec3(-1.0f, 0.0f, 0.0f);
 
+			//Print for task 2.2
+			std::cout << "Colliding vertex: " << glm::to_string(vCoord) << std::endl;
+
 			//Calculate collision overshoot
 			overShoot = glm::vec3(cubeScale[0][0], vCoord.y, vCoord.z) - vCoord;
 		}
@@ -491,6 +575,9 @@ void CheckCollisions(RigidBody &rb, Mesh &cube)
 			collision = true;
 			collisionsCoords.push_back(vCoord);
 			planeNormal = glm::vec3(1.0f, 0.0f, 0.0f);
+
+			//Print for task 2.2
+			std::cout << "Colliding vertex: " << glm::to_string(vCoord) << std::endl;
 
 			//Calculate collision overshoot
 			overShoot = glm::vec3(-cubeScale[0][0], vCoord.y, vCoord.z) - vCoord;
@@ -501,6 +588,9 @@ void CheckCollisions(RigidBody &rb, Mesh &cube)
 			collisionsCoords.push_back(vCoord);
 			planeNormal = glm::vec3(0.0f, -1.0f, 0.0f);
 
+			//Print for task 2.2
+			std::cout << "Colliding vertex: " << glm::to_string(vCoord) << std::endl;
+
 			//Calculate collision overshoot
 			overShoot = glm::vec3(vCoord.x, cubeScale[1][1], vCoord.z) - vCoord;
 		}
@@ -509,6 +599,9 @@ void CheckCollisions(RigidBody &rb, Mesh &cube)
 			collision = true;
 			collisionsCoords.push_back(vCoord);
 			planeNormal = glm::vec3(0.0f, 1.0f, 0.0f);
+
+			//Print for task 2.2
+			std::cout << "Colliding vertex: " << glm::to_string(vCoord) << std::endl;
 
 			//Calculate collision overshoot
 			overShoot = glm::vec3(vCoord.x, -cubeScale[1][1], vCoord.z) - vCoord;
@@ -519,6 +612,9 @@ void CheckCollisions(RigidBody &rb, Mesh &cube)
 			collisionsCoords.push_back(vCoord);
 			planeNormal = glm::vec3(0.0f, 0.0f, -1.0f);
 
+			//Print for task 2.2
+			std::cout << "Colliding vertex: " << glm::to_string(vCoord) << std::endl;
+
 			//Calculate collision overshoot
 			overShoot = glm::vec3(vCoord.x, vCoord.y, cubeScale[2][2]) - vCoord;
 		}
@@ -528,6 +624,9 @@ void CheckCollisions(RigidBody &rb, Mesh &cube)
 			collisionsCoords.push_back(vCoord);
 			planeNormal = glm::vec3(0.0f, 0.0f, 1.0f);
 
+			//Print for task 2.2
+			std::cout << "Colliding vertex: " << glm::to_string(vCoord) << std::endl;
+
 			//Calculate collision overshoot
 			overShoot = glm::vec3(vCoord.x, vCoord.y, -cubeScale[2][2]) - vCoord;
 		}
@@ -535,7 +634,7 @@ void CheckCollisions(RigidBody &rb, Mesh &cube)
 	if (collision) {
 		//Get center point of all collided vertices
 		glm::vec3 averageCoord = glm::vec3(0.0f, 0.0f, 0.0f);
-		unsigned int j = 0;
+		float j = 0.0f;
 		for each (glm::vec3 colCoord in collisionsCoords) {
 			averageCoord += colCoord;
 			j++;
@@ -543,7 +642,9 @@ void CheckCollisions(RigidBody &rb, Mesh &cube)
 		averageCoord /= j;
 
 		//pause = true;
-		std::cout << "Collision detected at at: " << glm::to_string(averageCoord) << std::endl;
+		std::cout << "Average of all colliding vertices: " << glm::to_string(averageCoord) << std::endl;
+		std::cout << glm::to_string(rb.getRotate()) << std::endl;
+
 
 		//Move rb back to collision plane
 		rb.setPos(rb.getPos() + overShoot);
@@ -571,9 +672,9 @@ void CheckCollisions(RigidBody &rb, Mesh &cube)
 
 		rb.impulses.push_back(imp);
 
-		std::cout << "Impulse magnitude: " << std::to_string(impMag) << std::endl;
-		std::cout << "Impulse Direction: " << glm::to_string(planeNormal) << std::endl;
-		std::cout << "PoA: " << glm::to_string(imp.getPoA()) << std::endl;
+		//std::cout << "Impulse magnitude: " << std::to_string(impMag) << std::endl;
+		//std::cout << "Impulse Direction: " << glm::to_string(planeNormal) << std::endl;
+		//std::cout << "PoA: " << glm::to_string(imp.getPoA()) << std::endl;
 
 		return;
 	}
