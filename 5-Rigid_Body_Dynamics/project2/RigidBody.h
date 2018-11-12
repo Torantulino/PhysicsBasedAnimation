@@ -23,12 +23,14 @@ public:
 			0.0f, ((1.0f / 12.0f) * Body::getMass() * (pow(Body::getScale()[0][0], 2.0f) + pow(Body::getScale()[2][2], 2.0f))), 0.0f,
 			0.0f, 0.0f, ((1.0f / 12.0f) * Body::getMass() * (pow(Body::getScale()[0][0], 2.0f) + pow(Body::getScale()[1][1], 2.0f))));
 	}
+	void setCoF(float CoF) { m_CoF = CoF; }
 
 	// - GETTERS -
 	glm::vec3 getAngVel() { return m_angVel; }
 	glm::vec3 getAngAcc() { return m_angAcc; }
 	glm::vec3 getCoM() { return m_CoM; }
 	glm::mat3 getInvInertia() { return m_invInertia; }
+	float getCoF() { return m_CoF; }
 
 	// - METHODS -
 	void scale(glm::vec3 vect) { Body::scale(vect); setInertiaBS(); setInvIneria(); }						//Update body space inertia tensor and inverse global space inertia tensor
@@ -46,5 +48,6 @@ private:
 	glm::vec3 m_angVel;					//Angular velocity
 	glm::vec3 m_angAcc;					//Angular acceleration
 	glm::vec3 m_CoM;					//Center of mass
+	float m_CoF;						//Coefficient of friction
 };
 

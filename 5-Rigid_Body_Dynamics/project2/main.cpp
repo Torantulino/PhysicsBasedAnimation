@@ -69,10 +69,12 @@ int main()
 	// Game loop
 	while (!glfwWindowShouldClose(app.getWindow()))
 	{
+		//Flags to insure single firing of setups
 		static bool flag = true;
 		static bool flag1 = true;
 		static bool flag2 = true;
 		static bool flag3 = true;
+		static bool flag4 = true;
 		// - MODE SWITCHING -
 		// 0 - 2.1 Application of an impulse (1 & 2)
 		if (glfwGetKey(app.getWindow(), GLFW_KEY_0) && flag) {
@@ -80,6 +82,7 @@ int main()
 			flag1 = true;
 			flag2 = true;
 			flag3 = true;
+			flag4 = true;
  			mode = 0;
 			particles.clear();
 			particles2D.clear();
@@ -123,6 +126,7 @@ int main()
 			flag = true;
 			flag2 = true;
 			flag3 = true;
+			flag4 = true;
 			mode = 1;
 			particles.clear();
 			particles2D.clear();
@@ -146,7 +150,7 @@ int main()
 
 			//Set dynamic properties
 			rbCube.setAngVel(glm::vec3(0.0f, 0.0f, 0.0f));
-			rbCube.setVel(glm::vec3(2.0f, 0.0f, 0.0f));
+			//rbCube.setVel(glm::vec3(2.0f, 0.0f, 0.0f));
 
 			//Add gravity force
 			rbCube.addForce(grav);
@@ -163,6 +167,7 @@ int main()
 			flag = true;
 			flag1 = true;							//## Running this without flag sometimes causes infinite loop + memory leak of unknown cause##.
 			flag3 = true;
+			flag4 = true;
 			mode = 1;
 			particles.clear();
 			particles2D.clear();
@@ -203,6 +208,7 @@ int main()
 			flag = true;
 			flag1 = true;							//## Running this without flag sometimes causes infinite loop + memory leak of unknown cause##.
 			flag2 = true;
+			flag4 = true;
 			mode = 1;
 			particles.clear();
 			particles2D.clear();
@@ -226,6 +232,47 @@ int main()
 
 			//Set dynamic properties
 			rbCube.setAngVel(glm::vec3(0.1f, 0.1f, 0.1f));
+			rbCube.setVel(glm::vec3(0.0f, 0.0f, 0.0f));
+
+			//Add gravity force
+			rbCube.addForce(grav);
+
+			//Add to collection
+			rigidbodies.push_back(rbCube);
+
+			//Reset Time
+			timeAccumulated = 0.0f;
+		}
+		// 4 - 2.4 Friction
+		if (glfwGetKey(app.getWindow(), GLFW_KEY_4) && flag4) {
+			flag4 = false;
+			flag = true;
+			flag1 = true;							//## Running this without flag sometimes causes infinite loop + memory leak of unknown cause##.
+			flag2 = true;
+			flag3 = true;
+			mode = 1;
+			particles.clear();
+			particles2D.clear();
+			triangles.clear();
+ 			rigidbodies.clear();		
+			pause = true;
+
+			//Create rigidbody
+			RigidBody rbCube = RigidBody();
+			Mesh m = Mesh::Mesh(Mesh::CUBE);
+			rbCube.setMesh(m);
+			rbCube.getMesh().setShader(blue);
+
+			//Set static properties
+			rbCube.scale(glm::vec3(1.0f, 3.0f, 1.0f));
+			rbCube.setMass(2.0f);
+			rbCube.setCoM(glm::vec3(0.0f, 0.0f, 0.0f));
+			rbCube.setCor(0.6f);
+			rbCube.setPos(glm::vec3(0.0f, 0.0f, 0.0f));
+			//rbCube.rotate(1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+
+			//Set dynamic properties
+			rbCube.setAngVel(glm::vec3(0.0f, 0.0f, 0.0f));
 			rbCube.setVel(glm::vec3(0.0f, 0.0f, 0.0f));
 
 			//Add gravity force
@@ -672,12 +719,45 @@ void CheckCollisions(RigidBody &rb, Mesh &cube)
 
 		rb.impulses.push_back(imp);
 
+		//Calculate and apply friction
+		Impulse Jf = calculateFriction(pointVel, planeNormal, rb, impMag * planeNormal, imp.getPoA() - rb.getPos());
+
+		rb.impulses.push_back(Jf);
+
 		//std::cout << "Impulse magnitude: " << std::to_string(impMag) << std::endl;
 		//std::cout << "Impulse Direction: " << glm::to_string(planeNormal) << std::endl;
 		//std::cout << "PoA: " << glm::to_string(imp.getPoA()) << std::endl;
 
 		return;
 	}
+}
+
+Impulse calculateFriction(glm::vec3 vRel, glm::vec3 planeNormal, RigidBody &rb, glm::vec3 jn, glm::vec3 r) {
+	// First Attempt - From Lecture Slides 
+	/*
+	//Calculate relative velocity tangential to the plane normal
+	glm::vec3 Vn = glm::proj(vRel, planeNormal);
+	glm::vec3 Vt = vRel - Vn;
+
+	//Calculate friction impulse
+	return -rb.getCoF() * glm::length(jn) * (Vt / glm::length(Vt));
+	*/
+
+
+	//Calculate tangent vector in direction of sliding along the plane
+	glm::vec3 Vn = glm::proj(vRel, planeNormal);
+	glm::vec3 Vt = vRel - Vn;
+
+
+	float numerator = glm::dot(vRel, Vt);
+	float denom = (1.0f / rb.getMass()) + glm::dot(rb.getInvInertia() *  glm::cross ( glm::cross(r, Vt), r), Vt);
+	float jMag = numerator / denom;
+
+	glm::vec3 PoA = r + rb.getPos();
+
+	Impulse J(-Vt, jMag, r);
+
+	return J;
 }
 
 
