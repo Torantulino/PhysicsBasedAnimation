@@ -268,8 +268,8 @@ int main()
 			rbCube.setMass(2.0f);
 			rbCube.setCoM(glm::vec3(0.0f, 0.0f, 0.0f));
 			rbCube.setCor(0.6f);
-			rbCube.setPos(glm::vec3(0.0f, 0.0f, 0.0f));
-			//rbCube.rotate(1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+			rbCube.setPos(glm::vec3(0.0f, -6.9f, 0.0f));
+			//rbCube.rotate(2.0f, glm::vec3(0.0f, 0.0f, 1.0f));
 
 			//Set dynamic properties
 			rbCube.setAngVel(glm::vec3(0.0f, 0.0f, 0.0f));
@@ -747,15 +747,16 @@ Impulse calculateFriction(glm::vec3 vRel, glm::vec3 planeNormal, RigidBody &rb, 
 	//Calculate tangent vector in direction of sliding along the plane
 	glm::vec3 Vn = glm::proj(vRel, planeNormal);
 	glm::vec3 Vt = vRel - Vn;
+	glm::vec3 t = glm::normalize(Vt);
 
 
-	float numerator = glm::dot(vRel, Vt);
+	float numerator = glm::dot(-vRel, Vt);
 	float denom = (1.0f / rb.getMass()) + glm::dot(rb.getInvInertia() *  glm::cross ( glm::cross(r, Vt), r), Vt);
 	float jMag = numerator / denom;
 
 	glm::vec3 PoA = r + rb.getPos();
 
-	Impulse J(-Vt, jMag, r);
+	Impulse J(t, jMag, PoA);
 
 	return J;
 }
