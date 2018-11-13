@@ -692,7 +692,6 @@ void CheckCollisions(RigidBody &rb, Mesh &cube)
 		std::cout << "Average of all colliding vertices: " << glm::to_string(averageCoord) << std::endl;
 		std::cout << glm::to_string(rb.getRotate()) << std::endl;
 
-
 		//Move rb back to collision plane
 		rb.setPos(rb.getPos() + overShoot);
 
@@ -746,17 +745,23 @@ Impulse calculateFriction(glm::vec3 vRel, glm::vec3 planeNormal, RigidBody &rb, 
 
 	//Calculate tangent vector in direction of sliding along the plane
 	glm::vec3 Vn = glm::proj(vRel, planeNormal);
+	//glm::vec3 Vn = ((glm::dot(planeNormal, vRel)) / 
+	//				(glm::pow(glm::length(planeNormal),2))) * planeNormal;
 	glm::vec3 Vt = vRel - Vn;
-	glm::vec3 t = glm::normalize(Vt);
+	glm::vec3 t;
+	if (Vt != glm::vec3(0.0f, 0.0f, 0.0f))
+		t = glm::normalize(Vt);
+	else
+		t = Vt;
 
-
-	float numerator = glm::dot(-vRel, Vt);
-	float denom = (1.0f / rb.getMass()) + glm::dot(rb.getInvInertia() *  glm::cross ( glm::cross(r, Vt), r), Vt);
+	float numerator = glm::dot(-vRel, t);
+	float denom = (1.0f / rb.getMass()) + glm::dot(rb.getInvInertia() *  glm::cross ( glm::cross(r, t), r), t);
 	float jMag = numerator / denom;
 
 	glm::vec3 PoA = r + rb.getPos();
 
 	Impulse J(t, jMag, PoA);
+
 
 	return J;
 }
