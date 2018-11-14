@@ -268,12 +268,12 @@ int main()
 			rbCube.setMass(2.0f);
 			rbCube.setCoM(glm::vec3(0.0f, 0.0f, 0.0f));
 			rbCube.setCor(0.6f);
-			rbCube.setPos(glm::vec3(0.0f, -6.9f, 0.0f));
+			rbCube.setPos(glm::vec3(0.0f, -2.0f, 0.0f));
 			//rbCube.rotate(2.0f, glm::vec3(0.0f, 0.0f, 1.0f));
 
 			//Set dynamic properties
 			rbCube.setAngVel(glm::vec3(0.0f, 0.0f, 0.0f));
-			rbCube.setVel(glm::vec3(0.0f, 0.0f, 0.0f));
+			rbCube.setVel(glm::vec3(1.0f, 0.0f, 0.0f));
 
 			//Add gravity force
 			rbCube.addForce(grav);
@@ -290,6 +290,7 @@ int main()
 		if (glfwGetKey(app.getWindow(), GLFW_KEY_SPACE)) {
 			pause = false;
 			simStartTime = (GLfloat)glfwGetTime();
+			firstShot = true;
 		}
 
 		// - TIME -
@@ -720,7 +721,6 @@ void CheckCollisions(RigidBody &rb, Mesh &cube)
 
 		//Calculate and apply friction
 		Impulse Jf = calculateFriction(pointVel, planeNormal, rb, impMag * planeNormal, imp.getPoA() - rb.getPos());
-
 		rb.impulses.push_back(Jf);
 
 		//std::cout << "Impulse magnitude: " << std::to_string(impMag) << std::endl;
@@ -745,22 +745,25 @@ Impulse calculateFriction(glm::vec3 vRel, glm::vec3 planeNormal, RigidBody &rb, 
 
 	//Calculate tangent vector in direction of sliding along the plane
 	glm::vec3 Vn = glm::proj(vRel, planeNormal);
-	//glm::vec3 Vn = ((glm::dot(planeNormal, vRel)) / 
-	//				(glm::pow(glm::length(planeNormal),2))) * planeNormal;
 	glm::vec3 Vt = vRel - Vn;
 	glm::vec3 t;
 	if (Vt != glm::vec3(0.0f, 0.0f, 0.0f))
 		t = glm::normalize(Vt);
-	else
-		t = Vt;
+	else {
+		Impulse k(glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
+		return k;
+	}
 
-	float numerator = glm::dot(-vRel, t);
-	float denom = (1.0f / rb.getMass()) + glm::dot(rb.getInvInertia() *  glm::cross ( glm::cross(r, t), r), t);
+	float numerator = glm::dot(vRel, Vt);
+	float denom = (1.0f / rb.getMass()) + glm::dot(rb.getInvInertia() *  glm::cross ( glm::cross(r, Vt), r), Vt);
 	float jMag = numerator / denom;
 
 	glm::vec3 PoA = r + rb.getPos();
 
-	Impulse J(t, jMag, PoA);
+	Impulse J(-t, jMag, PoA);
+
+	std::cout << "Friction Direction = " << glm::to_string(t) << std::endl;
+	std::cout << "Friction Magnitude = " << std::to_string(jMag) << std::endl;
 
 
 	return J;
