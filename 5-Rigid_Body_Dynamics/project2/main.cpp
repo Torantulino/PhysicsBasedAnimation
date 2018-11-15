@@ -707,6 +707,14 @@ void CheckCollisions(RigidBody &rb, Mesh &cube)
 
 			//Calculate collision overshoot
 			overShoot = glm::vec3(vCoord.x, -cubeScale[1][1], vCoord.z) - vCoord;
+
+			if (frictionEnabled) {
+				//Slow vibration if stopped on the ground
+				if (glm::length(rb.getVel()) < 1.0f) {
+					rb.setVel(rb.getVel() * 0.5f);
+					rb.setAngVel(rb.getAngVel() * 0.5f);
+				}
+			}
 		}
 		//Front
 		if (vCoord.z > cubePos.z + cubeScale[2][2]) {
