@@ -46,7 +46,7 @@ int main()
 	Application::camera.setCameraPosition(glm::vec3(0.0f, 5.0f, 10.0f));
 			
 	// Create Shaders
-	Shader blue = Shader("resources/shaders/solid.vert", "resources/shaders/solid_blue.frag");
+	Shader blue = Shader("resources/shaders/physics.vert", "resources/shaders/physics.frag");
 	Shader red = Shader("resources/shaders/solid.vert", "resources/shaders/solid_red.frag");
 	Shader transLambert = Shader("resources/shaders/physics.vert", "resources/shaders/physics_transparent.frag");
 
@@ -58,7 +58,7 @@ int main()
 	cube.setShader(transLambert);
 
 	//// time
-	const GLfloat timestep = 0.033f;
+	const GLfloat timestep = 0.013f;
 	GLfloat initTime = (GLfloat)glfwGetTime();
 	GLfloat simStartTime;
 	GLfloat timeAccumulated = 0.0f;
@@ -185,7 +185,7 @@ int main()
 			rbCube.scale(glm::vec3(1.0f, 3.0f, 1.0f));
 			rbCube.setMass(2.0f);
 			rbCube.setCoM(glm::vec3(0.0f, 0.0f, 0.0f));
-			rbCube.setCor(1.0f);
+			rbCube.setCor(0.6f);
 			rbCube.setPos(glm::vec3(0.0f, 0.0f, 0.0f));
 			//rbCube.rotate(1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
 
@@ -719,33 +719,26 @@ void CheckCollisions(RigidBody &rb, Mesh &cube)
 
 		rb.impulses.push_back(imp);
 
+
+
+
 		//Calculate and apply friction
 		Impulse Jf = calculateFriction(pointVel, planeNormal, rb, impMag * planeNormal, imp.getPoA() - rb.getPos());
 		rb.impulses.push_back(Jf);
 
-		//std::cout << "Impulse magnitude: " << std::to_string(impMag) << std::endl;
-		//std::cout << "Impulse Direction: " << glm::to_string(planeNormal) << std::endl;
-		//std::cout << "PoA: " << glm::to_string(imp.getPoA()) << std::endl;
+		std::cout << "Impulse magnitude: " << std::to_string(impMag) << std::endl;
+		std::cout << "Impulse Direction: " << glm::to_string(planeNormal) << std::endl;
+		std::cout << "PoA: " << glm::to_string(imp.getPoA()) << std::endl;
 
 		return;
 	}
 }
 
 Impulse calculateFriction(glm::vec3 vRel, glm::vec3 planeNormal, RigidBody &rb, glm::vec3 jn, glm::vec3 r) {
-	// First Attempt - From Lecture Slides 
-	/*
-	//Calculate relative velocity tangential to the plane normal
+	//Calculate Velocity Tangential to the plane
 	glm::vec3 Vn = glm::proj(vRel, planeNormal);
 	glm::vec3 Vt = vRel - Vn;
-
-	//Calculate friction impulse
-	return -rb.getCoF() * glm::length(jn) * (Vt / glm::length(Vt));
-	*/
-
-
-	//Calculate tangent vector in direction of sliding along the plane
-	glm::vec3 Vn = glm::proj(vRel, planeNormal);
-	glm::vec3 Vt = vRel - Vn;
+	//normalize
 	glm::vec3 t;
 	if (Vt != glm::vec3(0.0f, 0.0f, 0.0f))
 		t = glm::normalize(Vt);
@@ -754,19 +747,35 @@ Impulse calculateFriction(glm::vec3 vRel, glm::vec3 planeNormal, RigidBody &rb, 
 		return k;
 	}
 
-	float numerator = glm::dot(vRel, Vt);
-	float denom = (1.0f / rb.getMass()) + glm::dot(rb.getInvInertia() *  glm::cross ( glm::cross(r, Vt), r), Vt);
-	float jMag = numerator / denom;
-
+	//Calculate Point of application
 	glm::vec3 PoA = r + rb.getPos();
 
+
+	//Method 1 - Gaffer's Method
+	//Calculate impluse magnitude
+	float numerator = glm::dot(vRel, t);
+	float denom = (1.0f / rb.getMass()) + glm::dot(rb.getInvInertia() *  glm::cross(glm::cross(r, t), r), t);
+	float jMag = numerator / denom;
+	//Create and return impulse
 	Impulse J(-t, jMag, PoA);
-
-	std::cout << "Friction Direction = " << glm::to_string(t) << std::endl;
-	std::cout << "Friction Magnitude = " << std::to_string(jMag) << std::endl;
-
-
 	return J;
+	
+	////Method 2 
+	////Calculate friction impulse
+	//glm::vec3 jMin = rb.getCoF() * abs(glm::length(jn)) * (Vt / glm::length(Vt));
+	//float jMag = glm::length(Vt) * rb.getMass() + glm::length(rb.getAngVel()) / glm::length(rb.getInvInertia() * glm::cross(r, glm::normalize(jMin)));
+	////Create and return impulse with cap
+	//Impulse J(-t, jMag <= glm::length(jMin) ? jMag : glm::length(jMin), PoA);
+	//return J;
+
+	////Method 3
+	////Calculate friction impulse
+	//glm::vec3 jMin = rb.getCoF() * abs(glm::length(jn)) * (Vt / glm::length(Vt));
+	//float jMax = glm::length(rb.getAngVel()) / glm::length(rb.getInvInertia() * glm::cross(r, glm::normalize(jMin)));
+	//float jMag = glm::length(Vt) * rb.getMass() + glm::length(rb.getAngVel()) / glm::length(rb.getInvInertia() * glm::cross(r, glm::normalize(jMin)));
+	////Create and return impulse with cap
+	//Impulse J(-t, jMag <= jMax ? jMag : jMax, PoA);
+	//return J;
 }
 
 
