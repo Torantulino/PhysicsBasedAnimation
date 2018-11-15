@@ -58,12 +58,12 @@ int main()
 	cube.setShader(transLambert);
 
 	//// time
-	const GLfloat timestep = 0.013f;
+	const GLfloat timestep = 0.013f; 
 	GLfloat initTime = (GLfloat)glfwGetTime();
-	GLfloat simStartTime;
+	GLfloat simStartTime; 
 	GLfloat timeAccumulated = 0.0f;
-
-	//flags
+	 
+	//flags  
 	static bool firstShot;
 
 	// Game loop
@@ -75,6 +75,7 @@ int main()
 		static bool flag2 = true;
 		static bool flag3 = true;
 		static bool flag4 = true;
+		static bool flag5 = true;
 		// - MODE SWITCHING -
 		// 0 - 2.1 Application of an impulse (1 & 2)
 		if (glfwGetKey(app.getWindow(), GLFW_KEY_0) && flag) {
@@ -83,6 +84,7 @@ int main()
 			flag2 = true;
 			flag3 = true;
 			flag4 = true;
+			flag5 = true;
  			mode = 0;
 			particles.clear();
 			particles2D.clear();
@@ -127,6 +129,7 @@ int main()
 			flag2 = true;
 			flag3 = true;
 			flag4 = true;
+			flag5 = true;
 			mode = 1;
 			particles.clear();
 			particles2D.clear();
@@ -169,6 +172,7 @@ int main()
 			flag1 = true;							//## Running this without flag sometimes causes infinite loop + memory leak of unknown cause##.
 			flag3 = true;
 			flag4 = true;
+			flag5 = true;
 			mode = 1;
 			particles.clear();
 			particles2D.clear();
@@ -211,6 +215,7 @@ int main()
 			flag1 = true;							//## Running this without flag sometimes causes infinite loop + memory leak of unknown cause##.
 			flag2 = true;
 			flag4 = true;
+			flag5 = true;
 			mode = 1;
 			particles.clear();
 			particles2D.clear();
@@ -254,6 +259,7 @@ int main()
 			flag1 = true;							//## Running this without flag sometimes causes infinite loop + memory leak of unknown cause##.
 			flag2 = true;
 			flag3 = true;
+			flag5 = true;
 			mode = 1;
 			particles.clear();
 			particles2D.clear();
@@ -279,6 +285,49 @@ int main()
 			//Set dynamic properties
 			rbCube.setAngVel(glm::vec3(0.0f, 0.0f, 0.0f));
 			rbCube.setVel(glm::vec3(1.0f, 0.0f, 0.0f));
+
+			//Add gravity force
+			rbCube.addForce(grav);
+
+			//Add to collection
+			rigidbodies.push_back(rbCube);
+
+			//Reset Time
+			timeAccumulated = 0.0f;
+		}
+		// 5 - 2.4 Friction 2
+		if (glfwGetKey(app.getWindow(), GLFW_KEY_5) && flag5) {
+			flag5 = false;
+			flag = true;
+			flag1 = true;							//## Running this without flag sometimes causes infinite loop + memory leak of unknown cause##.
+			flag2 = true;
+			flag3 = true;
+			flag4 = true;
+			mode = 1;
+			particles.clear();
+			particles2D.clear();
+			triangles.clear();
+ 			rigidbodies.clear();		
+			pause = true;
+			frictionEnabled = true;
+
+			//Create rigidbody
+			RigidBody rbCube = RigidBody();
+			Mesh m = Mesh::Mesh(Mesh::CUBE);
+			rbCube.setMesh(m);
+			rbCube.getMesh().setShader(blue);
+
+			//Set static properties
+			rbCube.scale(glm::vec3(1.0f, 3.0f, 1.0f));
+			rbCube.setMass(2.0f);
+			rbCube.setCoM(glm::vec3(0.0f, 0.0f, 0.0f));
+			rbCube.setCor(0.6f);
+			rbCube.setPos(glm::vec3(0.0f, 0.0f, 0.5f));
+			//rbCube.rotate(2.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+
+			//Set dynamic properties
+			rbCube.setAngVel(glm::vec3(0.0f, 0.0f, 0.5f));
+			rbCube.setVel(glm::vec3(0.0f, 0.0f, 0.0f));
 
 			//Add gravity force
 			rbCube.addForce(grav);
