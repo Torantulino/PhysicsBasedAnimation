@@ -79,7 +79,7 @@ int main()
 		// - MODE SWITCHING -
 		// 0 - 2.1 Application of an impulse (1 & 2)
 		if (glfwGetKey(app.getWindow(), GLFW_KEY_0) && flag) {
-			flag = false;					//## Running this without flag sometimes causes infinite loop + memory leak of unknown cause##.
+			flag = false;
 			flag1 = true;
 			flag2 = true;
 			flag3 = true;
@@ -124,7 +124,7 @@ int main()
 		}
 		// 1 - 2.2 Collision Detection
 		if (glfwGetKey(app.getWindow(), GLFW_KEY_1) && flag1) {
-			flag1 = false;					//## Running this without flag sometimes causes infinite loop + memory leak of unknown cause##.
+			flag1 = false;
 			flag = true;
 			flag2 = true;
 			flag3 = true;
@@ -169,7 +169,7 @@ int main()
 		if (glfwGetKey(app.getWindow(), GLFW_KEY_2) && flag2) {
 			flag2 = false;
 			flag = true;
-			flag1 = true;							//## Running this without flag sometimes causes infinite loop + memory leak of unknown cause##.
+			flag1 = true;
 			flag3 = true;
 			flag4 = true;
 			flag5 = true;
@@ -212,7 +212,7 @@ int main()
 		if (glfwGetKey(app.getWindow(), GLFW_KEY_3) && flag3) {
 			flag3 = false;
 			flag = true;
-			flag1 = true;							//## Running this without flag sometimes causes infinite loop + memory leak of unknown cause##.
+			flag1 = true;
 			flag2 = true;
 			flag4 = true;
 			flag5 = true;
@@ -256,7 +256,7 @@ int main()
 		if (glfwGetKey(app.getWindow(), GLFW_KEY_4) && flag4) {
 			flag4 = false;
 			flag = true;
-			flag1 = true;							//## Running this without flag sometimes causes infinite loop + memory leak of unknown cause##.
+			flag1 = true;
 			flag2 = true;
 			flag3 = true;
 			flag5 = true;
@@ -299,7 +299,7 @@ int main()
 		if (glfwGetKey(app.getWindow(), GLFW_KEY_5) && flag5) {
 			flag5 = false;
 			flag = true;
-			flag1 = true;							//## Running this without flag sometimes causes infinite loop + memory leak of unknown cause##.
+			flag1 = true;							
 			flag2 = true;
 			flag3 = true;
 			flag4 = true;
@@ -494,7 +494,7 @@ glm::vec3 sumImpulsesLin(RigidBody &rb) {
 	return linImpSum;
 }
 
-
+//Create Hooke force connections for the given 2D particle array
 void CreateCloth(std::vector<std::vector<Particle> > &p2D, float stiffness, float damping, float rest)
 {
 	//Add forces
@@ -808,6 +808,7 @@ void CheckCollisions(RigidBody &rb, Mesh &cube)
 	}
 }
 
+//Calculate Friction
 Impulse calculateFriction(glm::vec3 vRel, glm::vec3 planeNormal, RigidBody &rb, glm::vec3 jn, glm::vec3 r) {
 	//Calculate Velocity Tangential to the plane
 	glm::vec3 Vn = glm::proj(vRel, planeNormal);
@@ -850,7 +851,6 @@ Impulse calculateFriction(glm::vec3 vRel, glm::vec3 planeNormal, RigidBody &rb, 
 	//Impulse J(-t, jMag <= jMax ? jMag : jMax, PoA);
 	//return J;
 }
-
 
 //Calculate the force excerted on a particle at pos by a force cone.
 glm::vec3 calcConeForce(glm::vec3 pos) {
