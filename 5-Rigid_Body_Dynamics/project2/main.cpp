@@ -29,7 +29,7 @@ float coneForceScale = 5.0f;
 unsigned int mode = 10;
 bool firstLoop;
 bool pause;
-
+bool frictionEnabled = false;
 
 //Force
 Gravity *grav = new Gravity(glm::vec3(0.0f, -9.8f, 0.0f));
@@ -46,9 +46,9 @@ int main()
 	Application::camera.setCameraPosition(glm::vec3(0.0f, 5.0f, 10.0f));
 			
 	// Create Shaders
-	Shader blue = Shader("resources/shaders/physics.vert", "resources/shaders/physics.frag");
-	Shader red = Shader("resources/shaders/solid.vert", "resources/shaders/solid_red.frag");
-	Shader transLambert = Shader("resources/shaders/physics.vert", "resources/shaders/physics_transparent.frag");
+	Shader blue = Shader("E:/University/Year3_Tri1/Physics_Based_Animation/5-Rigid_Body_Dynamics/project2/resources/shaders/physics.vert", "E:/University/Year3_Tri1/Physics_Based_Animation/5-Rigid_Body_Dynamics/project2/resources/shaders/physics.frag");
+	Shader red = Shader("E:/University/Year3_Tri1/Physics_Based_Animation/5-Rigid_Body_Dynamics/project2/resources/shaders/solid.vert", "E:/University/Year3_Tri1/Physics_Based_Animation/5-Rigid_Body_Dynamics/project2/resources/shaders/solid_red.frag");
+	Shader transLambert = Shader("E:/University/Year3_Tri1/Physics_Based_Animation/5-Rigid_Body_Dynamics/project2/resources/shaders/physics.vert", "E:/University/Year3_Tri1/Physics_Based_Animation/5-Rigid_Body_Dynamics/project2/resources/shaders/physics_transparent.frag");
 
 	// - Create Cube -
 	Mesh cube = Mesh::Mesh(Mesh::CUBE);
@@ -133,6 +133,7 @@ int main()
 			triangles.clear();
  			rigidbodies.clear();		
 			pause = true;
+			frictionEnabled = false;
 
 			//Create rigidbody
 			RigidBody rbCube = RigidBody();
@@ -174,6 +175,7 @@ int main()
 			triangles.clear();
  			rigidbodies.clear();		
 			pause = true;
+			frictionEnabled = false;
 
 			//Create rigidbody
 			RigidBody rbCube = RigidBody();
@@ -185,7 +187,7 @@ int main()
 			rbCube.scale(glm::vec3(1.0f, 3.0f, 1.0f));
 			rbCube.setMass(2.0f);
 			rbCube.setCoM(glm::vec3(0.0f, 0.0f, 0.0f));
-			rbCube.setCor(0.6f);
+			rbCube.setCor(1.0f);
 			rbCube.setPos(glm::vec3(0.0f, 0.0f, 0.0f));
 			//rbCube.rotate(1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
 
@@ -215,6 +217,8 @@ int main()
 			triangles.clear();
  			rigidbodies.clear();		
 			pause = true;
+			frictionEnabled = false;
+
 
 			//Create rigidbody
 			RigidBody rbCube = RigidBody();
@@ -227,7 +231,7 @@ int main()
 			rbCube.setMass(2.0f);
 			rbCube.setCoM(glm::vec3(0.0f, 0.0f, 0.0f));
 			rbCube.setCor(0.7f);
-			rbCube.setPos(glm::vec3(0.0f, 0.0f, 0.0f));
+			rbCube.setPos(glm::vec3(0.0f, -3.0f, 0.0f));
 			//rbCube.rotate(1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
 
 			//Set dynamic properties
@@ -256,6 +260,7 @@ int main()
 			triangles.clear();
  			rigidbodies.clear();		
 			pause = true;
+			frictionEnabled = true;
 
 			//Create rigidbody
 			RigidBody rbCube = RigidBody();
@@ -422,8 +427,8 @@ glm::vec3 sumImpulsesAng(RigidBody &rb) {
 		rotImpSum += imp.getMag() * rb.getInvInertia() * glm::cross((imp.getPoA() - rb.getPos()), imp.getDir());
 
 
-		std::cout << "r: " << glm::to_string(imp.getPoA() - rb.getPos()) << std::endl;
-		std::cout << "r magnitude: " << std::to_string(glm::length(imp.getPoA() - rb.getPos())) << std::endl << std::endl;
+		//std::cout << "r: " << glm::to_string(imp.getPoA() - rb.getPos()) << std::endl;
+		//std::cout << "r magnitude: " << std::to_string(glm::length(imp.getPoA() - rb.getPos())) << std::endl << std::endl;
 	}
 	return rotImpSum;
 }
@@ -690,8 +695,8 @@ void CheckCollisions(RigidBody &rb, Mesh &cube)
 		averageCoord /= j;
 
 		//pause = true;
-		std::cout << "Average of all colliding vertices: " << glm::to_string(averageCoord) << std::endl;
-		std::cout << glm::to_string(rb.getRotate()) << std::endl;
+		std::cout << "Average of all colliding vertices: " << glm::to_string(averageCoord) << std::endl << std::endl;
+		//std::cout << glm::to_string(rb.getRotate()) << std::endl;
 
 		//Move rb back to collision plane
 		rb.setPos(rb.getPos() + overShoot);
@@ -719,16 +724,15 @@ void CheckCollisions(RigidBody &rb, Mesh &cube)
 
 		rb.impulses.push_back(imp);
 
+		if (frictionEnabled) {
+			//Calculate and apply friction
+			Impulse Jf = calculateFriction(pointVel, planeNormal, rb, impMag * planeNormal, imp.getPoA() - rb.getPos());
+			rb.impulses.push_back(Jf);
+		}
 
-
-
-		//Calculate and apply friction
-		Impulse Jf = calculateFriction(pointVel, planeNormal, rb, impMag * planeNormal, imp.getPoA() - rb.getPos());
-		rb.impulses.push_back(Jf);
-
-		std::cout << "Impulse magnitude: " << std::to_string(impMag) << std::endl;
-		std::cout << "Impulse Direction: " << glm::to_string(planeNormal) << std::endl;
-		std::cout << "PoA: " << glm::to_string(imp.getPoA()) << std::endl;
+		//std::cout << "Impulse magnitude: " << std::to_string(impMag) << std::endl;
+		//std::cout << "Impulse Direction: " << glm::to_string(planeNormal) << std::endl;
+		//std::cout << "PoA: " << glm::to_string(imp.getPoA()) << std::endl;
 
 		return;
 	}
@@ -749,7 +753,6 @@ Impulse calculateFriction(glm::vec3 vRel, glm::vec3 planeNormal, RigidBody &rb, 
 
 	//Calculate Point of application
 	glm::vec3 PoA = r + rb.getPos();
-
 
 	//Method 1 - Gaffer's Method
 	//Calculate impluse magnitude
