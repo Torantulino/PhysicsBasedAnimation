@@ -708,13 +708,26 @@ void CheckCollisions(RigidBody &rb, Mesh &cube)
 			//Calculate collision overshoot
 			overShoot = glm::vec3(vCoord.x, -cubeScale[1][1], vCoord.z) - vCoord;
 
+			//Teared ground resting
 			if (frictionEnabled) {
 				//Slow vibration if stopped on the ground
 				if (glm::length(rb.getVel()) < 1.0f) {
-					rb.setVel(rb.getVel() * 0.5f);
+					//rb.setVel(rb.getVel() * 0.5f);
 					rb.setAngVel(rb.getAngVel() * 0.5f);
 				}
+				//Stop
+				if (glm::length(rb.getVel()) < 0.1f && glm::length(rb.getAngVel()) < 2.0f) {
+					rb.setAngVel(rb.getAngVel() * 0.2f);
+					rb.setVel(rb.getVel() * 0.2f);
+				}
+				//Rest
+				if (glm::length(rb.getVel()) < 0.05f && glm::length(rb.getAngVel()) < 2.0f) {
+					rb.setAngVel(rb.getAngVel() * 0.05f);
+					rb.setVel(rb.getVel() * 0.05f);
+				}
 			}
+
+
 		}
 		//Front
 		if (vCoord.z > cubePos.z + cubeScale[2][2]) {
