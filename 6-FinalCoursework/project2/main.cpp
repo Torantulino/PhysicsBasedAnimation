@@ -101,7 +101,7 @@ int main()
 				//rbCube.rotate(1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
 
 				//Set dynamic properties
-				sphere.setAngVel(glm::vec3(10.0f + i, 0.0f, 0.0f));
+				sphere.setAngVel(glm::vec3(30.0f * i, 0.0f, i*15.0f));
 				sphere.setVel(glm::vec3(0.0f, 0.0f, 0.0f));
 
 				//Add gravity force
@@ -177,6 +177,9 @@ int main()
 					rigidbodies[i].translate(timestep * rigidbodies[i].getVel());
 					//Check for collisions with bounding cube
 					CheckCollisions(rigidbodies[i], cube);
+
+					//Check for intersphere collisions
+					CheckCollisions(rigidbodies);
 				}
 			}
 
@@ -665,6 +668,34 @@ void CheckCollisions(Sphere &rb, Mesh &cube)
 	}
 }
 
+void CheckCollisions(std::vector<Sphere> &spheres) {
+	//iterate through collection
+	for (unsigned int i = 0; i < spheres.size(); i++) {
+		for (unsigned int j = 0; j < spheres.size(); j++) {
+			//If the spheres are not the same object
+			if (i != j) {
+				float combiedRadius = spheres[i].getRadius() + spheres[j].getRadius();
+				float distance = glm::length(spheres[i].getPos() - spheres[j].getPos());
+				if (distance < combiedRadius) {
+					float overshoot = combiedRadius - distance;
+					CollisionResponse(spheres[i], spheres[j], overshoot);
+				}
+			}
+		}
+	}
+}
+
+void CollisionResponse(Sphere & sp1, Sphere & sp2, float overshoot) {
+	glm::vec3 collisionNormal = glm::normalize(sp1.getPos() - sp2.getPos());	//Towards sp1
+	glm::vec3 r1 = (sp1.getPos() + collisionNormal * sp1.getRadius()) - sp1.getPos();
+	glm::vec3 r2 = (sp2.getPos() + collisionNormal * sp2.getRadius()) - sp2.getPos();
+	glm::vec3 PoA = sp1.getPos() + r1;
+	
+	//Move back against collision
+	sp1.setPos(sp1.getPos() + (overshoot / 2) * collisionNormal);
+	sp2.setPos(sp2.getPos() - (overshoot / 2) * collisionNormal);
+}
+
 void CollisionResponse(Sphere & rb, glm::vec3 &overShoot, glm::vec3 &planeNormal)
 {
 	//Move rb back to collision plane
@@ -704,6 +735,8 @@ void CollisionResponse(Sphere & rb, glm::vec3 &overShoot, glm::vec3 &planeNormal
 	//std::cout << "Impulse Direction: " << glm::to_string(planeNormal) << std::endl;
 	//std::cout << "PoA: " << glm::to_string(imp.getPoA()) << std::endl;
 }
+
+
 
 //Calculate Friction
 Impulse calculateFriction(glm::vec3 vRel, glm::vec3 planeNormal, RigidBody &rb, glm::vec3 jn, glm::vec3 r) {
