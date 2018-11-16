@@ -42,3 +42,5 @@ Impulse calculateFriction(glm::vec3 vRel, glm::vec3 planeNormal, RigidBody &rb, 
 std::vector<Triangle*> TriangulateGrid(std::vector<std::vector<Particle> > &p2D);
 
 glm::vec3 calcConeForce(glm::vec3 pos);
+
+GLuint loadBMP_custom(const char * imagepath);

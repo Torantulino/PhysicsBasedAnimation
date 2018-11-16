@@ -38,25 +38,25 @@ Gravity *grav = new Gravity(glm::vec3(0.0f, -9.8f, 0.0f));
 
 
 // main function
-int main()
-{
-	// create application
-	Application app = Application::Application();
+int main() 
+{  
+	// create application 
+	Application app = Application::Application(); 
 	app.initRender();
 	Application::camera.setCameraPosition(glm::vec3(0.0f, 5.0f, 10.0f));
-			
-	// Create Shaders
-	Shader lambert = Shader("E:/University/Year3_Tri1/Physics_Based_Animation/5-Rigid_Body_Dynamics/project2/resources/shaders/physics.vert", "E:/University/Year3_Tri1/Physics_Based_Animation/5-Rigid_Body_Dynamics/project2/resources/shaders/physics.frag");
-	Shader red = Shader("E:/University/Year3_Tri1/Physics_Based_Animation/5-Rigid_Body_Dynamics/project2/resources/shaders/solid.vert", "E:/University/Year3_Tri1/Physics_Based_Animation/5-Rigid_Body_Dynamics/project2/resources/shaders/solid_red.frag");
-	Shader transLambert = Shader("E:/University/Year3_Tri1/Physics_Based_Animation/5-Rigid_Body_Dynamics/project2/resources/shaders/physics.vert", "E:/University/Year3_Tri1/Physics_Based_Animation/5-Rigid_Body_Dynamics/project2/resources/shaders/physics_transparent.frag");
+			  
+	// Create Shaders    
+	Shader lambert = Shader("E:/University/Year3_Tri1/Physics_Based_Animation/6-FinalCoursework/project2/resources/shaders/physics.vert", "E:/University/Year3_Tri1/Physics_Based_Animation/6-FinalCoursework/project2/resources/shaders/physics.frag");
+	Shader red = Shader("E:/University/Year3_Tri1/Physics_Based_Animation/6-FinalCoursework/project2/resources/shaders/solid.vert", "E:/University/Year3_Tri1/Physics_Based_Animation/6-FinalCoursework/project2/resources/shaders/solid_red.frag");
+	Shader transLambert = Shader("E:/University/Year3_Tri1/Physics_Based_Animation/6-FinalCoursework/project2/resources/shaders/physics.vert", "E:/University/Year3_Tri1/Physics_Based_Animation/6-FinalCoursework/project2/resources/shaders/physics_transparent.frag");
 
 	// - Create Cube -
 	Mesh cube = Mesh::Mesh(Mesh::CUBE);
 	// scale up x5
 	cube.scale(glm::vec3(10.0f, 10.0f, 10.0f));
 	//Set Shader
-	cube.setShader(transLambert);
-
+	cube.setShader(transLambert); 
+	   
 	//// time
 	const GLfloat timestep = 0.013f; 
 	GLfloat initTime = (GLfloat)glfwGetTime();
@@ -79,11 +79,12 @@ int main()
 			flag = true;
 			mode = 1;
 			particles.clear();
-			particles2D.clear();
+			particles2D.clear(); 
 			triangles.clear();
  			rigidbodies.clear();		
 			pause = true;
 			frictionEnabled = true;
+
 
 			//Create sphere
 			Sphere sphere = Sphere();
@@ -101,7 +102,7 @@ int main()
 
 			//Set dynamic properties
 			sphere.setAngVel(glm::vec3(0.0f, 0.0f, 0.0f));
-			//rbCube.setVel(glm::vec3(2.0f, 0.0f, 0.0f));
+			sphere.setVel(glm::vec3(10.0f, 10.0f, -6.0f));
 
 			//Add gravity force
 			sphere.addForce(grav);
@@ -122,7 +123,7 @@ int main()
 			triangles.clear();
  			rigidbodies.clear();		
 			pause = true;
-			frictionEnabled = false;
+			frictionEnabled = true;
 		}
 
 		// - OTHER USER INTERACTION -
@@ -598,6 +599,7 @@ void CheckCollisions(Sphere &rb, Mesh &cube)
 		//Calculate collision overshoot
 		overShoot = glm::vec3(spherePos.x, cubePos.y + cubeScale[1][1], spherePos.z) - glm::vec3(spherePos.x, spherePos.y + rb.getRadius(), spherePos.z);
 	}
+
 	//Down
 	distance = abs(cubePos.y - cubeScale[1][1] - spherePos.y);
 	if (distance < rb.getRadius()) {
@@ -625,26 +627,27 @@ void CheckCollisions(Sphere &rb, Mesh &cube)
 				rb.setVel(rb.getVel() * 0.05f);
 			}
 		}
-		
-		//Front
-		distance = abs(cubePos.z + cubeScale[2][2] - spherePos.z);
-		if (distance < rb.getRadius()) {
-			collision = true;
-			planeNormal = glm::vec3(0.0f, 0.0f, -1.0f);
-
-			//Calculate collision overshoot
-			overShoot = glm::vec3(spherePos.x, spherePos.y, cubePos.z + cubeScale[2][2]) - glm::vec3(spherePos.x, spherePos.y, spherePos.z + rb.getRadius());
-		}
-		//Back
-		distance = abs(cubePos.z - cubeScale[2][2] - spherePos.z);
-		if (distance < rb.getRadius()) {
-			collision = true;
-			planeNormal = glm::vec3(0.0f, 0.0f, 1.0f);
-
-			//Calculate collision overshoot
-			overShoot = glm::vec3(spherePos.x, spherePos.y, cubePos.z - cubeScale[2][2]) - glm::vec3(spherePos.x, spherePos.y, spherePos.z - rb.getRadius());
-		}
 	}
+
+	//Front
+	distance = abs(cubePos.z + cubeScale[2][2] - spherePos.z);
+	if (distance < rb.getRadius()) {
+		collision = true;
+		planeNormal = glm::vec3(0.0f, 0.0f, -1.0f);
+
+		//Calculate collision overshoot
+		overShoot = glm::vec3(spherePos.x, spherePos.y, cubePos.z + cubeScale[2][2]) - glm::vec3(spherePos.x, spherePos.y, spherePos.z + rb.getRadius());
+	}
+	//Back
+	distance = abs(cubePos.z - cubeScale[2][2] - spherePos.z);
+	if (distance < rb.getRadius()) {
+		collision = true;
+		planeNormal = glm::vec3(0.0f, 0.0f, 1.0f);
+
+		//Calculate collision overshoot
+		overShoot = glm::vec3(spherePos.x, spherePos.y, cubePos.z - cubeScale[2][2]) - glm::vec3(spherePos.x, spherePos.y, spherePos.z - rb.getRadius());
+	}
+
 	if (collision) {
 
 

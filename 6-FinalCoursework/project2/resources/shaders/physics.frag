@@ -18,7 +18,7 @@ void main()
 {
 	// directional light properties
 	DirectionalLight light;
-	light.color = vec3(0.5f, 0.5f, 0.5f);
+	light.color = vec3(0.0f + normal.x, 0.0f + normal.y, 0.0f + normal.z);
 	light.direction = vec3(-2.0f, 0.5f, 3.7f);
 
     // ambient 
