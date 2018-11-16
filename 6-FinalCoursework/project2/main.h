@@ -35,6 +35,8 @@ void CheckCollisions(RigidBody &rb, Mesh &cube);
 
 void CheckCollisions(Sphere &rb, Mesh &cube);
 
+void CollisionResponse(Sphere & rb, glm::vec3 &overShoot, glm::vec3 &planeNormal);
+
 void CreateCloth(std::vector<std::vector<Particle> >& p2D, float stiffness, float damping, float rest);
 
 Impulse calculateFriction(glm::vec3 vRel, glm::vec3 planeNormal, RigidBody &rb, glm::vec3 jn, glm::vec3 r);
@@ -44,3 +46,4 @@ std::vector<Triangle*> TriangulateGrid(std::vector<std::vector<Particle> > &p2D)
 glm::vec3 calcConeForce(glm::vec3 pos);
 
 GLuint loadBMP_custom(const char * imagepath);
+

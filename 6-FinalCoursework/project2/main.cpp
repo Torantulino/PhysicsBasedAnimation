@@ -92,17 +92,17 @@ int main()
 				sphere.setMesh(m);
 				sphere.getMesh().setShader(lambert);
 
-				//Set static properties
+				//Set static properties    
 				sphere.scale(glm::vec3(1.0f, 1.0f, 1.0f));
 				sphere.setMass(2.0f);
 				sphere.setCoM(glm::vec3(0.0f, 0.0f, 0.0f));
 				sphere.setCor(1.0f);
-				sphere.setPos(glm::vec3(-9.0f + i*2, 0.0f, 0.0f));
+				sphere.setPos(glm::vec3(-9.0f + i*2, -9.0f, 0.0f));
 				//rbCube.rotate(1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
 
 				//Set dynamic properties
-				sphere.setAngVel(glm::vec3(0.0f, 0.0f, 0.0f));
-				sphere.setVel(glm::vec3(10.0f, 10.0f, -6.0f));
+				sphere.setAngVel(glm::vec3(10.0f + i, 0.0f, 0.0f));
+				sphere.setVel(glm::vec3(0.0f, 0.0f, 0.0f));
 
 				//Add gravity force
 				sphere.addForce(grav);
@@ -571,30 +571,38 @@ void CheckCollisions(Sphere &rb, Mesh &cube)
 	bool collision = false;
 	float distance;
 
+	//##DOESN'T WORK WHEN THERE ARE TWO COLLISIONS AT ONCE!##
 	//Check for collision with ground
 	//Right
-	distance = abs(cubePos.x + cubeScale[0][0] - spherePos.x);
-	if (distance < rb.getRadius()) {
+	if (spherePos.x + rb.getRadius() > cubePos.x + cubeScale[0][0]) { //TODO: Convert rest to this method to prevent tunneling
 		collision = true;
 		planeNormal = glm::vec3(-1.0f, 0.0f, 0.0f);
+
+		CollisionResponse(rb, overShoot, planeNormal);
 
 		//Calculate collision overshoot
 		overShoot = glm::vec3(cubePos.x + cubeScale[0][0], spherePos.y, spherePos.z) - glm::vec3(spherePos.x + rb.getRadius(), spherePos.y, spherePos.z);
 	}
+
 	//Left
 	distance = abs(cubePos.x - cubeScale[0][0] - spherePos.x);
 	if (distance < rb.getRadius()) {
 		collision = true;
 		planeNormal = glm::vec3(1.0f, 0.0f, 0.0f);
 
+		CollisionResponse(rb, overShoot, planeNormal);
+
 		//Calculate collision overshoot
 		overShoot = glm::vec3(cubePos.x - cubeScale[0][0], spherePos.y, spherePos.z) - glm::vec3(spherePos.x - rb.getRadius(), spherePos.y, spherePos.z);
 	}
+
 	//Up
 	distance = abs(cubePos.y + cubeScale[1][1] - spherePos.y);
 	if (distance < rb.getRadius()) {
 		collision = true;
 		planeNormal = glm::vec3(0.0f, -1.0f, 0.0f);
+
+		CollisionResponse(rb, overShoot, planeNormal);
 
 		//Calculate collision overshoot
 		overShoot = glm::vec3(spherePos.x, cubePos.y + cubeScale[1][1], spherePos.z) - glm::vec3(spherePos.x, spherePos.y + rb.getRadius(), spherePos.z);
@@ -608,6 +616,8 @@ void CheckCollisions(Sphere &rb, Mesh &cube)
 
 		//Calculate collision overshoot
 		overShoot = glm::vec3(spherePos.x, cubePos.y - cubeScale[1][1], spherePos.z) - glm::vec3(spherePos.x, spherePos.y - rb.getRadius(), spherePos.z);
+
+		CollisionResponse(rb, overShoot, planeNormal);
 
 		//Teared ground resting
 		if (frictionEnabled) {
@@ -627,6 +637,7 @@ void CheckCollisions(Sphere &rb, Mesh &cube)
 				rb.setVel(rb.getVel() * 0.05f);
 			}
 		}
+
 	}
 
 	//Front
@@ -637,7 +648,10 @@ void CheckCollisions(Sphere &rb, Mesh &cube)
 
 		//Calculate collision overshoot
 		overShoot = glm::vec3(spherePos.x, spherePos.y, cubePos.z + cubeScale[2][2]) - glm::vec3(spherePos.x, spherePos.y, spherePos.z + rb.getRadius());
+		return CollisionResponse(rb, overShoot, planeNormal);
+
 	}
+
 	//Back
 	distance = abs(cubePos.z - cubeScale[2][2] - spherePos.z);
 	if (distance < rb.getRadius()) {
@@ -646,50 +660,49 @@ void CheckCollisions(Sphere &rb, Mesh &cube)
 
 		//Calculate collision overshoot
 		overShoot = glm::vec3(spherePos.x, spherePos.y, cubePos.z - cubeScale[2][2]) - glm::vec3(spherePos.x, spherePos.y, spherePos.z - rb.getRadius());
+		return CollisionResponse(rb, overShoot, planeNormal);
+
+	}
+}
+
+void CollisionResponse(Sphere & rb, glm::vec3 &overShoot, glm::vec3 &planeNormal)
+{
+	//Move rb back to collision plane
+	rb.setPos(rb.getPos() + overShoot);
+	//pause = true;
+
+	//Apply plane based collision impulse
+	Impulse imp;
+
+	//Calculate distance from CoM
+	glm::vec3 r = rb.getRadius() * -planeNormal;
+
+	//Set point of application
+	imp.setPoA(rb.getPos() + r);
+
+	//Calculate velocity of point
+	glm::vec3 pointVel = glm::vec3(rb.getVel() + glm::cross(rb.getAngVel(), r));
+
+	//Calculate impulse magnitude
+	float num = -(1.0f + rb.getCor()) * glm::dot(pointVel, planeNormal);
+	float denom = 1.0f / rb.getMass() + glm::dot(planeNormal, (glm::cross(rb.getInvInertia() * glm::cross(r, planeNormal), r)));
+	float impMag = abs(num / denom);
+
+	//Set impulse magnitude and direction
+	imp.setMag(impMag);
+	imp.setDir(planeNormal);
+
+	rb.impulses.push_back(imp);
+
+	if (frictionEnabled) {
+		//Calculate and apply friction
+		Impulse Jf = calculateFriction(pointVel, planeNormal, rb, impMag * planeNormal, imp.getPoA() - rb.getPos());
+		rb.impulses.push_back(Jf);
 	}
 
-	if (collision) {
-
-
-		//Move rb back to collision plane
-		rb.setPos(rb.getPos() + overShoot);
-		//pause = true;
-
-		//Apply plane based collision impulse
-		Impulse imp;
-
-		//Calculate distance from CoM
-		glm::vec3 r = rb.getRadius() * planeNormal;
-
-		//Set point of application
-		imp.setPoA(rb.getPos() + r);
-
-		//Calculate velocity of point
-		glm::vec3 pointVel = glm::vec3(rb.getVel() + glm::cross(rb.getAngVel(),  r));
-
-		//Calculate impulse magnitude
-		float num = -(1.0f + rb.getCor()) * glm::dot(pointVel, planeNormal);
-		float denom = 1.0f / rb.getMass() + glm::dot(planeNormal, (glm::cross(rb.getInvInertia() * glm::cross(r, planeNormal), r)));
-		float impMag =	abs(num/denom);
-
-		//Set impulse magnitude and direction
-		imp.setMag(impMag);
-		imp.setDir(planeNormal);
-
-		rb.impulses.push_back(imp);
-
-		if (frictionEnabled) {
-			//Calculate and apply friction
-			Impulse Jf = calculateFriction(pointVel, planeNormal, rb, impMag * planeNormal, imp.getPoA() - rb.getPos());
-			rb.impulses.push_back(Jf);
-		}
-
-		//std::cout << "Impulse magnitude: " << std::to_string(impMag) << std::endl;
-		//std::cout << "Impulse Direction: " << glm::to_string(planeNormal) << std::endl;
-		//std::cout << "PoA: " << glm::to_string(imp.getPoA()) << std::endl;
-
-		return;
-	}
+	//std::cout << "Impulse magnitude: " << std::to_string(impMag) << std::endl;
+	//std::cout << "Impulse Direction: " << glm::to_string(planeNormal) << std::endl;
+	//std::cout << "PoA: " << glm::to_string(imp.getPoA()) << std::endl;
 }
 
 //Calculate Friction

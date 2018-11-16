@@ -1,8 +1,12 @@
 #version 410
 
 layout (location = 0) in vec3 position;
+layout (location = 1) in vec2 texCoord;
+
+
 
 in vec3 normal;
+in vec3 pos;
 out vec4 color;
 
 struct DirectionalLight
@@ -18,7 +22,7 @@ void main()
 {
 	// directional light properties
 	DirectionalLight light;
-	light.color = vec3(0.0f + normal.x, 0.0f + normal.y, 0.0f + normal.z);
+	light.color = vec3(0.0f + pos.x, 0.0f + pos.y, 0.0f + pos.z);
 	light.direction = vec3(-2.0f, 0.5f, 3.7f);
 
     // ambient 
