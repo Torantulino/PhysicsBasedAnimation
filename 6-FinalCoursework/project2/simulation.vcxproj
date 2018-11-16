@@ -175,6 +175,7 @@
     <ClCompile Include="OBJLoader.cpp" />
     <ClCompile Include="Particle.cpp" />
     <ClCompile Include="RigidBody.cpp" />
+    <ClCompile Include="Sphere.cpp" />
     <ClCompile Include="Triangle.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -193,6 +194,7 @@
     <ClInclude Include="Particle.h" />
     <ClInclude Include="RigidBody.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="Sphere.h" />
     <ClInclude Include="Triangle.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

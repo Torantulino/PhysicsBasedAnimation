@@ -23,6 +23,7 @@
 #include "Particle.h"
 #include "Triangle.h"
 #include "RigidBody.h"
+#include "Sphere.h"
 
 glm::vec3 sumImpulsesLin(RigidBody &rb);
 
@@ -31,6 +32,8 @@ glm::vec3 sumImpulsesAng(RigidBody &rb);
 void CheckCollisions(Particle &p, Mesh &cube);
 
 void CheckCollisions(RigidBody &rb, Mesh &cube);
+
+void CheckCollisions(Sphere &rb, Mesh &cube);
 
 void CreateCloth(std::vector<std::vector<Particle> >& p2D, float stiffness, float damping, float rest);
 

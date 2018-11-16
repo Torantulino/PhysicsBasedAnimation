@@ -12,7 +12,7 @@ GLfloat lastTime = 0.0f;
 std::vector<Particle> particles;
 std::vector < std::vector<Particle> > particles2D;
 std::vector<Triangle*> triangles;
-std::vector<RigidBody> rigidbodies;
+std::vector<Sphere> rigidbodies;
 
 
 // Global Properties
@@ -46,7 +46,7 @@ int main()
 	Application::camera.setCameraPosition(glm::vec3(0.0f, 5.0f, 10.0f));
 			
 	// Create Shaders
-	Shader blue = Shader("E:/University/Year3_Tri1/Physics_Based_Animation/5-Rigid_Body_Dynamics/project2/resources/shaders/physics.vert", "E:/University/Year3_Tri1/Physics_Based_Animation/5-Rigid_Body_Dynamics/project2/resources/shaders/physics.frag");
+	Shader lambert = Shader("E:/University/Year3_Tri1/Physics_Based_Animation/5-Rigid_Body_Dynamics/project2/resources/shaders/physics.vert", "E:/University/Year3_Tri1/Physics_Based_Animation/5-Rigid_Body_Dynamics/project2/resources/shaders/physics.frag");
 	Shader red = Shader("E:/University/Year3_Tri1/Physics_Based_Animation/5-Rigid_Body_Dynamics/project2/resources/shaders/solid.vert", "E:/University/Year3_Tri1/Physics_Based_Animation/5-Rigid_Body_Dynamics/project2/resources/shaders/solid_red.frag");
 	Shader transLambert = Shader("E:/University/Year3_Tri1/Physics_Based_Animation/5-Rigid_Body_Dynamics/project2/resources/shaders/physics.vert", "E:/University/Year3_Tri1/Physics_Based_Animation/5-Rigid_Body_Dynamics/project2/resources/shaders/physics_transparent.frag");
 
@@ -72,107 +72,50 @@ int main()
 		//Flags to insure single firing of setups
 		static bool flag = true;
 		static bool flag1 = true;
-		static bool flag2 = true;
-		static bool flag3 = true;
-		static bool flag4 = true;
-		static bool flag5 = true;
 		// - MODE SWITCHING -
-		// 0 - 2.1 Application of an impulse (1 & 2)
-		if (glfwGetKey(app.getWindow(), GLFW_KEY_0) && flag) {
-			flag = false;
-			flag1 = true;
-			flag2 = true;
-			flag3 = true;
-			flag4 = true;
-			flag5 = true;
- 			mode = 0;
-			particles.clear();
-			particles2D.clear();
-			triangles.clear();
- 			rigidbodies.clear();		
-			pause = true;
-			firstShot = true;
-
-			//Create rigidbody
-			RigidBody rbCube = RigidBody();
-			Mesh m	= Mesh::Mesh(Mesh::CUBE);
-			rbCube.setMesh(m);
-			rbCube.getMesh().setShader(blue);
-			
-			//Set static properties
-			rbCube.scale(glm::vec3(1.0f, 3.0f, 1.0f));
-			rbCube.setMass(2.0f);
-			rbCube.setCoM(glm::vec3(0.0f, 0.0f, 0.0f));
-			rbCube.setCor(1.0f);
-			rbCube.setPos(glm::vec3(0.0f, 0.0f, 0.0f));
-			//rbCube.rotate(1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-
-			std::cout << "Inverse inertia matrix: " << glm::to_string(rbCube.getInvInertia()) << std::endl;
-
-			//Set dynamic properties
-			rbCube.setAngVel(glm::vec3(0.0f, 0.0f, 0.0f));
-			rbCube.setVel(glm::vec3(2.0f, 0.0f, 0.0f));
-
-			//Add forces
-			//rbCube.addForce(grav);
-
-			//Add to collection
-			rigidbodies.push_back(rbCube);
-
-			//Reset Time
-			timeAccumulated = 0.0f;
-		}
 		// 1 - 2.2 Collision Detection
 		if (glfwGetKey(app.getWindow(), GLFW_KEY_1) && flag1) {
 			flag1 = false;
 			flag = true;
-			flag2 = true;
-			flag3 = true;
-			flag4 = true;
-			flag5 = true;
 			mode = 1;
 			particles.clear();
 			particles2D.clear();
 			triangles.clear();
  			rigidbodies.clear();		
 			pause = true;
-			frictionEnabled = false;
+			frictionEnabled = true;
 
-			//Create rigidbody
-			RigidBody rbCube = RigidBody();
-			Mesh m = Mesh::Mesh(Mesh::CUBE);
-			rbCube.setMesh(m);
-			rbCube.getMesh().setShader(blue);
+			//Create sphere
+			Sphere sphere = Sphere();
+			Mesh m = Mesh::Mesh("./resources/models/sphere.obj");
+			sphere.setMesh(m);
+			sphere.getMesh().setShader(lambert);
 
 			//Set static properties
-			rbCube.scale(glm::vec3(1.0f, 3.0f, 1.0f));
-			rbCube.setMass(2.0f);
-			rbCube.setCoM(glm::vec3(0.0f, 0.0f, 0.0f));
-			rbCube.setCor(1.0f);
-			rbCube.setPos(glm::vec3(0.0f, 0.0f, 0.0f));
+			sphere.scale(glm::vec3(1.0f, 1.0f, 1.0f));
+			sphere.setMass(2.0f);
+			sphere.setCoM(glm::vec3(0.0f, 0.0f, 0.0f));
+			sphere.setCor(1.0f);
+			sphere.setPos(glm::vec3(0.0f, 0.0f, 0.0f));
 			//rbCube.rotate(1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
 
 			//Set dynamic properties
-			rbCube.setAngVel(glm::vec3(0.0f, 0.0f, 0.0f));
+			sphere.setAngVel(glm::vec3(0.0f, 0.0f, 0.0f));
 			//rbCube.setVel(glm::vec3(2.0f, 0.0f, 0.0f));
 
 			//Add gravity force
-			rbCube.addForce(grav);
+			sphere.addForce(grav);
 
 			//Add to collection
-			rigidbodies.push_back(rbCube);
+			rigidbodies.push_back(sphere);
 
 			//Reset Time
 			timeAccumulated = 0.0f;
 		}
 		// 2 - 2.3 Collision Response (1)
-		if (glfwGetKey(app.getWindow(), GLFW_KEY_2) && flag2) {
-			flag2 = false;
-			flag = true;
+		if (glfwGetKey(app.getWindow(), GLFW_KEY_2) && flag) {
+			flag = false;
 			flag1 = true;
-			flag3 = true;
-			flag4 = true;
-			flag5 = true;
 			mode = 1;
 			particles.clear();
 			particles2D.clear();
@@ -180,163 +123,6 @@ int main()
  			rigidbodies.clear();		
 			pause = true;
 			frictionEnabled = false;
-
-			//Create rigidbody
-			RigidBody rbCube = RigidBody();
-			Mesh m = Mesh::Mesh(Mesh::CUBE);
-			rbCube.setMesh(m);
-			rbCube.getMesh().setShader(blue);
-
-			//Set static properties
-			rbCube.scale(glm::vec3(1.0f, 3.0f, 1.0f));
-			rbCube.setMass(2.0f);
-			rbCube.setCoM(glm::vec3(0.0f, 0.0f, 0.0f));
-			rbCube.setCor(1.0f);
-			rbCube.setPos(glm::vec3(0.0f, 0.0f, 0.0f));
-			//rbCube.rotate(1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-
-			//Set dynamic properties
-			rbCube.setAngVel(glm::vec3(0.0f, 0.0f, 0.5f));
-			rbCube.setVel(glm::vec3(0.0f, 0.0f, 0.0f));
-
-			//Add gravity force
-			rbCube.addForce(grav);
-
-			//Add to collection
-			rigidbodies.push_back(rbCube);
-
-			//Reset Time
-			timeAccumulated = 0.0f;
-		}
-		// 3 - 2.3 Collision Response (2)
-		if (glfwGetKey(app.getWindow(), GLFW_KEY_3) && flag3) {
-			flag3 = false;
-			flag = true;
-			flag1 = true;
-			flag2 = true;
-			flag4 = true;
-			flag5 = true;
-			mode = 1;
-			particles.clear();
-			particles2D.clear();
-			triangles.clear();
- 			rigidbodies.clear();		
-			pause = true;
-			frictionEnabled = false;
-
-
-			//Create rigidbody
-			RigidBody rbCube = RigidBody();
-			Mesh m = Mesh::Mesh(Mesh::CUBE);
-			rbCube.setMesh(m);
-			rbCube.getMesh().setShader(blue);
-
-			//Set static properties
-			rbCube.scale(glm::vec3(1.0f, 3.0f, 1.0f));
-			rbCube.setMass(2.0f);
-			rbCube.setCoM(glm::vec3(0.0f, 0.0f, 0.0f));
-			rbCube.setCor(0.7f);
-			rbCube.setPos(glm::vec3(0.0f, -3.0f, 0.0f));
-			//rbCube.rotate(1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-
-			//Set dynamic properties
-			rbCube.setAngVel(glm::vec3(0.1f, 0.1f, 0.1f));
-			rbCube.setVel(glm::vec3(0.0f, 0.0f, 0.0f));
-
-			//Add gravity force
-			rbCube.addForce(grav);
-
-			//Add to collection
-			rigidbodies.push_back(rbCube);
-
-			//Reset Time
-			timeAccumulated = 0.0f;
-		}
-		// 4 - 2.4 Friction
-		if (glfwGetKey(app.getWindow(), GLFW_KEY_4) && flag4) {
-			flag4 = false;
-			flag = true;
-			flag1 = true;
-			flag2 = true;
-			flag3 = true;
-			flag5 = true;
-			mode = 1;
-			particles.clear();
-			particles2D.clear();
-			triangles.clear();
- 			rigidbodies.clear();		
-			pause = true;
-			frictionEnabled = true;
-
-			//Create rigidbody
-			RigidBody rbCube = RigidBody();
-			Mesh m = Mesh::Mesh(Mesh::CUBE);
-			rbCube.setMesh(m);
-			rbCube.getMesh().setShader(blue);
-
-			//Set static properties
-			rbCube.scale(glm::vec3(1.0f, 3.0f, 1.0f));
-			rbCube.setMass(2.0f);
-			rbCube.setCoM(glm::vec3(0.0f, 0.0f, 0.0f));
-			rbCube.setCor(0.6f);
-			rbCube.setPos(glm::vec3(0.0f, -2.0f, 0.0f));
-			//rbCube.rotate(2.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-
-			//Set dynamic properties
-			rbCube.setAngVel(glm::vec3(0.0f, 0.0f, 1.0f));
-			rbCube.setVel(glm::vec3(0.0f, 0.0f, 0.0f));
-
-			//Add gravity force
-			rbCube.addForce(grav);
-
-			//Add to collection
-			rigidbodies.push_back(rbCube);
-
-			//Reset Time
-			timeAccumulated = 0.0f;
-		}
-		// 5 - 2.4 Friction 2
-		if (glfwGetKey(app.getWindow(), GLFW_KEY_5) && flag5) {
-			flag5 = false;
-			flag = true;
-			flag1 = true;							
-			flag2 = true;
-			flag3 = true;
-			flag4 = true;
-			mode = 1;
-			particles.clear();
-			particles2D.clear();
-			triangles.clear();
- 			rigidbodies.clear();		
-			pause = true;
-			frictionEnabled = true;
-
-			//Create rigidbody
-			RigidBody rbCube = RigidBody();
-			Mesh m = Mesh::Mesh(Mesh::CUBE);
-			rbCube.setMesh(m);
-			rbCube.getMesh().setShader(blue);
-
-			//Set static properties
-			rbCube.scale(glm::vec3(1.0f, 3.0f, 1.0f));
-			rbCube.setMass(2.0f);
-			rbCube.setCoM(glm::vec3(0.0f, 0.0f, 0.0f));
-			rbCube.setCor(0.6f);
-			rbCube.setPos(glm::vec3(0.0f, 0.0f, 0.5f));
-			//rbCube.rotate(2.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-
-			//Set dynamic properties
-			rbCube.setAngVel(glm::vec3(0.0f, 0.0f, 0.5f));
-			rbCube.setVel(glm::vec3(0.0f, 0.0f, 0.0f));
-
-			//Add gravity force
-			rbCube.addForce(grav);
-
-			//Add to collection
-			rigidbodies.push_back(rbCube);
-
-			//Reset Time
-			timeAccumulated = 0.0f;
 		}
 
 		// - OTHER USER INTERACTION -
@@ -365,41 +151,6 @@ int main()
 			app.doMovement(timestep);
 
 			// - SIMULATE -
-
-			// 0 - Test Simulation
-			if (mode == 0 && !pause) {
-				for (unsigned int i = 0; i < rigidbodies.size(); i++) {
-
-
-					if (currentTime - simStartTime > 2 && firstShot) {
-						firstShot = false;
-						Impulse imp (glm::vec3(-1.0f, 0.0f, 0.0f),4.0f, glm::vec3(0.0f, -1.0f, 0.0f));
-						rigidbodies[i].impulses.push_back(imp);
-					}
-
-					// - ROTATIONAL DYNAMICS - 
-					//Calculate current angular velocity
-					rigidbodies[i].setAngVel(rigidbodies[i].getAngVel() + timestep * rigidbodies[i].getAngAcc() + sumImpulsesAng(rigidbodies[i]));
-					//Create skew symmetric matrix for w
-					glm::mat3 angVelSkew = glm::matrixCross3(rigidbodies[i].getAngVel());
-					//Create 3x3 rotation matrix from rigidbody rotation matrix
-					glm::mat3 R = glm::mat3(rigidbodies[i].getRotate());
-					//Update rotation Matrix
-					R += timestep * angVelSkew*R;
-					R = glm::orthonormalize(R);
-					rigidbodies[i].setRotate(glm::mat4(R));
-
-					// - LINEAR DYNAMICS -
-					//Calculate Accelleration
-					rigidbodies[i].setAcc(rigidbodies[i].applyForces(rigidbodies[i].getPos(), rigidbodies[i].getVel(), 1, timestep));
-					//Calculate Current Velocity
-					rigidbodies[i].setVel(rigidbodies[i].getVel() + timestep * rigidbodies[i].getAcc() + sumImpulsesLin(rigidbodies[i]));
-					//Calculate New Position
-					rigidbodies[i].translate(timestep * rigidbodies[i].getVel());
-					//Check for collisions with bounding cube
-					CheckCollisions(rigidbodies[i], cube);
-				}
-			}
 			// 1 - Impulses
 			if (mode == 1 && !pause) {
 				for (unsigned int i = 0; i < rigidbodies.size(); i++) {
@@ -638,7 +389,7 @@ void CheckCollisions(Particle &p, Mesh &cube)
 	}
 }
 
-//Check for rigidbody collisions with a bouding cube.
+//Check for Cube collisions with a bouding cube.
 void CheckCollisions(RigidBody &rb, Mesh &cube)
 {
 	std::vector<Vertex> localVertices = rb.getMesh().getVertices();
@@ -787,6 +538,136 @@ void CheckCollisions(RigidBody &rb, Mesh &cube)
 		float num = -(1.0f + rb.getCor()) * glm::dot(pointVel, planeNormal);
 		float denom = 1.0f / rb.getMass() + glm::dot(planeNormal, (glm::cross(rb.getInvInertia() * glm::cross(r, planeNormal), r)));
 		float impMag =	num/denom;
+
+		//Set impulse magnitude and direction
+		imp.setMag(impMag);
+		imp.setDir(planeNormal);
+
+		rb.impulses.push_back(imp);
+
+		if (frictionEnabled) {
+			//Calculate and apply friction
+			Impulse Jf = calculateFriction(pointVel, planeNormal, rb, impMag * planeNormal, imp.getPoA() - rb.getPos());
+			rb.impulses.push_back(Jf);
+		}
+
+		//std::cout << "Impulse magnitude: " << std::to_string(impMag) << std::endl;
+		//std::cout << "Impulse Direction: " << glm::to_string(planeNormal) << std::endl;
+		//std::cout << "PoA: " << glm::to_string(imp.getPoA()) << std::endl;
+
+		return;
+	}
+}
+
+//Check for Shpere collisions with a bouding cube.
+void CheckCollisions(Sphere &rb, Mesh &cube)
+{
+	glm::vec3 cubePos = cube.getPos();
+	glm::mat4 cubeScale = cube.getScale();
+	glm::vec3 overShoot;
+	glm::vec3 planeNormal;
+	glm::vec3 spherePos = rb.getPos();
+	bool collision = false;
+	float distance;
+
+	//Check for collision with ground
+	//Right
+	distance = abs(cubePos.x + cubeScale[0][0] - spherePos.x);
+	if (distance < rb.getRadius()) {
+		collision = true;
+		planeNormal = glm::vec3(-1.0f, 0.0f, 0.0f);
+
+		//Calculate collision overshoot
+		overShoot = glm::vec3(cubePos.x + cubeScale[0][0], spherePos.y, spherePos.z) - glm::vec3(spherePos.x + rb.getRadius(), spherePos.y, spherePos.z);
+	}
+	//Left
+	distance = abs(cubePos.x - cubeScale[0][0] - spherePos.x);
+	if (distance < rb.getRadius()) {
+		collision = true;
+		planeNormal = glm::vec3(1.0f, 0.0f, 0.0f);
+
+		//Calculate collision overshoot
+		overShoot = glm::vec3(cubePos.x - cubeScale[0][0], spherePos.y, spherePos.z) - glm::vec3(spherePos.x - rb.getRadius(), spherePos.y, spherePos.z);
+	}
+	//Up
+	distance = abs(cubePos.y + cubeScale[1][1] - spherePos.y);
+	if (distance < rb.getRadius()) {
+		collision = true;
+		planeNormal = glm::vec3(0.0f, -1.0f, 0.0f);
+
+		//Calculate collision overshoot
+		overShoot = glm::vec3(spherePos.x, cubePos.y + cubeScale[1][1], spherePos.z) - glm::vec3(spherePos.x, spherePos.y + rb.getRadius(), spherePos.z);
+	}
+	//Down
+	distance = abs(cubePos.y - cubeScale[1][1] - spherePos.y);
+	if (distance < rb.getRadius()) {
+		collision = true;
+		planeNormal = glm::vec3(0.0f, 1.0f, 0.0f);
+
+		//Calculate collision overshoot
+		overShoot = glm::vec3(spherePos.x, cubePos.y - cubeScale[1][1], spherePos.z) - glm::vec3(spherePos.x, spherePos.y - rb.getRadius(), spherePos.z);
+
+		//Teared ground resting
+		if (frictionEnabled) {
+			//Slow vibration if stopped on the ground
+			if (glm::length(rb.getVel()) < 1.0f) {
+				//rb.setVel(rb.getVel() * 0.5f);
+				rb.setAngVel(rb.getAngVel() * 0.5f);
+			}
+			//Stop
+			if (glm::length(rb.getVel()) < 0.1f && glm::length(rb.getAngVel()) < 2.0f) {
+				rb.setAngVel(rb.getAngVel() * 0.2f);
+				rb.setVel(rb.getVel() * 0.2f);
+			}
+			//Rest
+			if (glm::length(rb.getVel()) < 0.05f && glm::length(rb.getAngVel()) < 2.0f) {
+				rb.setAngVel(rb.getAngVel() * 0.05f);
+				rb.setVel(rb.getVel() * 0.05f);
+			}
+		}
+		
+		//Front
+		distance = abs(cubePos.z + cubeScale[2][2] - spherePos.z);
+		if (distance < rb.getRadius()) {
+			collision = true;
+			planeNormal = glm::vec3(0.0f, 0.0f, -1.0f);
+
+			//Calculate collision overshoot
+			overShoot = glm::vec3(spherePos.x, spherePos.y, cubePos.z + cubeScale[2][2]) - glm::vec3(spherePos.x, spherePos.y, spherePos.z + rb.getRadius());
+		}
+		//Back
+		distance = abs(cubePos.z - cubeScale[2][2] - spherePos.z);
+		if (distance < rb.getRadius()) {
+			collision = true;
+			planeNormal = glm::vec3(0.0f, 0.0f, 1.0f);
+
+			//Calculate collision overshoot
+			overShoot = glm::vec3(spherePos.x, spherePos.y, cubePos.z - cubeScale[2][2]) - glm::vec3(spherePos.x, spherePos.y, spherePos.z - rb.getRadius());
+		}
+	}
+	if (collision) {
+
+
+		//Move rb back to collision plane
+		rb.setPos(rb.getPos() + overShoot);
+		//pause = true;
+
+		//Apply plane based collision impulse
+		Impulse imp;
+
+		//Calculate distance from CoM
+		glm::vec3 r = rb.getRadius() * planeNormal;
+
+		//Set point of application
+		imp.setPoA(rb.getPos() + r);
+
+		//Calculate velocity of point
+		glm::vec3 pointVel = glm::vec3(rb.getVel() + glm::cross(rb.getAngVel(),  r));
+
+		//Calculate impulse magnitude
+		float num = -(1.0f + rb.getCor()) * glm::dot(pointVel, planeNormal);
+		float denom = 1.0f / rb.getMass() + glm::dot(planeNormal, (glm::cross(rb.getInvInertia() * glm::cross(r, planeNormal), r)));
+		float impMag =	abs(num/denom);
 
 		//Set impulse magnitude and direction
 		imp.setMag(impMag);
