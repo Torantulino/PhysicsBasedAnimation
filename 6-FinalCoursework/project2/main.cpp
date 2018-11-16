@@ -85,31 +85,31 @@ int main()
 			pause = true;
 			frictionEnabled = true;
 
+			for (unsigned int i = 0; i < 10; i++) {
+				//Create sphere
+				Sphere sphere = Sphere();
+				Mesh m = Mesh::Mesh("./resources/models/sphere.obj");
+				sphere.setMesh(m);
+				sphere.getMesh().setShader(lambert);
 
-			//Create sphere
-			Sphere sphere = Sphere();
-			Mesh m = Mesh::Mesh("./resources/models/sphere.obj");
-			sphere.setMesh(m);
-			sphere.getMesh().setShader(lambert);
+				//Set static properties
+				sphere.scale(glm::vec3(1.0f, 1.0f, 1.0f));
+				sphere.setMass(2.0f);
+				sphere.setCoM(glm::vec3(0.0f, 0.0f, 0.0f));
+				sphere.setCor(1.0f);
+				sphere.setPos(glm::vec3(-9.0f + i*2, 0.0f, 0.0f));
+				//rbCube.rotate(1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
 
-			//Set static properties
-			sphere.scale(glm::vec3(1.0f, 1.0f, 1.0f));
-			sphere.setMass(2.0f);
-			sphere.setCoM(glm::vec3(0.0f, 0.0f, 0.0f));
-			sphere.setCor(1.0f);
-			sphere.setPos(glm::vec3(0.0f, 0.0f, 0.0f));
-			//rbCube.rotate(1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+				//Set dynamic properties
+				sphere.setAngVel(glm::vec3(0.0f, 0.0f, 0.0f));
+				sphere.setVel(glm::vec3(10.0f, 10.0f, -6.0f));
 
-			//Set dynamic properties
-			sphere.setAngVel(glm::vec3(0.0f, 0.0f, 0.0f));
-			sphere.setVel(glm::vec3(10.0f, 10.0f, -6.0f));
+				//Add gravity force
+				sphere.addForce(grav);
 
-			//Add gravity force
-			sphere.addForce(grav);
-
-			//Add to collection
-			rigidbodies.push_back(sphere);
-
+				//Add to collection
+				rigidbodies.push_back(sphere);
+			}
 			//Reset Time
 			timeAccumulated = 0.0f;
 		}
