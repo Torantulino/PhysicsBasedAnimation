@@ -58,7 +58,7 @@ int main()
 	cube.setShader(transLambert); 
 	   
 	//// time
-	const GLfloat timestep = 0.013f; 
+	const GLfloat timestep = 0.003f; 
 	GLfloat initTime = (GLfloat)glfwGetTime();
 	GLfloat simStartTime; 
 	GLfloat timeAccumulated = 0.0f;
@@ -85,7 +85,7 @@ int main()
 			pause = true;
 			frictionEnabled = true;
 
-			for (unsigned int i = 0; i < 10; i++) {
+			for (unsigned int i = 0; i < 5; i++) {
 				//Create sphere
 				Sphere sphere = Sphere();
 				Mesh m = Mesh::Mesh("./resources/models/sphere.obj");
@@ -97,7 +97,7 @@ int main()
 				sphere.setMass(2.0f);
 				sphere.setCoM(glm::vec3(0.0f, 0.0f, 0.0f));
 				sphere.setCor(1.0f);
-				sphere.setPos(glm::vec3(-9.0f + i*2, -9.0f, 0.0f));
+				sphere.setPos(glm::vec3(-9.0f + i*3, -9.0f, 0.0f));
 				//rbCube.rotate(1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
 
 				//Set dynamic properties
@@ -686,14 +686,42 @@ void CheckCollisions(std::vector<Sphere> &spheres) {
 }
 
 void CollisionResponse(Sphere & sp1, Sphere & sp2, float overshoot) {
-	glm::vec3 collisionNormal = glm::normalize(sp1.getPos() - sp2.getPos());	//Towards sp1
-	glm::vec3 r1 = (sp1.getPos() + collisionNormal * sp1.getRadius()) - sp1.getPos();
-	glm::vec3 r2 = (sp2.getPos() + collisionNormal * sp2.getRadius()) - sp2.getPos();
+	glm::vec3 collisionNormal = glm::normalize(sp2.getPos() - sp1.getPos());	//Towards sp2
+	glm::vec3 r1 = collisionNormal * sp1.getRadius();
+	glm::vec3 r2 = -collisionNormal * sp2.getRadius();
 	glm::vec3 PoA = sp1.getPos() + r1;
 	
 	//Move back against collision
-	sp1.setPos(sp1.getPos() + (overshoot / 2) * collisionNormal);
-	sp2.setPos(sp2.getPos() - (overshoot / 2) * collisionNormal);
+	sp1.setPos(sp1.getPos() - (overshoot / 2) * collisionNormal);
+	sp2.setPos(sp2.getPos() + (overshoot / 2) * collisionNormal);
+
+	//Calculate velocity of collision points
+	glm::vec3 pointVel1 = glm::vec3(sp1.getVel() + glm::cross(sp1.getAngVel(), r1));
+	glm::vec3 pointVel2 = glm::vec3(sp2.getVel() + glm::cross(sp2.getAngVel(), r2));
+	glm::vec3 vRel = pointVel2 - pointVel1;
+
+	//Calculate collision impulse magnitude
+	float e = (sp1.getCor() + sp2.getCor()) / 2;
+	float num = -(1.0f + e) * glm::dot(vRel, collisionNormal);
+	float denom = 1.0f / sp1.getMass() + 1.0f / sp2.getMass() + glm::dot(collisionNormal, 
+		glm::cross(sp1.getInvInertia() * glm::cross(r1, collisionNormal), r1) +
+		glm::cross(sp2.getInvInertia() * glm::cross(r2, collisionNormal), r2));
+	float impMag = abs(num / denom);
+
+	//Create collision Impulses
+	Impulse imp1;
+	imp1.setPoA(PoA);
+	imp1.setDir(-collisionNormal);
+	imp1.setMag(impMag);
+
+	Impulse imp2;
+	imp2.setPoA(PoA);
+	imp2.setDir(collisionNormal);
+	imp2.setMag(impMag);
+	
+	//Add Impulses to collection to be applied
+	sp1.impulses.push_back(imp1);
+	sp2.impulses.push_back(imp2);
 }
 
 void CollisionResponse(Sphere & rb, glm::vec3 &overShoot, glm::vec3 &planeNormal)
