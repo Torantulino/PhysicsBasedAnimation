@@ -84,7 +84,7 @@ int main()
  			rigidbodies.clear();		
 			pause = true;
 			frictionEnabled = true;
-
+			
 			for (unsigned int i = 0; i < 5; i++) {
 				//Create sphere
 				Sphere sphere = Sphere();
@@ -97,7 +97,7 @@ int main()
 				sphere.setMass(2.0f);
 				sphere.setCoM(glm::vec3(0.0f, 0.0f, 0.0f));
 				sphere.setCor(1.0f);
-				sphere.setPos(glm::vec3(-9.0f + i*3, -9.0f, 0.0f));
+				sphere.setPos(glm::vec3(-7.0f + i*3, -9.0f, 0.0f));
 				//rbCube.rotate(1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
 
 				//Set dynamic properties
@@ -622,24 +622,24 @@ void CheckCollisions(Sphere &rb, Mesh &cube)
 
 		CollisionResponse(rb, overShoot, planeNormal);
 
-		//Teared ground resting
-		if (frictionEnabled) {
-			//Slow vibration if stopped on the ground
-			if (glm::length(rb.getVel()) < 1.0f) {
-				//rb.setVel(rb.getVel() * 0.5f);
-				rb.setAngVel(rb.getAngVel() * 0.5f);
-			}
-			//Stop
-			if (glm::length(rb.getVel()) < 0.1f && glm::length(rb.getAngVel()) < 2.0f) {
-				rb.setAngVel(rb.getAngVel() * 0.2f);
-				rb.setVel(rb.getVel() * 0.2f);
-			}
-			//Rest
-			if (glm::length(rb.getVel()) < 0.05f && glm::length(rb.getAngVel()) < 2.0f) {
-				rb.setAngVel(rb.getAngVel() * 0.05f);
-				rb.setVel(rb.getVel() * 0.05f);
-			}
-		}
+		////Teared ground resting
+		//if (frictionEnabled) {
+		//	//Slow vibration if stopped on the ground
+		//	if (glm::length(rb.getVel()) < 1.0f) {
+		//		//rb.setVel(rb.getVel() * 0.5f);
+		//		rb.setAngVel(rb.getAngVel() * 0.5f);
+		//	}
+		//	//Stop
+		//	if (glm::length(rb.getVel()) < 0.1f && glm::length(rb.getAngVel()) < 2.0f) {
+		//		rb.setAngVel(rb.getAngVel() * 0.2f);
+		//		rb.setVel(rb.getVel() * 0.2f);
+		//	}
+		//	//Rest
+		//	if (glm::length(rb.getVel()) < 0.05f && glm::length(rb.getAngVel()) < 2.0f) {
+		//		rb.setAngVel(rb.getAngVel() * 0.05f);
+		//		rb.setVel(rb.getVel() * 0.05f);
+		//	}
+		//}
 
 	}
 
@@ -696,8 +696,12 @@ void CollisionResponse(Sphere & sp1, Sphere & sp2, float overshoot) {
 	sp2.setPos(sp2.getPos() + (overshoot / 2) * collisionNormal);
 
 	//Calculate velocity of collision points
-	glm::vec3 pointVel1 = glm::vec3(sp1.getVel() + glm::cross(sp1.getAngVel(), r1));
-	glm::vec3 pointVel2 = glm::vec3(sp2.getVel() + glm::cross(sp2.getAngVel(), r2));
+	//without angular v
+	glm::vec3 pointVel1 = glm::vec3(sp1.getVel() /*+ glm::cross(sp1.getAngVel(), r1)*/);
+	glm::vec3 pointVel2 = glm::vec3(sp2.getVel() /*+ glm::cross(sp2.getAngVel(), r2)*/);
+	//with angualr v
+	//glm::vec3 pointVel1 = glm::vec3(sp1.getVel() + glm::cross(sp1.getAngVel(), r1));
+	//glm::vec3 pointVel2 = glm::vec3(sp2.getVel() + glm::cross(sp2.getAngVel(), r2));
 	glm::vec3 vRel = pointVel2 - pointVel1;
 
 	//Calculate collision impulse magnitude
@@ -713,15 +717,27 @@ void CollisionResponse(Sphere & sp1, Sphere & sp2, float overshoot) {
 	imp1.setPoA(PoA);
 	imp1.setDir(-collisionNormal);
 	imp1.setMag(impMag);
+	std::cout << "Impulse 1: " << glm::to_string(imp1.getPoA()) << glm::to_string(imp1.getDir()) << std::to_string(imp1.getMag()) << std::endl;
 
 	Impulse imp2;
 	imp2.setPoA(PoA);
 	imp2.setDir(collisionNormal);
 	imp2.setMag(impMag);
-	
+	std::cout << "Impulse 2: " << glm::to_string(imp2.getPoA()) << glm::to_string(imp2.getDir()) << std::to_string(imp2.getMag()) << std::endl;
+
 	//Add Impulses to collection to be applied
 	sp1.impulses.push_back(imp1);
 	sp2.impulses.push_back(imp2);
+
+	//if (frictionEnabled) {
+	//	//Calculate and apply friction
+	//	Impulse Jf1 = calculateFriction(pointVel1, collisionNormal, sp1, impMag * collisionNormal, imp1.getPoA() - sp1.getPos());
+	//	sp1.impulses.push_back(Jf1);
+
+	//	Impulse Jf2 = calculateFriction(pointVel2, collisionNormal, sp2, impMag * collisionNormal, imp2.getPoA() - sp2.getPos());
+	//	sp2.impulses.push_back(Jf2);
+	//}
+
 }
 
 void CollisionResponse(Sphere & rb, glm::vec3 &overShoot, glm::vec3 &planeNormal)

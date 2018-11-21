@@ -283,8 +283,8 @@ int main()
 			//rbCube.rotate(2.0f, glm::vec3(0.0f, 0.0f, 1.0f));
 
 			//Set dynamic properties
-			rbCube.setAngVel(glm::vec3(0.0f, 0.0f, 0.0f));
-			rbCube.setVel(glm::vec3(1.0f, 0.0f, 0.0f));
+			rbCube.setAngVel(glm::vec3(0.0f, 0.0f, 1.0f));
+			rbCube.setVel(glm::vec3(0.0f, 0.0f, 0.0f));
 
 			//Add gravity force
 			rbCube.addForce(grav);
