@@ -101,9 +101,9 @@ int main()
 				//rbCube.rotate(1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
 
 				//Set dynamic properties
-				sphere.setAngVel(glm::vec3(30.0f * i, 0.0f, i*15.0f));
-				sphere.setVel(glm::vec3(0.0f, 0.0f, 0.0f));
-
+				//sphere.setAngVel(glm::vec3(30.0f * i, 0.0f, i*15.0f));
+				sphere.setVel(glm::vec3(i, 0.0f, 1.3 * i));
+				
 				//Add gravity force
 				sphere.addForce(grav);
 
@@ -740,6 +740,7 @@ void CollisionResponse(Sphere & sp1, Sphere & sp2, float overshoot) {
 
 }
 
+//Sphere collision with bounding cube
 void CollisionResponse(Sphere & rb, glm::vec3 &overShoot, glm::vec3 &planeNormal)
 {
 	//Move rb back to collision plane
@@ -769,11 +770,11 @@ void CollisionResponse(Sphere & rb, glm::vec3 &overShoot, glm::vec3 &planeNormal
 
 	rb.impulses.push_back(imp);
 
-	if (frictionEnabled) {
-		//Calculate and apply friction
-		Impulse Jf = calculateFriction(pointVel, planeNormal, rb, impMag * planeNormal, imp.getPoA() - rb.getPos());
-		rb.impulses.push_back(Jf);
-	}
+	//if (frictionEnabled) {
+	//	//Calculate and apply friction
+	//	Impulse Jf = calculateFriction(pointVel, planeNormal, rb, impMag * planeNormal, imp.getPoA() - rb.getPos());
+	//	rb.impulses.push_back(Jf);
+	//}
 
 	//std::cout << "Impulse magnitude: " << std::to_string(impMag) << std::endl;
 	//std::cout << "Impulse Direction: " << glm::to_string(planeNormal) << std::endl;
