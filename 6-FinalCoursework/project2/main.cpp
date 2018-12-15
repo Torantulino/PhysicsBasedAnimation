@@ -56,7 +56,7 @@ int main()
 	cube.setShader(transLambert); 
 	   
 	//// time
-	const GLfloat timestep = 0.003f; 
+	const GLfloat timestep = 1.0f/60.0f; 
 	GLfloat initTime = (GLfloat)glfwGetTime();
 	GLfloat simStartTime; 
 	GLfloat timeAccumulated = 0.0f;
@@ -87,7 +87,7 @@ int main()
 			cube.setScale(glm::vec3(15.0f, 15.0f, 15.0f));
 
 			//Create Spheres
-			for (unsigned int i = 0; i < 5; i++) {
+			for (unsigned int i = 0; i < 10; i++) {
 				//Create sphere
 				Sphere sphere = Sphere();
 				Mesh m = Mesh::Mesh("./resources/models/sphere.obj");
@@ -179,9 +179,9 @@ int main()
 					rigidbodies[i].setVel(rigidbodies[i].getVel() + timestep * rigidbodies[i].getAcc() + sumImpulsesLin(rigidbodies[i]));
 					//Calculate New Position
 					rigidbodies[i].translate(timestep * rigidbodies[i].getVel());
+					
 					//Check for collisions with bounding cube
 					CheckCollisions(rigidbodies[i], cube);
-
 					//Check for intersphere collisions
 					CheckCollisions(rigidbodies);
 				}
@@ -735,13 +735,13 @@ void CollisionResponse(Sphere & sp1, Sphere & sp2, float overshoot) {
 	glm::vec3 PoA = sp1.getPos() + r1;
 	
 	//Move back against collision
-	sp1.setPos(sp1.getPos() - (overshoot / 2) * collisionNormal);
-	sp2.setPos(sp2.getPos() + (overshoot / 2) * collisionNormal);
+	sp1.setPos(sp1.getPos() - (overshoot / 1.9f) * collisionNormal);
+	sp2.setPos(sp2.getPos() + (overshoot / 1.9f) * collisionNormal);
 
 	//Calculate velocity of collision points
 	//without angular v
-	glm::vec3 pointVel1 = glm::vec3(sp1.getVel() /*+ glm::cross(sp1.getAngVel(), r1)*/);
-	glm::vec3 pointVel2 = glm::vec3(sp2.getVel() /*+ glm::cross(sp2.getAngVel(), r2)*/);
+	glm::vec3 pointVel1 = glm::vec3(sp1.getVel());
+	glm::vec3 pointVel2 = glm::vec3(sp2.getVel());
 	//with angualr v
 	//glm::vec3 pointVel1 = glm::vec3(sp1.getVel() + glm::cross(sp1.getAngVel(), r1));
 	//glm::vec3 pointVel2 = glm::vec3(sp2.getVel() + glm::cross(sp2.getAngVel(), r2));
@@ -780,7 +780,6 @@ void CollisionResponse(Sphere & sp1, Sphere & sp2, float overshoot) {
 	//	Impulse Jf2 = calculateFriction(pointVel2, collisionNormal, sp2, impMag * collisionNormal, imp2.getPoA() - sp2.getPos());
 	//	sp2.impulses.push_back(Jf2);
 	//}
-
 }
 
 //Sphere collision with bounding cube
