@@ -99,7 +99,6 @@ int main()
 				sphere.setMass(2.0f);
 				sphere.setCoM(glm::vec3(0.0f, 0.0f, 0.0f));
 				sphere.setCor(1.0f);
-				sphere.setPos(glm::vec3(-7.0f + i*3, -9.0f, 0.0f));
 				//rbCube.rotate(1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
 
 				//Set dynamic properties
@@ -107,11 +106,14 @@ int main()
 				sphere.setVel(glm::vec3(i, 0.0f, 1.3 * i));
 				
 				//Add gravity force
-				sphere.addForce(grav);
+				//sphere.addForce(grav);
 
 				//Add to collection
 				rigidbodies.push_back(sphere);
 			}
+			//Set sphere positions
+			PositionSpheres(rigidbodies, cube);
+
 			//Reset Time
 			timeAccumulated = 0.0f;
 		}
@@ -252,11 +254,40 @@ glm::vec3 sumImpulsesLin(RigidBody &rb) {
 }
 
 //Set the initial, random but not overlapping, sphere positions
-void positionSpheres(std::vector<Sphere> spheres) {
+void PositionSpheres(std::vector<Sphere> &spheres, Mesh &cube) {
 	std::vector<glm::vec3> positions;
-	for each (Sphere sphere in spheres)
-	{
-		
+	glm::vec3 cubePos  = cube.getPos();
+	glm::mat4 cubeScale = cube.getScale();
+
+	for (unsigned int i = 0; i < spheres.size(); i++) {
+		glm::vec2 rndPos;
+		bool collision = true;
+
+		//Loop until a free space is found
+		while (collision) {
+			//reset flag
+			collision = false;
+
+			//Generate random coordinate - disk distribution keeps spheres away from corners initially
+			rndPos = glm::diskRand(cubeScale[0][0] - spheres[i].getRadius());
+			
+			//Loop through positions: approve position
+			for each (glm::vec3 pos in positions)
+			{
+				glm::vec2 sPos = glm::vec2(pos.x, pos.z);
+
+				//If closer than 2*r, collision
+				if (glm::length(rndPos - sPos) < (spheres[i].getRadius()*2)) {
+					//collision found: position denied
+					collision = true;
+					break;
+				}
+			}
+		}
+
+		spheres[i].setPos(glm::vec3(rndPos.x, cubePos.y - cubeScale[1][1] + spheres[i].getRadius(), rndPos.y));
+		positions.push_back(glm::vec3(rndPos.x, cubePos.y - cubeScale[1][1] + spheres[i].getRadius(), rndPos.y));
+		//spheres[i].scale(glm::vec3(10.0f));
 	}
 }
 

@@ -12,6 +12,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/matrix_operation.hpp>
 #include "glm/ext.hpp"
+#include <glm/gtc/random.hpp>
 
 // Other Libs
 #include "SOIL2/SOIL2.h"
@@ -49,6 +50,6 @@ std::vector<Triangle*> TriangulateGrid(std::vector<std::vector<Particle> > &p2D)
 
 glm::vec3 calcConeForce(glm::vec3 pos);
 
-void positionSpheres(std::vector<Sphere> spheres);
+void PositionSpheres(std::vector<Sphere> &spheres, Mesh &cube);
 
 
