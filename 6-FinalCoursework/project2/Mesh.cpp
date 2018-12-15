@@ -353,8 +353,6 @@ void Mesh::loadOBJ(const char * path,
 
 }
 
-
-
 /*
 ** TRANSFORMATION METHODS
 */
@@ -372,6 +370,10 @@ void Mesh::rotate(const float &angle, const glm::vec3 &vect) {
 // scale
 void Mesh::scale(const glm::vec3 &vect) {
 	m_scale = glm::scale(m_scale, vect);
+}
+
+void Mesh::setScale(const glm::vec3 &vect) {
+	m_scale = glm::scale(glm::mat4(1.0f), vect);
 }
 
 

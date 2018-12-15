@@ -130,6 +130,8 @@ public:
 	void rotate(const float &angle, const glm::vec3 &vect);
 	// scale mesh by a vector
 	void scale(const glm::vec3 &vect);
+	//Set the scale of the mesh
+	void Mesh::setScale(const glm::vec3 &vect);
 
 	GLuint m_vertexArrayObject;
 	GLuint m_vertexBuffer;

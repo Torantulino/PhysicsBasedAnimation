@@ -52,8 +52,6 @@ int main()
 
 	// - Create Cube -
 	Mesh cube = Mesh::Mesh(Mesh::CUBE);
-	// scale up x5
-	cube.scale(glm::vec3(10.0f, 10.0f, 10.0f));
 	//Set Shader
 	cube.setShader(transLambert); 
 	   
@@ -85,6 +83,10 @@ int main()
 			pause = true;
 			frictionEnabled = true;
 			
+			//Scale cube x15
+			cube.setScale(glm::vec3(15.0f, 15.0f, 15.0f));
+
+			//Create Spheres
 			for (unsigned int i = 0; i < 5; i++) {
 				//Create sphere
 				Sphere sphere = Sphere();
@@ -248,6 +250,16 @@ glm::vec3 sumImpulsesLin(RigidBody &rb) {
 	}
 	return linImpSum;
 }
+
+//Set the initial, random but not overlapping, sphere positions
+void positionSpheres(std::vector<Sphere> spheres) {
+	std::vector<glm::vec3> positions;
+	for each (Sphere sphere in spheres)
+	{
+		
+	}
+}
+
 
 //Create Hooke force connections for the given 2D particle array
 void CreateCloth(std::vector<std::vector<Particle> > &p2D, float stiffness, float damping, float rest)
