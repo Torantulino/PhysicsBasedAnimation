@@ -16,8 +16,9 @@ std::vector<Sphere> rigidbodies;
 
 //Collision Grid - Vector<Vector< Map<ID, Sphere> > > > - [X][Z][ID]
 //std::vector<std::vector< std::unordered_map <unsigned int, std::unique_ptr<Sphere> > > > Grid;
-const unsigned int gridN = 6;
-std::unordered_map <unsigned int, std::unique_ptr<Sphere> > Grid[gridN][gridN];
+const unsigned int gridN = 10;
+//std::unordered_map <unsigned int, std::unique_ptr<Sphere> > Grid[gridN][gridN];
+std::unordered_map <unsigned int, Sphere*> Grid[gridN][gridN];
 
 
 // Global Properties
@@ -89,11 +90,11 @@ int main()
 			frictionEnabled = true;
 			
 			//Scale cube x15
-			cube.setScale(glm::vec3(15.0f, 15.0f, 15.0f));
+			cube.setScale(glm::vec3(150.0f, 150.0f, 150.0f));
 
 
 			//Create Spheres
-			for (unsigned int i = 0; i < 15; i++) {
+			for (unsigned int i = 0; i < 100; i++) {
 				//Create sphere
 				Sphere sphere = Sphere();
 				sphere.ID = i;
@@ -120,12 +121,14 @@ int main()
 				//Add to collection
 				rigidbodies.push_back(sphere);
 			}
+
 			//Set sphere positions
 			PositionSpheres(rigidbodies, cube);
 
 			//Reset Time
 			timeAccumulated = 0.0f;
 		}
+
 		// 2 - 2.3 Collision Response (1)
 		if (glfwGetKey(app.getWindow(), GLFW_KEY_2) && flag) {
 			flag = false;
@@ -190,12 +193,13 @@ int main()
 					//Calculate New Position
 					rigidbodies[i].translate(timestep * rigidbodies[i].getVel());
 					
+					UpdateGrid(rigidbodies[i], cube);
+
 					//Check for collisions with bounding cube
 					CheckCollisions(rigidbodies[i], cube);
 					//Check for intersphere collisions
-					CheckCollisions(rigidbodies);
+					CheckCollisions(rigidbodies, cube);
 				}
-				UpdateGrid(rigidbodies, cube);
 			}
 
 			// - Remove calculated time from the accumulator -
@@ -738,41 +742,67 @@ void CheckCollisions(std::vector<Sphere> &spheres) {
 	}
 }
 
-//Check if sphere has changed position, if so, update grid [Requires Uniform Cube]
-void UpdateGrid(std::vector<Sphere> &spheres, Mesh &cube) {
-	
-	//For every sphere
-	for (unsigned int i = 0; i < spheres.size(); i++) {
+//Uniform Grid-Based Collision checking
+void CheckCollisions(std::vector<Sphere> &spheres, Mesh &cube) {
+	//iterate through each cell
+	for (unsigned int i = 0; i < gridN; i++) {
+		for (unsigned int j = 0; j < gridN; j++) {
+			for (auto & x : Grid[i][j]) {
+				for (auto & y : Grid[i][j]) {
+			//for (auto x = Grid[i][j].begin(); x != Grid[i][j].end(); ++x) {
+			//	for (auto y = Grid[i][j].begin(); y != Grid[i][j].end(); ++y) {
+					//If not the same sphere
+					if (x.second != y.second) {
+						//Calculate distance and combined radius
+						float combiedRadius = x.second->getRadius() + y.second->getRadius();
+						float distance = glm::length(x.second->getPos() - y.second->getPos());
+						if (distance < combiedRadius) {
+							float overshoot = combiedRadius - distance;
+							CollisionResponse(*x.second, *y.second, overshoot);
 
-		float gridWidth = cube.getScale()[0][0] * 2;
-		float cellWidth = gridWidth / gridN;
-
-		//Cacluate distance to origin in X and Z
-		float dTOX = abs(spheres[i].getPos().x - gridWidth / 2);
-		float dTOZ = abs(spheres[i].getPos().z - gridWidth / 2);
-
-		//Calculate new cell
-		unsigned int cellX = floor(dTOX / cellWidth);
-		unsigned int cellZ = floor(dTOZ / cellWidth);
-
-		//Check if cell has changed
-		if (cellX != spheres[i].getCellX() || cellZ != spheres[i].getCellZ()) {
-			//If so, update
-
-			//Check if first loop
-			if (spheres[i].getCellX() != INT_MAX) {
-				//Remove from old cell
-				Grid[spheres[i].getCellX()][spheres[i].getCellZ()].erase(spheres[i].ID);
+							//x.second -> setVel(glm::vec3(0.0f, 10.0f, 0.0f));
+						}
+					}
+				}
 			}
-
-			//Add smart pointer into new cell and update sphere
-			//std::unordered_map <unsigned int, std::unique_ptr<Sphere> > TestGrid;
-			//TestGrid.insert(std::make_pair(spheres[i].ID, std::make_unique<Sphere>(spheres[i])));
-
-			Grid[cellX][cellZ].insert(std::make_pair(spheres[i].ID, std::make_unique<Sphere>(spheres[i])));
-			spheres[i].setCellX(cellX);
-			spheres[i].setCellZ(cellZ);
 		}
+	}
+}
+
+
+//Check if sphere has changed position, if so, update grid [Requires Uniform Cube]
+void UpdateGrid(Sphere &sphere, Mesh &cube) {	
+
+	float gridWidth = cube.getScale()[0][0] * 2;
+	float cellWidth = gridWidth / gridN;
+
+	//Cacluate distance to origin in X and Z
+	float dTOX = abs(sphere.getPos().x - gridWidth / 2);
+	float dTOZ = abs(sphere.getPos().z - gridWidth / 2);
+
+	//Calculate new cell
+	unsigned int cellX = floor(dTOX / cellWidth);
+	unsigned int cellZ = floor(dTOZ / cellWidth);
+
+	//Check if cell has changed
+	if (cellX != sphere.getCellX() || cellZ != sphere.getCellZ()) {
+		//If so, update
+
+		//Check if first loop
+		if (sphere.getCellX() != INT_MAX) {
+			//Remove from old cell
+			Grid[sphere.getCellX()][sphere.getCellZ()].erase(sphere.ID);
+		}
+
+		//Add smart pointer into new cell and update sphere
+		//std::unordered_map <unsigned int, std::unique_ptr<Sphere> > TestGrid;
+		//TestGrid.insert(std::make_pair(spheres[i].ID, std::make_unique<Sphere>(spheres[i])));
+
+		//Grid[cellX][cellZ].insert(std::make_pair(sphere.ID, std::make_unique<Sphere>(sphere)));
+		Grid[cellX][cellZ].insert(std::make_pair(sphere.ID, &sphere));
+
+		sphere.setCellX(cellX);
+		sphere.setCellZ(cellZ);
 	}
 }
 

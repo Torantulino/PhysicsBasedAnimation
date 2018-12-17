@@ -55,4 +55,7 @@ glm::vec3 calcConeForce(glm::vec3 pos);
 
 void PositionSpheres(std::vector<Sphere> &spheres, Mesh &cube);
 
-void UpdateGrid(std::vector<Sphere> &spheres, Mesh &cube);
+void UpdateGrid(Sphere &sphere, Mesh &cube);
+
+void CheckCollisions(std::vector<Sphere> &spheres, Mesh &cube);
+
