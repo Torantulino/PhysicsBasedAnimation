@@ -5,6 +5,9 @@
 #include <string>
 #include <time.h>
 #include <iostream>
+#include <memory>
+#include <algorithm>
+#include <unordered_map>
 
 // GLM
 #include <glm/glm.hpp>
@@ -52,4 +55,4 @@ glm::vec3 calcConeForce(glm::vec3 pos);
 
 void PositionSpheres(std::vector<Sphere> &spheres, Mesh &cube);
 
-
+void UpdateGrid(std::vector<Sphere> &spheres, Mesh &cube);

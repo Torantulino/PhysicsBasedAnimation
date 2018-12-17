@@ -14,6 +14,11 @@ std::vector < std::vector<Particle> > particles2D;
 std::vector<Triangle*> triangles;
 std::vector<Sphere> rigidbodies;
 
+//Collision Grid - Vector<Vector< Map<ID, Sphere> > > > - [X][Z][ID]
+//std::vector<std::vector< std::unordered_map <unsigned int, std::unique_ptr<Sphere> > > > Grid;
+const unsigned int gridN = 6;
+std::unordered_map <unsigned int, std::unique_ptr<Sphere> > Grid[gridN][gridN];
+
 
 // Global Properties
 glm::vec3 g = glm::vec3(0.0f, -9.8f, 0.0f);
@@ -86,10 +91,12 @@ int main()
 			//Scale cube x15
 			cube.setScale(glm::vec3(15.0f, 15.0f, 15.0f));
 
+
 			//Create Spheres
-			for (unsigned int i = 0; i < 10; i++) {
+			for (unsigned int i = 0; i < 15; i++) {
 				//Create sphere
 				Sphere sphere = Sphere();
+				sphere.ID = i;
 				Mesh m = Mesh::Mesh("./resources/models/sphere.obj");
 				sphere.setMesh(m);
 				sphere.getMesh().setShader(lambert);
@@ -103,7 +110,9 @@ int main()
 
 				//Set dynamic properties
 				//sphere.setAngVel(glm::vec3(30.0f * i, 0.0f, i*15.0f));
-				sphere.setVel(glm::vec3(i, 0.0f, 1.3 * i));
+				glm::vec2 vDir = glm::circularRand(1.0f);
+				float vMag = glm::linearRand(0.0f, 20.0f);
+				sphere.setVel(glm::vec3(vDir.x, 0.0f, vDir.y) * vMag);
 				
 				//Add gravity force
 				//sphere.addForce(grav);
@@ -158,8 +167,9 @@ int main()
 			// - SIMULATE -
 			// 1 - Impulses
 			if (mode == 1 && !pause) {
+
 				for (unsigned int i = 0; i < rigidbodies.size(); i++) {
-					
+
 					// - ROTATIONAL DYNAMICS - 
 					//Calculate current angular velocity
 					rigidbodies[i].setAngVel(rigidbodies[i].getAngVel() + timestep * rigidbodies[i].getAngAcc() + sumImpulsesAng(rigidbodies[i]));
@@ -185,8 +195,8 @@ int main()
 					//Check for intersphere collisions
 					CheckCollisions(rigidbodies);
 				}
+				UpdateGrid(rigidbodies, cube);
 			}
-
 
 			// - Remove calculated time from the accumulator -
 			timeAccumulated -= timestep;
@@ -290,7 +300,6 @@ void PositionSpheres(std::vector<Sphere> &spheres, Mesh &cube) {
 		//spheres[i].scale(glm::vec3(10.0f));
 	}
 }
-
 
 //Create Hooke force connections for the given 2D particle array
 void CreateCloth(std::vector<std::vector<Particle> > &p2D, float stiffness, float damping, float rest)
@@ -711,6 +720,7 @@ void CheckCollisions(Sphere &rb, Mesh &cube)
 	}
 }
 
+//Basic Intersphere collision checking
 void CheckCollisions(std::vector<Sphere> &spheres) {
 	//iterate through collection
 	for (unsigned int i = 0; i < spheres.size(); i++) {
@@ -728,6 +738,45 @@ void CheckCollisions(std::vector<Sphere> &spheres) {
 	}
 }
 
+//Check if sphere has changed position, if so, update grid [Requires Uniform Cube]
+void UpdateGrid(std::vector<Sphere> &spheres, Mesh &cube) {
+	
+	//For every sphere
+	for (unsigned int i = 0; i < spheres.size(); i++) {
+
+		float gridWidth = cube.getScale()[0][0] * 2;
+		float cellWidth = gridWidth / gridN;
+
+		//Cacluate distance to origin in X and Z
+		float dTOX = abs(spheres[i].getPos().x - gridWidth / 2);
+		float dTOZ = abs(spheres[i].getPos().z - gridWidth / 2);
+
+		//Calculate new cell
+		unsigned int cellX = floor(dTOX / cellWidth);
+		unsigned int cellZ = floor(dTOZ / cellWidth);
+
+		//Check if cell has changed
+		if (cellX != spheres[i].getCellX() || cellZ != spheres[i].getCellZ()) {
+			//If so, update
+
+			//Check if first loop
+			if (spheres[i].getCellX() != INT_MAX) {
+				//Remove from old cell
+				Grid[spheres[i].getCellX()][spheres[i].getCellZ()].erase(spheres[i].ID);
+			}
+
+			//Add smart pointer into new cell and update sphere
+			//std::unordered_map <unsigned int, std::unique_ptr<Sphere> > TestGrid;
+			//TestGrid.insert(std::make_pair(spheres[i].ID, std::make_unique<Sphere>(spheres[i])));
+
+			Grid[cellX][cellZ].insert(std::make_pair(spheres[i].ID, std::make_unique<Sphere>(spheres[i])));
+			spheres[i].setCellX(cellX);
+			spheres[i].setCellZ(cellZ);
+		}
+	}
+}
+
+//Intersphere Collision response
 void CollisionResponse(Sphere & sp1, Sphere & sp2, float overshoot) {
 	glm::vec3 collisionNormal = glm::normalize(sp2.getPos() - sp1.getPos());	//Towards sp2
 	glm::vec3 r1 = collisionNormal * sp1.getRadius();
@@ -822,8 +871,6 @@ void CollisionResponse(Sphere & rb, glm::vec3 &overShoot, glm::vec3 &planeNormal
 	//std::cout << "Impulse Direction: " << glm::to_string(planeNormal) << std::endl;
 	//std::cout << "PoA: " << glm::to_string(imp.getPoA()) << std::endl;
 }
-
-
 
 //Calculate Friction
 Impulse calculateFriction(glm::vec3 vRel, glm::vec3 planeNormal, RigidBody &rb, glm::vec3 jn, glm::vec3 r) {
