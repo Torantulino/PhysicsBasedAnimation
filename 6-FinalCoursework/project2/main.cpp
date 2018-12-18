@@ -73,6 +73,8 @@ int main()
 	// Game loop
 	while (!glfwWindowShouldClose(app.getWindow()))
 	{
+		//Draw FPS
+		app.showFPS();
 		//Flags to insure single firing of setups
 		static bool flag = true;
 		static bool flag1 = true;
@@ -94,11 +96,11 @@ int main()
 
 
 			//Create Spheres
-			for (unsigned int i = 0; i < 100; i++) {
+			for (unsigned int i = 0; i < 250; i++) {
 				//Create sphere
 				Sphere sphere = Sphere();
 				sphere.ID = i;
-				Mesh m = Mesh::Mesh("./resources/models/sphere.obj");
+				Mesh m = Mesh::Mesh("./resources/models/sphere2.obj");
 				sphere.setMesh(m);
 				sphere.getMesh().setShader(lambert);
 
@@ -630,7 +632,7 @@ void CheckCollisions(Sphere &rb, Mesh &cube)
 	bool collision = false;
 	float distance;
 
-	//##DOESN'T WORK WHEN THERE ARE TWO COLLISIONS AT ONCE!##
+	//##DOESN'T WORK WHEN THERE ARE TWO COLLISIONS AT ONCE!## (In Corners?)
 	//Check for collision with ground
 	//Right
 	if (spherePos.x + rb.getRadius() > cubePos.x + cubeScale[0][0]) { //TODO: Convert rest to this method to prevent tunneling
@@ -644,8 +646,7 @@ void CheckCollisions(Sphere &rb, Mesh &cube)
 	}
 
 	//Left
-	distance = abs(cubePos.x - cubeScale[0][0] - spherePos.x);
-	if (distance < rb.getRadius()) {
+	if (spherePos.x - rb.getRadius() < cubePos.x - cubeScale[0][0]) {
 		collision = true;
 		planeNormal = glm::vec3(1.0f, 0.0f, 0.0f);
 
@@ -656,8 +657,7 @@ void CheckCollisions(Sphere &rb, Mesh &cube)
 	}
 
 	//Up
-	distance = abs(cubePos.y + cubeScale[1][1] - spherePos.y);
-	if (distance < rb.getRadius()) {
+	if (spherePos.y + rb.getRadius() > cubePos.y + cubeScale[0][0]) {
 		collision = true;
 		planeNormal = glm::vec3(0.0f, -1.0f, 0.0f);
 
@@ -668,8 +668,7 @@ void CheckCollisions(Sphere &rb, Mesh &cube)
 	}
 
 	//Down
-	distance = abs(cubePos.y - cubeScale[1][1] - spherePos.y);
-	if (distance < rb.getRadius()) {
+	if (spherePos.y - rb.getRadius() < cubePos.y - cubeScale[0][0]) {
 		collision = true;
 		planeNormal = glm::vec3(0.0f, 1.0f, 0.0f);
 
@@ -700,8 +699,7 @@ void CheckCollisions(Sphere &rb, Mesh &cube)
 	}
 
 	//Front
-	distance = abs(cubePos.z + cubeScale[2][2] - spherePos.z);
-	if (distance < rb.getRadius()) {
+	if (spherePos.z + rb.getRadius() > cubePos.z + cubeScale[0][0]) {
 		collision = true;
 		planeNormal = glm::vec3(0.0f, 0.0f, -1.0f);
 
@@ -712,8 +710,7 @@ void CheckCollisions(Sphere &rb, Mesh &cube)
 	}
 
 	//Back
-	distance = abs(cubePos.z - cubeScale[2][2] - spherePos.z);
-	if (distance < rb.getRadius()) {
+	if (spherePos.z - rb.getRadius() < cubePos.z - cubeScale[0][0]) {
 		collision = true;
 		planeNormal = glm::vec3(0.0f, 0.0f, 1.0f);
 
@@ -744,7 +741,7 @@ void CheckCollisions(std::vector<Sphere> &spheres) {
 
 //Uniform Grid-Based Collision checking
 void CheckCollisions(std::vector<Sphere> &spheres, Mesh &cube) {
-	//iterate through each cell
+	//Iterate through each cell
 	for (unsigned int i = 0; i < gridN; i++) {
 		for (unsigned int j = 0; j < gridN; j++) {
 			for (auto & x : Grid[i][j]) {
@@ -839,13 +836,13 @@ void CollisionResponse(Sphere & sp1, Sphere & sp2, float overshoot) {
 	imp1.setPoA(PoA);
 	imp1.setDir(-collisionNormal);
 	imp1.setMag(impMag);
-	std::cout << "Impulse 1: " << glm::to_string(imp1.getPoA()) << glm::to_string(imp1.getDir()) << std::to_string(imp1.getMag()) << std::endl;
+	//std::cout << "Impulse 1: " << glm::to_string(imp1.getPoA()) << glm::to_string(imp1.getDir()) << std::to_string(imp1.getMag()) << std::endl;
 
 	Impulse imp2;
 	imp2.setPoA(PoA);
 	imp2.setDir(collisionNormal);
 	imp2.setMag(impMag);
-	std::cout << "Impulse 2: " << glm::to_string(imp2.getPoA()) << glm::to_string(imp2.getDir()) << std::to_string(imp2.getMag()) << std::endl;
+	//std::cout << "Impulse 2: " << glm::to_string(imp2.getPoA()) << glm::to_string(imp2.getDir()) << std::to_string(imp2.getMag()) << std::endl;
 
 	//Add Impulses to collection to be applied
 	sp1.impulses.push_back(imp1);

@@ -52,6 +52,7 @@ public:
 	void draw(const Mesh &mesh);
 	void display();
 	void terminate(){ glfwTerminate(); }
+	void showFPS();
 
 private:
 
