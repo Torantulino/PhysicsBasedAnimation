@@ -17,7 +17,6 @@ std::vector<Sphere> rigidbodies;
 //Collision Grid - Vector<Vector< Map<ID, Sphere> > > > - [X][Z][ID]
 //std::vector<std::vector< std::unordered_map <unsigned int, std::unique_ptr<Sphere> > > > Grid;
 const unsigned int gridN = 10;
-//std::unordered_map <unsigned int, std::unique_ptr<Sphere> > Grid[gridN][gridN];
 std::unordered_map <unsigned int, Sphere*> Grid[gridN][gridN];
 
 
@@ -78,22 +77,70 @@ int main()
 		//Flags to insure single firing of setups
 		static bool flag = true;
 		static bool flag1 = true;
+		static bool flag2 = true;
 		// - MODE SWITCHING -
-		// 1 - 2.2 Collision Detection
-		if (glfwGetKey(app.getWindow(), GLFW_KEY_1) && flag1) {
+		// 1 - Sphere Collisions
+		if (glfwGetKey(app.getWindow(), GLFW_KEY_1) && flag) {
+			flag = false;
+			flag1 = true;
+			flag2 = true;
+			mode = 1;
+			particles.clear();
+			particles2D.clear();
+			triangles.clear();
+			rigidbodies.clear();
+			pause = true;
+			frictionEnabled = false;
+
+			//Scale cube to 30 x 30 x 30
+			cube.setScale(glm::vec3(15.0f, 15.0f, 15.0f));
+
+			//Create Spheres
+			for (unsigned int i = 0; i < 15; i++) {
+				//Create sphere
+				Sphere sphere = Sphere();
+				sphere.ID = i;
+				Mesh m = Mesh::Mesh("./resources/models/sphere.obj");
+				sphere.setMesh(m);
+				sphere.getMesh().setShader(lambert);
+
+				//Set static properties    
+				sphere.scale(glm::vec3(1.0f, 1.0f, 1.0f));
+				sphere.setMass(2.0f);
+				sphere.setCoM(glm::vec3(0.0f, 0.0f, 0.0f));
+				sphere.setCor(1.0f);
+
+				//Set dynamic properties
+				glm::vec2 vDir = glm::circularRand(1.0f);
+				float vMag = glm::linearRand(0.0f, 20.0f);
+				sphere.setVel(glm::vec3(vDir.x, 0.0f, vDir.y) * vMag);
+
+				//Add to collection
+				rigidbodies.push_back(sphere);
+			}
+
+			//Set sphere positions
+			PositionSpheres(rigidbodies, cube);
+
+			//Reset Time
+			timeAccumulated = 0.0f;
+		}
+
+		// 2 - Scalability
+		if (glfwGetKey(app.getWindow(), GLFW_KEY_2) && flag1) {
 			flag1 = false;
 			flag = true;
-			mode = 1;
+			flag2 = true;
+			mode = 2;
 			particles.clear();
 			particles2D.clear(); 
 			triangles.clear();
  			rigidbodies.clear();		
 			pause = true;
-			frictionEnabled = true;
+			frictionEnabled = false;
 			
-			//Scale cube x15
+			//Scale cube to 300 x 300 x 300
 			cube.setScale(glm::vec3(150.0f, 150.0f, 150.0f));
-
 
 			//Create Spheres
 			for (unsigned int i = 0; i < 250; i++) {
@@ -131,18 +178,53 @@ int main()
 			timeAccumulated = 0.0f;
 		}
 
-		// 2 - 2.3 Collision Response (1)
-		if (glfwGetKey(app.getWindow(), GLFW_KEY_2) && flag) {
-			flag = false;
+		// 3 - Pool Physics
+		if (glfwGetKey(app.getWindow(), GLFW_KEY_3) && flag2) {
+			flag2 = false;
+			flag = true;
 			flag1 = true;
 			mode = 1;
 			particles.clear();
 			particles2D.clear();
 			triangles.clear();
- 			rigidbodies.clear();		
+			rigidbodies.clear();
 			pause = true;
-			frictionEnabled = true;
+			frictionEnabled = false;
+
+			//Scale cube to 30 x 30 x 30
+			cube.setScale(glm::vec3(45.0f, 100.0f, 45.0f));
+
+			//Create Spheres
+			for (unsigned int i = 0; i < 16; i++) {
+				//Create sphere
+				Sphere sphere = Sphere();
+				sphere.ID = i;
+				Mesh m = Mesh::Mesh("./resources/models/sphere.obj");
+				sphere.setMesh(m);
+				sphere.getMesh().setShader(lambert);
+
+				//Set static properties    
+				sphere.scale(glm::vec3(1.0f, 1.0f, 1.0f));
+				sphere.setMass(2.0f);
+				sphere.setCoM(glm::vec3(0.0f, 0.0f, 0.0f));
+				sphere.setCor(1.0f);
+
+				//Set dynamic properties
+				glm::vec2 vDir = glm::circularRand(1.0f);
+				float vMag = glm::linearRand(0.0f, 20.0f);
+				sphere.setVel(glm::vec3(vDir.x, 0.0f, vDir.y) * vMag);
+
+				//Add to collection
+				rigidbodies.push_back(sphere);
+			}
+
+			//Set sphere positions
+			SetupTable(rigidbodies, cube);
+
+			//Reset Time
+			timeAccumulated = 0.0f;
 		}
+
 
 		// - OTHER USER INTERACTION -
 		//Start Simulation
@@ -170,8 +252,40 @@ int main()
 			app.doMovement(timestep);
 
 			// - SIMULATE -
-			// 1 - Impulses
+			// 1 - Sphere Collisions
 			if (mode == 1 && !pause) {
+
+				for (unsigned int i = 0; i < rigidbodies.size(); i++) {
+
+					// - ROTATIONAL DYNAMICS - 
+					//Calculate current angular velocity
+					rigidbodies[i].setAngVel(rigidbodies[i].getAngVel() + timestep * rigidbodies[i].getAngAcc() + sumImpulsesAng(rigidbodies[i]));
+					//Create skew symmetric matrix for w
+					glm::mat3 angVelSkew = glm::matrixCross3(rigidbodies[i].getAngVel());
+					//Create 3x3 rotation matrix from rigidbody rotation matrix
+					glm::mat3 R = glm::mat3(rigidbodies[i].getRotate());
+					//Update rotation Matrix
+					R += timestep * angVelSkew*R;
+					R = glm::orthonormalize(R);
+					rigidbodies[i].setRotate(glm::mat4(R));
+
+					// - LINEAR DYNAMICS -
+					//Calculate Accelleration
+					rigidbodies[i].setAcc(rigidbodies[i].applyForces(rigidbodies[i].getPos(), rigidbodies[i].getVel(), 1, timestep));
+					//Calculate Current Velocity
+					rigidbodies[i].setVel(rigidbodies[i].getVel() + timestep * rigidbodies[i].getAcc() + sumImpulsesLin(rigidbodies[i]));
+					//Calculate New Position
+					rigidbodies[i].translate(timestep * rigidbodies[i].getVel());
+
+					//Check for collisions with bounding cube
+					CheckCollisions(rigidbodies[i], cube);
+					//Check for intersphere collisions using 'brute force' collision detection
+					CheckCollisions(rigidbodies);
+				}
+			}
+
+			// 2 - Scalability
+			if (mode == 2 && !pause) {
 
 				for (unsigned int i = 0; i < rigidbodies.size(); i++) {
 
@@ -201,6 +315,8 @@ int main()
 					CheckCollisions(rigidbodies[i], cube);
 					//Check for intersphere collisions
 					CheckCollisions(rigidbodies, cube);
+
+					UpdateGrid(rigidbodies[i], cube);
 				}
 			}
 
@@ -744,10 +860,8 @@ void CheckCollisions(std::vector<Sphere> &spheres, Mesh &cube) {
 	//Iterate through each cell
 	for (unsigned int i = 0; i < gridN; i++) {
 		for (unsigned int j = 0; j < gridN; j++) {
-			for (auto & x : Grid[i][j]) {
+			for (auto  x : Grid[i][j]) {
 				for (auto & y : Grid[i][j]) {
-			//for (auto x = Grid[i][j].begin(); x != Grid[i][j].end(); ++x) {
-			//	for (auto y = Grid[i][j].begin(); y != Grid[i][j].end(); ++y) {
 					//If not the same sphere
 					if (x.second != y.second) {
 						//Calculate distance and combined radius
@@ -756,8 +870,6 @@ void CheckCollisions(std::vector<Sphere> &spheres, Mesh &cube) {
 						if (distance < combiedRadius) {
 							float overshoot = combiedRadius - distance;
 							CollisionResponse(*x.second, *y.second, overshoot);
-
-							//x.second -> setVel(glm::vec3(0.0f, 10.0f, 0.0f));
 						}
 					}
 				}
@@ -1018,4 +1130,43 @@ std::vector<Triangle*> TriangulateGrid(std::vector<std::vector<Particle> > &p2D)
 		}
 	}
 	return tris;
+}
+
+//Setup Pool Table
+void SetupTable(std::vector<Sphere> &spheres, Mesh &cube) {
+	float initX = 0;
+	float x = initX;
+	float y = cube.getPos().y - cube.getScale()[1][1] + spheres[0].getRadius();
+	float z = 5;
+	unsigned int gap = 1;
+	unsigned int last = 1;
+
+	for (unsigned int ball = 0; ball < 16; ball++) {
+		//White
+		if (ball == 0) {
+			spheres[ball].setPos(glm::vec3(0.0f, y, -10.0f));
+		}
+		// Ball 1
+		else if (ball == 1) {
+			last = ball;
+			spheres[ball].setPos(glm::vec3(x, y, z));
+			x += 2;
+		}
+
+		if (ball == last + gap) {
+			//Increment to Next Row
+			initX -= 1;
+			x = initX;
+			z += 2;
+			last = ball;
+			gap++;
+
+			spheres[ball].setPos(glm::vec3(x, y, z));
+		}
+		else if (ball != 0 && ball != 1){
+			//Next Ball on row
+			x += 2;
+			spheres[ball].setPos(glm::vec3(x, y, z));
+		}
+	}
 }

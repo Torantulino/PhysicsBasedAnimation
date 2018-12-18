@@ -59,3 +59,7 @@ void UpdateGrid(Sphere &sphere, Mesh &cube);
 
 void CheckCollisions(std::vector<Sphere> &spheres, Mesh &cube);
 
+void SetupTable(std::vector<Sphere> &spheres, Mesh &cube);
+
+
+
