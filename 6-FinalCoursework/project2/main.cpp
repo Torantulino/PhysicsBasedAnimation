@@ -78,12 +78,17 @@ int main()
 		static bool flag = true;
 		static bool flag1 = true;
 		static bool flag2 = true;
+		static bool flag3 = true;
+
+		static bool first = true;
+
 		// - MODE SWITCHING -
 		// 1 - Sphere Collisions
 		if (glfwGetKey(app.getWindow(), GLFW_KEY_1) && flag) {
 			flag = false;
 			flag1 = true;
 			flag2 = true;
+			flag3 = true;
 			mode = 1;
 			particles.clear();
 			particles2D.clear();
@@ -131,6 +136,7 @@ int main()
 			flag1 = false;
 			flag = true;
 			flag2 = true;
+			flag3 = true;
 			mode = 2;
 			particles.clear();
 			particles2D.clear(); 
@@ -164,9 +170,6 @@ int main()
 				float vMag = glm::linearRand(0.0f, 20.0f);
 				sphere.setVel(glm::vec3(vDir.x, 0.0f, vDir.y) * vMag);
 				
-				//Add gravity force
-				//sphere.addForce(grav);
-
 				//Add to collection
 				rigidbodies.push_back(sphere);
 			}
@@ -178,21 +181,23 @@ int main()
 			timeAccumulated = 0.0f;
 		}
 
-		// 3 - Pool Physics
+		// 3 - Pool Physics 1
 		if (glfwGetKey(app.getWindow(), GLFW_KEY_3) && flag2) {
 			flag2 = false;
 			flag = true;
 			flag1 = true;
-			mode = 1;
+			flag3 = true;
+			first = true;
+			mode = 3;
 			particles.clear();
 			particles2D.clear();
 			triangles.clear();
 			rigidbodies.clear();
 			pause = true;
-			frictionEnabled = false;
+			frictionEnabled = true;
 
 			//Scale cube to 30 x 30 x 30
-			cube.setScale(glm::vec3(45.0f, 100.0f, 45.0f));
+			cube.setScale(glm::vec3(45.0f, 45.0f, 45.0f));
 
 			//Create Spheres
 			for (unsigned int i = 0; i < 16; i++) {
@@ -209,10 +214,61 @@ int main()
 				sphere.setCoM(glm::vec3(0.0f, 0.0f, 0.0f));
 				sphere.setCor(1.0f);
 
+				//Add gravity force
+				sphere.addForce(grav);
+
 				//Set dynamic properties
-				glm::vec2 vDir = glm::circularRand(1.0f);
-				float vMag = glm::linearRand(0.0f, 20.0f);
-				sphere.setVel(glm::vec3(vDir.x, 0.0f, vDir.y) * vMag);
+				sphere.setVel(glm::vec3(0.0f, 0.0f, 0.0f));
+
+				//Add to collection
+				rigidbodies.push_back(sphere);
+			}
+
+			//Set sphere positions
+			SetupTable(rigidbodies, cube);
+
+			//Reset Time
+			timeAccumulated = 0.0f;
+		}
+
+		// 3 - Pool Physics 2
+		if (glfwGetKey(app.getWindow(), GLFW_KEY_4) && flag3) {
+			flag3 = false;
+			flag = true;
+			flag1 = true;
+			flag2 = true;
+			first = true;
+			mode = 4;
+			particles.clear();
+			particles2D.clear();
+			triangles.clear();
+			rigidbodies.clear();
+			pause = true;
+			frictionEnabled = true;
+
+			//Scale cube to 30 x 30 x 30
+			cube.setScale(glm::vec3(45.0f, 45.0f, 45.0f));
+
+			//Create Spheres
+			for (unsigned int i = 0; i < 16; i++) {
+				//Create sphere
+				Sphere sphere = Sphere();
+				sphere.ID = i;
+				Mesh m = Mesh::Mesh("./resources/models/sphere.obj");
+				sphere.setMesh(m);
+				sphere.getMesh().setShader(lambert);
+
+				//Set static properties    
+				sphere.scale(glm::vec3(1.0f, 1.0f, 1.0f));
+				sphere.setMass(2.0f);
+				sphere.setCoM(glm::vec3(0.0f, 0.0f, 0.0f));
+				sphere.setCor(1.0f);
+
+				//Add gravity force
+				sphere.addForce(grav);
+
+				//Set dynamic properties
+				sphere.setVel(glm::vec3(0.0f, 0.0f, 0.0f));
 
 				//Add to collection
 				rigidbodies.push_back(sphere);
@@ -319,6 +375,83 @@ int main()
 					UpdateGrid(rigidbodies[i], cube);
 				}
 			}
+
+			// 3 - Pool Physics - 1. Perfect Break
+			if (mode == 3 && !pause) {
+				if (first) {
+					//Perfect Break
+					Impulse cue(glm::vec3(0.0f, 0.0f, 1.0f), 50.0f, glm::vec3(rigidbodies[0].getPos().x, rigidbodies[0].getPos().y, rigidbodies[0].getPos().z));
+					rigidbodies[0].impulses.push_back(cue);
+					first = false;
+				}
+
+				for (unsigned int i = 0; i < rigidbodies.size(); i++) {
+
+					// - ROTATIONAL DYNAMICS - 
+					//Calculate current angular velocity
+					rigidbodies[i].setAngVel(rigidbodies[i].getAngVel() + timestep * rigidbodies[i].getAngAcc() + sumImpulsesAng(rigidbodies[i]));
+					//Create skew symmetric matrix for w
+					glm::mat3 angVelSkew = glm::matrixCross3(rigidbodies[i].getAngVel());
+					//Create 3x3 rotation matrix from rigidbody rotation matrix
+					glm::mat3 R = glm::mat3(rigidbodies[i].getRotate());
+					//Update rotation Matrix
+					R += timestep * angVelSkew*R;
+					R = glm::orthonormalize(R);
+					rigidbodies[i].setRotate(glm::mat4(R));
+
+					// - LINEAR DYNAMICS -
+					//Calculate Accelleration
+					rigidbodies[i].setAcc(rigidbodies[i].applyForces(rigidbodies[i].getPos(), rigidbodies[i].getVel(), 1, timestep));
+					//Calculate Current Velocity
+					rigidbodies[i].setVel(rigidbodies[i].getVel() + timestep * rigidbodies[i].getAcc() + sumImpulsesLin(rigidbodies[i]));
+					//Calculate New Position
+					rigidbodies[i].translate(timestep * rigidbodies[i].getVel());
+
+					//Check for collisions with bounding cube
+					CheckCollisions(rigidbodies[i], cube);
+					//Check for intersphere collisions using 'brute force' collision detection
+					CheckCollisions(rigidbodies);
+				}
+			}
+
+			// 3 - Pool Physics - 2. Backspin Break
+			if (mode == 4 && !pause) {
+				if (first) {
+					//Perfect Break
+					Impulse cue(glm::vec3(0.0f, 0.0f, 1.0f), 75.0f, glm::vec3(rigidbodies[0].getPos().x, rigidbodies[0].getPos().y - 0.5f, rigidbodies[0].getPos().z));
+					rigidbodies[0].impulses.push_back(cue);
+					first = false;
+				}
+
+				for (unsigned int i = 0; i < rigidbodies.size(); i++) {
+
+					// - ROTATIONAL DYNAMICS - 
+					//Calculate current angular velocity
+					rigidbodies[i].setAngVel(rigidbodies[i].getAngVel() + timestep * rigidbodies[i].getAngAcc() + sumImpulsesAng(rigidbodies[i]));
+					//Create skew symmetric matrix for w
+					glm::mat3 angVelSkew = glm::matrixCross3(rigidbodies[i].getAngVel());
+					//Create 3x3 rotation matrix from rigidbody rotation matrix
+					glm::mat3 R = glm::mat3(rigidbodies[i].getRotate());
+					//Update rotation Matrix
+					R += timestep * angVelSkew*R;
+					R = glm::orthonormalize(R);
+					rigidbodies[i].setRotate(glm::mat4(R));
+
+					// - LINEAR DYNAMICS -
+					//Calculate Accelleration
+					rigidbodies[i].setAcc(rigidbodies[i].applyForces(rigidbodies[i].getPos(), rigidbodies[i].getVel(), 1, timestep));
+					//Calculate Current Velocity
+					rigidbodies[i].setVel(rigidbodies[i].getVel() + timestep * rigidbodies[i].getAcc() + sumImpulsesLin(rigidbodies[i]));
+					//Calculate New Position
+					rigidbodies[i].translate(timestep * rigidbodies[i].getVel());
+
+					//Check for collisions with bounding cube
+					CheckCollisions(rigidbodies[i], cube);
+					//Check for intersphere collisions using 'brute force' collision detection
+					CheckCollisions(rigidbodies);
+				}
+			}
+
 
 			// - Remove calculated time from the accumulator -
 			timeAccumulated -= timestep;
@@ -923,8 +1056,8 @@ void CollisionResponse(Sphere & sp1, Sphere & sp2, float overshoot) {
 	glm::vec3 PoA = sp1.getPos() + r1;
 	
 	//Move back against collision
-	sp1.setPos(sp1.getPos() - (overshoot / 1.9f) * collisionNormal);
-	sp2.setPos(sp2.getPos() + (overshoot / 1.9f) * collisionNormal);
+	sp1.setPos(sp1.getPos() - (overshoot / 1.8f) * collisionNormal);
+	sp2.setPos(sp2.getPos() + (overshoot / 1.8f) * collisionNormal);
 
 	//Calculate velocity of collision points
 	//without angular v
@@ -960,14 +1093,14 @@ void CollisionResponse(Sphere & sp1, Sphere & sp2, float overshoot) {
 	sp1.impulses.push_back(imp1);
 	sp2.impulses.push_back(imp2);
 
-	//if (frictionEnabled) {
-	//	//Calculate and apply friction
-	//	Impulse Jf1 = calculateFriction(pointVel1, collisionNormal, sp1, impMag * collisionNormal, imp1.getPoA() - sp1.getPos());
-	//	sp1.impulses.push_back(Jf1);
+	if (frictionEnabled) {
+		//Calculate and apply friction
+		Impulse Jf1 = calculateFriction(pointVel1, collisionNormal, sp1, impMag * collisionNormal, imp1.getPoA() - sp1.getPos());
+		sp1.impulses.push_back(Jf1);
 
-	//	Impulse Jf2 = calculateFriction(pointVel2, collisionNormal, sp2, impMag * collisionNormal, imp2.getPoA() - sp2.getPos());
-	//	sp2.impulses.push_back(Jf2);
-	//}
+		Impulse Jf2 = calculateFriction(pointVel2, collisionNormal, sp2, impMag * collisionNormal, imp2.getPoA() - sp2.getPos());
+		sp2.impulses.push_back(Jf2);
+	}
 }
 
 //Sphere collision with bounding cube
@@ -1000,11 +1133,11 @@ void CollisionResponse(Sphere & rb, glm::vec3 &overShoot, glm::vec3 &planeNormal
 
 	rb.impulses.push_back(imp);
 
-	//if (frictionEnabled) {
-	//	//Calculate and apply friction
-	//	Impulse Jf = calculateFriction(pointVel, planeNormal, rb, impMag * planeNormal, imp.getPoA() - rb.getPos());
-	//	rb.impulses.push_back(Jf);
-	//}
+	if (frictionEnabled) {
+		//Calculate and apply friction
+		Impulse Jf = calculateFriction(pointVel, planeNormal, rb, impMag * planeNormal, imp.getPoA() - rb.getPos());
+		rb.impulses.push_back(Jf);
+	}
 
 	//std::cout << "Impulse magnitude: " << std::to_string(impMag) << std::endl;
 	//std::cout << "Impulse Direction: " << glm::to_string(planeNormal) << std::endl;
@@ -1034,6 +1167,7 @@ Impulse calculateFriction(glm::vec3 vRel, glm::vec3 planeNormal, RigidBody &rb, 
 	float denom = (1.0f / rb.getMass()) + glm::dot(rb.getInvInertia() *  glm::cross(glm::cross(r, t), r), t);
 	float jMag = numerator / denom;
 	//Create and return impulse
+	jMag *= rb.getCoF();
 	Impulse J(-t, jMag, PoA);
 	return J;
 	
@@ -1144,20 +1278,20 @@ void SetupTable(std::vector<Sphere> &spheres, Mesh &cube) {
 	for (unsigned int ball = 0; ball < 16; ball++) {
 		//White
 		if (ball == 0) {
-			spheres[ball].setPos(glm::vec3(0.0f, y, -10.0f));
+			spheres[ball].setPos(glm::vec3(0.0f, y, -23.0f));
 		}
 		// Ball 1
 		else if (ball == 1) {
 			last = ball;
 			spheres[ball].setPos(glm::vec3(x, y, z));
-			x += 2;
+			x += 2.05f;
 		}
 
 		if (ball == last + gap) {
 			//Increment to Next Row
 			initX -= 1;
 			x = initX;
-			z += 2;
+			z += 2.0f;
 			last = ball;
 			gap++;
 
@@ -1165,7 +1299,7 @@ void SetupTable(std::vector<Sphere> &spheres, Mesh &cube) {
 		}
 		else if (ball != 0 && ball != 1){
 			//Next Ball on row
-			x += 2;
+			x += 2.05f;
 			spheres[ball].setPos(glm::vec3(x, y, z));
 		}
 	}
