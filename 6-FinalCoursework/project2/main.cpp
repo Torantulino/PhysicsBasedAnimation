@@ -1024,6 +1024,8 @@ void CheckCollisions(Sphere &rb, Mesh &cube)
 
 		CollisionResponse(rb, overShoot, planeNormal);
 
+		rb.setAngVel(rb.getAngVel() * 0.99);
+
 		////Teared ground resting
 		//if (frictionEnabled) {
 		//	//Slow vibration if stopped on the ground
@@ -1384,7 +1386,6 @@ void SetupTable(std::vector<Sphere> &spheres, Mesh &cube) {
 			spheres[ball].setPos(glm::vec3(x, y, z));
 			x += 2.05f;
 		}
-
 		if (ball == last + gap) {
 			//Increment to Next Row
 			initX -= 1;
@@ -1392,7 +1393,6 @@ void SetupTable(std::vector<Sphere> &spheres, Mesh &cube) {
 			z += 2.0f;
 			last = ball;
 			gap++;
-
 			spheres[ball].setPos(glm::vec3(x, y, z));
 		}
 		else if (ball != 0 && ball != 1){
